@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:light playground.xcodeproj">
+      location = "self:light-playground.xcodeproj">
    </FileRef>
 </Workspace>
