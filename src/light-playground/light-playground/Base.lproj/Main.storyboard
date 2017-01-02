@@ -1,26 +1,91 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11134" systemVersion="15F34" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11542" systemVersion="16C67" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="hLN-59-Igd">
+    <device id="retina4_7" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11106"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11524"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
-        <scene sceneID="tne-QT-ifu">
+        <!--MainController-->
+        <scene sceneID="mU8-aj-CdT">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="MainController" id="6eJ-qp-Qx8" customClass="MainViewController" customModule="light_playground" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
-                        <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
-                        <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
+                        <viewControllerLayoutGuide type="top" id="sXZ-5h-Gzg"/>
+                        <viewControllerLayoutGuide type="bottom" id="PgE-j0-TFR"/>
                     </layoutGuides>
-                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                    <view key="view" contentMode="scaleToFill" id="mIz-ZO-T50">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <subviews>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="I46-8f-nxY">
+                                <rect key="frame" x="0.0" y="623" width="375" height="44"/>
+                                <items>
+                                    <barButtonItem style="plain" id="fvg-vq-WTL">
+                                        <segmentedControl key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="bar" selectedSegmentIndex="0" id="Fz4-xu-6at">
+                                            <rect key="frame" x="16" y="7" width="345" height="30"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                            <segments>
+                                                <segment title="Light"/>
+                                                <segment title="Wall"/>
+                                            </segments>
+                                        </segmentedControl>
+                                    </barButtonItem>
+                                </items>
+                            </toolbar>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <gestureRecognizers/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="I46-8f-nxY" secondAttribute="trailing" id="2SR-dK-SXI"/>
+                            <constraint firstItem="I46-8f-nxY" firstAttribute="leading" secondItem="mIz-ZO-T50" secondAttribute="leading" id="XjD-mz-ZRy"/>
+                            <constraint firstItem="PgE-j0-TFR" firstAttribute="top" secondItem="I46-8f-nxY" secondAttribute="bottom" id="knO-2Y-8FC"/>
+                        </constraints>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="b88-eV-0Ps" appends="YES" id="dnO-wf-pxw"/>
+                            <outletCollection property="gestureRecognizers" destination="fAS-T8-JM2" appends="YES" id="PMY-Lb-3Sa"/>
+                        </connections>
                     </view>
+                    <navigationItem key="navigationItem" title="Light Playground" id="kvZ-wO-hVP"/>
+                    <connections>
+                        <outlet property="interactionModeControl" destination="Fz4-xu-6at" id="ERp-kR-wOI"/>
+                        <outlet property="interactionView" destination="mIz-ZO-T50" id="Iyn-Ca-i6l"/>
+                    </connections>
                 </viewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Fux-bJ-pCt" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="b88-eV-0Ps">
+                    <connections>
+                        <action selector="panGesture:" destination="6eJ-qp-Qx8" id="SZh-fV-7vh"/>
+                    </connections>
+                </panGestureRecognizer>
+                <tapGestureRecognizer id="fAS-T8-JM2">
+                    <connections>
+                        <action selector="tapGesture:" destination="6eJ-qp-Qx8" id="8yg-5b-Ev3"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
+            <point key="canvasLocation" x="1296.8" y="40.929535232383813"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="0Zj-CV-XEQ">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="hLN-59-Igd" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="GhZ-Lp-Ahs">
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="6eJ-qp-Qx8" kind="relationship" relationship="rootViewController" id="EFG-Lv-RGf"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="azB-fU-p2K" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="357.60000000000002" y="40.929535232383813"/>
         </scene>
     </scenes>
 </document>
