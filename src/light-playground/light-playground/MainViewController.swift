@@ -1,21 +1,22 @@
 import UIKit
 
-class MainViewController: UIViewController {
+class MainViewController: UIViewController, CALayerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Setup the draw layer
+        drawLayer.delegate = self
         drawLayer.isOpaque = true
-        // It seems this need to come from the screen since it isn't necessarily inherited from view correctly:
+
+        // It seems this needs to come from the screen since it isn't necessarily inherited from view correctly:
         //   http://stackoverflow.com/questions/9479001/uiviews-contentscalefactor-depends-on-implementing-drawrect
         drawLayer.contentsScale = UIScreen.main.scale
         interactionView.layer.insertSublayer(drawLayer, at: 0)
 
-        // Set up the drawlayer render loop
-        let displayLink = CADisplayLink(target: self, selector: #selector(updateDrawLayer))
-        displayLink.add(to: RunLoop.current, forMode: RunLoopMode.defaultRunLoopMode)
-        displayLink.preferredFramesPerSecond = 60
+        simulator.onDataChange = { [weak self] in
+            self?.drawLayer.display()
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -28,8 +29,9 @@ class MainViewController: UIViewController {
 
     }
 
+    // MARK: CALayerDelegate
 
-    func updateDrawLayer() {
+    func display(_ layer: CALayer) {
         let snapshot = simulator.latestSnapshot
         drawLayer.contents = snapshot.image
     }
@@ -44,7 +46,11 @@ class MainViewController: UIViewController {
 
     @IBAction func tapGesture(_ sender: UITapGestureRecognizer) {
         if case .light = currentInteractionMode {
-            lights.append(Light(pos: sender.location(in: interactionView)))
+            let lightLogation = sender.location(in: interactionView)
+            lights.append(Light(
+                pos: (
+                    x: Float(lightLogation.x * drawLayer.contentsScale),
+                    y: Float(lightLogation.y * drawLayer.contentsScale))))
             resetSimulator()
             print("Add light!")
         }
@@ -79,7 +85,7 @@ class MainViewController: UIViewController {
     /// Should be called any time the state of input to the simulator changes.
     private func resetSimulator() {
         simulator.startWithLayout(layout: SimulationLayout(
-            maxRayCount: 1000,
+            approxRayCount: 10000,
             pixelDimensions: (
                 w: Int(drawLayer.frame.size.width * drawLayer.contentsScale),
                 h: Int(drawLayer.frame.size.height * drawLayer.contentsScale)),
@@ -89,6 +95,6 @@ class MainViewController: UIViewController {
 
     private var lights = [Light]()
     private var walls = [Wall]()
-    private let simulator: LightSimulator = CPULightSimulator()
+    private var simulator: LightSimulator = CPULightSimulator()
 }
 
