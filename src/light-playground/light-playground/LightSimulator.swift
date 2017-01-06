@@ -11,8 +11,6 @@ public struct Wall {
 
 public struct SimulationLayout {
     public let approxRayCount: UInt64
-    public let pixelDimensions: (w: Int, h: Int)
-    // TODO: public let dims
     public let lights: [Light]
     public let walls: [Wall]
 }
@@ -28,8 +26,10 @@ public class SimulationSnapshot {
 
 /// All functions/variables must be called or accessed from main thread.
 public protocol LightSimulator {
+    init(imageWidth: Int, imageHeight: Int)
+
     /// Will erase any existing rays.
-    func startWithLayout(layout: SimulationLayout)
+    func start(layout: SimulationLayout)
 
     /// Will stop any further processing. No-op if the simulator hasn't been started, and not required before
     /// calling start again.

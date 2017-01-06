@@ -13,10 +13,6 @@ class MainViewController: UIViewController, CALayerDelegate {
         //   http://stackoverflow.com/questions/9479001/uiviews-contentscalefactor-depends-on-implementing-drawrect
         drawLayer.contentsScale = UIScreen.main.scale
         interactionView.layer.insertSublayer(drawLayer, at: 0)
-
-        simulator.onDataChange = { [weak self] in
-            self?.drawLayer.display()
-        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -25,15 +21,22 @@ class MainViewController: UIViewController, CALayerDelegate {
 
         // The simulator relies on the layout bounds, so it only makes sense to start the simulator
         // after it has been laid out.
-        resetSimulator()
+        simulator = CPULightSimulator(
+            imageWidth: Int(drawLayer.frame.size.width * drawLayer.contentsScale),
+            imageHeight: Int(drawLayer.frame.size.height * drawLayer.contentsScale))
 
+        simulator?.onDataChange = { [weak self] in
+            self?.drawLayer.display()
+        }
+
+        resetSimulator()
     }
 
     // MARK: CALayerDelegate
 
     func display(_ layer: CALayer) {
-        let snapshot = simulator.latestSnapshot
-        drawLayer.contents = snapshot.image
+        let snapshot = simulator?.latestSnapshot
+        drawLayer.contents = snapshot?.image
     }
 
     // MARK: Private
@@ -84,17 +87,14 @@ class MainViewController: UIViewController, CALayerDelegate {
 
     /// Should be called any time the state of input to the simulator changes.
     private func resetSimulator() {
-        simulator.startWithLayout(layout: SimulationLayout(
+        simulator?.start(layout: SimulationLayout(
             approxRayCount: 10000,
-            pixelDimensions: (
-                w: Int(drawLayer.frame.size.width * drawLayer.contentsScale),
-                h: Int(drawLayer.frame.size.height * drawLayer.contentsScale)),
             lights: lights,
             walls: walls))
     }
 
     private var lights = [Light]()
     private var walls = [Wall]()
-    private var simulator: LightSimulator = CPULightSimulator()
+    private var simulator: LightSimulator?
 }
 

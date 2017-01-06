@@ -13,17 +13,20 @@ private struct LightRay {
 /// A light simulator which operates on the CPU.
 /// TODO(aeidelson): Explore using a simulator operating on the GPU.
 public class CPULightSimulator: LightSimulator {
-    public init() {
-        rayQueue = Array(
-            // See declaration of rayQueue for what each index means.
-            repeating: Array(repeating: Float(), count: 5),
-            count: rayBatchSize)
+    public required init(imageWidth: Int, imageHeight: Int) {
+        self.imageWidth = imageWidth
+        self.imageHeight = imageHeight
+
+        let totalPixels = imageWidth * imageHeight
+
+        let totalComponents = totalPixels * componentsPerPixel
+
+        pixelData = [UInt8](repeatElement(0, count: totalComponents))
     }
 
     // MARK: LightSimulator
 
-    /// TODO: Look at https://github.com/scanlime/zenphoton/blob/bea23c1b2a7b7e68f8a8c3bb5ce4afd710005a22/html/src/worker-asm-shell.coffee#L200
-    public func startWithLayout(layout: SimulationLayout) {
+    public func start(layout: SimulationLayout) {
         precondition(Thread.isMainThread)
 
         let lights = layout.lights
@@ -35,65 +38,33 @@ public class CPULightSimulator: LightSimulator {
         // Stop the current computation if there is one
         stop()
 
-        // Populate with rabdom ray directions.
-        for i in 0..<rayBatchSize {
-            // Figure out which light the ray is coming from.
-            let light = lights[i % lights.count]
-
-            rayQueue[i][0] = light.pos.x;
-            rayQueue[i][1] = light.pos.y;
-            rayQueue[i][2] = (Float(arc4random()) - Float(UInt32.max)/2)
-            rayQueue[i][3] = (Float(arc4random()) - Float(UInt32.max)/2)
-            rayQueue[i][4] = 1.0
-        }
-
         // TODO: Intersect rays and convert into segments.
 
-        let imageSize = CGSize(width: layout.pixelDimensions.w,
-                               height: layout.pixelDimensions.h)
-        let imageRect = CGRect(origin: CGPoint(x: 0, y: 0), size: imageSize)
-
-        UIGraphicsBeginImageContextWithOptions(imageSize, true, 1.0)
-
-        guard let context = UIGraphicsGetCurrentContext() else { return };
-
-        if let cachedImage = cachedImage, let copiedImage = cachedImage.copy() {
-            // We flip the context, since otherwise the image is drawn upside-down.
-            context.translateBy(x: 0, y: imageRect.height)
-            context.scaleBy(x: 1.0, y: -1.0)
-            context.draw(copiedImage, in: imageRect)
-            context.scaleBy(x: 1.0, y: -1.0)
-            context.translateBy(x: 0, y: -imageRect.height)
+        for i in 0..<(imageWidth * imageHeight) {
+            pixelData[i*4] = UInt8(arc4random() % UInt32(255))
+            pixelData[i*4+1] = UInt8(arc4random() % UInt32(255))
+            pixelData[i*4+2] = UInt8(arc4random() % UInt32(255))
         }
 
-        let exposure = 0.5
-        let brightness = exp(1 + 10.0*exposure) / Double(rayBatchSize)
-        let alpha = CGFloat(brightness)
+        let providerRef = CGDataProvider(data: NSData(bytes: &pixelData, length: pixelData.count))
+        let bitsPerPixel = componentsPerPixel * bitsPerComponent
 
-        Swift.print("alpha: \(alpha)")
-
-        // Draw each segment.
-        // TODO: For now just drawing rays.
-        for i in 0..<rayBatchSize {
-            context.setLineWidth(3.0)
-            context.setStrokeColor(red: 1.0, green: 1.0, blue: 1.0, alpha: alpha)
-
-            let rayX = rayQueue[i][0]
-            let rayY = rayQueue[i][1]
-            let rayDX = rayQueue[i][2]
-            let rayDY = rayQueue[i][3]
-
-            context.move(to: CGPoint(x: CGFloat(rayX), y: CGFloat(rayY)))
-            context.addLine(to: CGPoint(x: CGFloat(rayX + rayDX * 1000), y: CGFloat(rayY + rayDY * 10000)))
-            context.strokePath()
-        }
-
-        cachedImage = UIGraphicsGetImageFromCurrentImageContext()?.cgImage
+        cachedImage = CGImage(
+            width: imageWidth,
+            height: imageHeight,
+            bitsPerComponent: bitsPerComponent,
+            bitsPerPixel: bitsPerPixel,
+            bytesPerRow: imageWidth * bitsPerPixel / 8,
+            space: CGColorSpaceCreateDeviceRGB(),
+            // Alpha is ignored.
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+            provider: providerRef!,
+            decode: nil,
+            shouldInterpolate: true,
+            intent: .defaultIntent)
 
         // TODO: Call on main thread
         onDataChange()
-
-        UIGraphicsEndImageContext()
     }
 
     public func stop() {
@@ -110,14 +81,18 @@ public class CPULightSimulator: LightSimulator {
 
     // MARK: Private
 
+    let imageWidth: Int
+    let imageHeight: Int
+
     // MARK: Constants
 
-    /// The number of rays to process at a time.
-    let rayBatchSize: Int = 20000
+    let componentsPerPixel = 4
+    let bitsPerComponent = 8
+
 
     // MARK: Simulation state
 
+    var pixelData: [UInt8]
+
     private var cachedImage: CGImage?
-    /// A 2D array of the format [[x, y, dx, dy, intensity]]
-    private var rayQueue: [[Float]]
 }
