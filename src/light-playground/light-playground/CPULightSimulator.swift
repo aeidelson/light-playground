@@ -17,11 +17,12 @@ public class CPULightSimulator: LightSimulator {
         self.imageWidth = imageWidth
         self.imageHeight = imageHeight
 
-        let totalPixels = imageWidth * imageHeight
+        self.accumulator = Accumulator(
+            width: imageWidth,
+            height: imageHeight,
+            componentsPerPixel: componentsPerPixel)
 
-        let totalComponents = totalPixels * componentsPerPixel
-
-        pixelData = [UInt8](repeatElement(0, count: totalComponents))
+        pixelData = [UInt8](repeatElement(0, count: imageWidth * imageHeight * componentsPerPixel))
     }
 
     // MARK: LightSimulator
@@ -36,14 +37,15 @@ public class CPULightSimulator: LightSimulator {
         }
 
         // Stop the current computation if there is one
-        stop()
+        cleanup()
+
+        accumulator.randomize()
 
         // TODO: Intersect rays and convert into segments.
 
-        for i in 0..<(imageWidth * imageHeight) {
-            pixelData[i*4] = UInt8(arc4random() % UInt32(255))
-            pixelData[i*4+1] = UInt8(arc4random() % UInt32(255))
-            pixelData[i*4+2] = UInt8(arc4random() % UInt32(255))
+        let accumulated = accumulator.accumulated
+        for i in 0..<(totalComponents) {
+            pixelData[i] = UInt8(accumulated[i])
         }
 
         let providerRef = CGDataProvider(data: NSData(bytes: &pixelData, length: pixelData.count))
@@ -67,8 +69,17 @@ public class CPULightSimulator: LightSimulator {
         onDataChange()
     }
 
+    // Draws lines (in CG space) onto the pixelData.
+    public func drawLines(segments: [(p1: CGPoint, p2: CGPoint)]) {
+
+    }
+
     public func stop() {
         precondition(Thread.isMainThread)
+
+        // TODO: Stop async tasks
+
+        cleanup()
     }
 
     public var onDataChange: () -> Void = {_ in }
@@ -83,16 +94,64 @@ public class CPULightSimulator: LightSimulator {
 
     let imageWidth: Int
     let imageHeight: Int
-
-    // MARK: Constants
-
     let componentsPerPixel = 4
     let bitsPerComponent = 8
+    var totalPixels: Int {
+        return imageWidth * imageHeight
+    }
+    var totalComponents: Int {
+        return totalPixels * componentsPerPixel
+    }
 
+    private func cleanup() {
+        accumulator.clear()
+    }
 
     // MARK: Simulation state
 
+    // Used to accumulate rays before rendering pixel data.
+    var accumulator: Accumulator
+
+    // Used as pixels for cached image.
     var pixelData: [UInt8]
 
     private var cachedImage: CGImage?
+}
+
+class Accumulator {
+    public init(width: Int, height: Int, componentsPerPixel: Int) {
+        self.width = width
+        self.height = height
+        self.componentsPerPixel = componentsPerPixel
+
+        self.accumulated = [UInt64](repeatElement(0, count: width * height * componentsPerPixel))
+    }
+
+    public var accumulated: [UInt64]
+
+    public func clear() {
+        for i in 0..<totalComponents {
+            accumulated[i] = 0
+        }
+    }
+
+    public func randomize() {
+        for i in 0..<(totalPixels) {
+            accumulated[i*componentsPerPixel] = UInt64(arc4random() % UInt32(255))
+            accumulated[i*componentsPerPixel+1] = UInt64(arc4random() % UInt32(255))
+            accumulated[i*componentsPerPixel+2] = UInt64(arc4random() % UInt32(255))
+        }
+    }
+
+    // MARK: Private
+
+    private let width: Int
+    private let height: Int
+    private let componentsPerPixel: Int
+    private var totalPixels: Int {
+        return width * height
+    }
+    private var totalComponents: Int {
+        return totalPixels * componentsPerPixel
+    }
 }
