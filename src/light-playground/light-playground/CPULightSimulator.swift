@@ -39,13 +39,24 @@ public class CPULightSimulator: LightSimulator {
         // Stop the current computation if there is one
         cleanup()
 
-        accumulator.randomize()
+        let rays = 100000
+
+        let exposure = 0.65
+        let br = Float(exp(1 + 10 * exposure)) / Float(rays)
+
+        accumulator.randomizeSegments(n: rays)
 
         // TODO: Intersect rays and convert into segments.
 
         let accumulated = accumulator.accumulated
-        for i in 0..<(totalComponents) {
-            pixelData[i] = UInt8(accumulated[i])
+        for i in 0..<(totalPixels) {
+            let j = i * componentsPerPixel
+
+            pixelData[j] = UInt8(min(Float(UInt8.max), Float(accumulated[j]) * br))
+            //print("\((pixelData[j], accumulated[j]))")
+            pixelData[j+1] = UInt8(min(Float(UInt8.max), Float(accumulated[j]) * br))
+            pixelData[j+2] = UInt8(min(Float(UInt8.max), Float(accumulated[j]) * br))
+
         }
 
         let providerRef = CGDataProvider(data: NSData(bytes: &pixelData, length: pixelData.count))
@@ -135,11 +146,82 @@ class Accumulator {
         }
     }
 
-    public func randomize() {
+    // Randomize all the pixels, for debugging.
+    public func randomizePixels() {
         for i in 0..<(totalPixels) {
             accumulated[i*componentsPerPixel] = UInt64(arc4random() % UInt32(255))
             accumulated[i*componentsPerPixel+1] = UInt64(arc4random() % UInt32(255))
             accumulated[i*componentsPerPixel+2] = UInt64(arc4random() % UInt32(255))
+        }
+    }
+
+    public func randomizeSegments(n: Int) {
+        var segments = [LineSegment]()
+        for _ in 0..<n {
+            segments.append(LineSegment(
+                x0: Int(arc4random() % UInt32(width)),
+                y0: Int(arc4random() % UInt32(height)),
+                x1: Int(arc4random() % UInt32(width)),
+                y1: Int(arc4random() % UInt32(height)),
+                r: UInt8(arc4random() % UInt32(255)),
+                g: UInt8(arc4random() % UInt32(255)),
+                b: UInt8(arc4random() % UInt32(255)),
+                inverseIntensity: 1))
+        }
+        drawSegments(segments: segments)
+    }
+
+    public struct LineSegment {
+        public let x0: Int
+        public let y0: Int
+        public let x1: Int
+        public let y1: Int
+
+        public let r: UInt8
+        public let g: UInt8
+        public let b: UInt8
+
+        // The recorded color will be color * (1/inverseIntensity)
+        public let inverseIntensity: UInt64
+    }
+
+    public func drawSegments(segments: [LineSegment]) {
+        for segment in segments {
+            // Taken almost directly from:
+            // https://github.com/ssloy/tinyrenderer/wiki/Lesson-1:-Bresenham%E2%80%99s-Line-Drawing-Algorithm
+            var steep = false
+            var x0 = segment.x0
+            var y0 = segment.y0
+            var x1 = segment.x1
+            var y1 = segment.y1
+
+
+            if abs(x0 - x1) < abs(y0 - y1) {
+                swap(&x0, &y0)
+                swap(&x1, &y1)
+                steep = true
+            }
+            if x0 > x1 {
+                swap(&x0, &x1)
+                swap(&y0, &y1)
+            }
+            let dx = x1 - x0
+            let dy = y1 - y0
+            let derror2 = abs(dy) * 2
+            var error2 = 0
+            var y = y0
+            for x in x0...x1 {
+                let index = steep ? indexFromLocation(y, x) : indexFromLocation(x, y)
+                accumulated[index] += UInt64(segment.r)/segment.inverseIntensity
+                accumulated[index+1] += UInt64(segment.g)/segment.inverseIntensity
+                accumulated[index+2] += UInt64(segment.b)/segment.inverseIntensity
+
+                error2 += derror2
+                if error2 > dx {
+                    y += (y1 > y0 ? 1 : -1)
+                    error2 -= dx * 2
+                }
+            }
         }
     }
 
@@ -153,5 +235,15 @@ class Accumulator {
     }
     private var totalComponents: Int {
         return totalPixels * componentsPerPixel
+    }
+
+    // Returns the index of the first component.
+    func indexFromLocation(_ x: Int, _ y: Int) -> Int {
+        #if DEBUG
+        precondition(x < width)
+        precondition(y < height)
+        #endif
+
+        return y * width * componentsPerPixel + x * componentsPerPixel
     }
 }
