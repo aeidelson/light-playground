@@ -51,21 +51,39 @@ class MainViewController: UIViewController, CALayerDelegate {
         if case .light = currentInteractionMode {
             let lightLogation = sender.location(in: interactionView)
             lights.append(Light(
-                pos: (
-                    x: Float(lightLogation.x * drawLayer.contentsScale),
-                    y: Float(lightLogation.y * drawLayer.contentsScale))))
+                pos: CGPoint(
+                    x: lightLogation.x * drawLayer.contentsScale,
+                    y: lightLogation.y * drawLayer.contentsScale)))
             resetSimulator()
             print("Add light!")
         }
     }
 
     @IBAction func panGesture(_ sender: UIPanGestureRecognizer) {
-        if case .wall = currentInteractionMode, case .ended = sender.state {
+        switch (currentInteractionMode, sender.state) {
+        case (.wall, .began):
+            wallStartLocation = sender.location(in: interactionView)
+        case (.wall, .ended):
+            guard let start = wallStartLocation else { break }
+            let end = sender.location(in: interactionView)
+            walls.append(Wall(
+                pos1: CGPoint(
+                    x: start.x * drawLayer.contentsScale,
+                    y: start.y * drawLayer.contentsScale),
+                pos2: CGPoint(
+                    x: end.x * drawLayer.contentsScale,
+                    y: end.y * drawLayer.contentsScale)))
 
             resetSimulator()
             print("Add wall!")
+        default:
+            break
         }
     }
+
+    /// Used to track where the start of a wall was.
+    /// HACK: This should probably be encoded in the interaction enum eventually?
+    var wallStartLocation: CGPoint?
 
     private enum InteractionMode {
         case light

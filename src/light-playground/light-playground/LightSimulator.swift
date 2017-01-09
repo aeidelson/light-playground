@@ -1,12 +1,14 @@
 import Foundation
 import CoreGraphics
 
+// TODO: Consider changing all coords here to ints.
+
 public struct Light {
-    let pos: (x: Float, y: Float)
+    let pos: CGPoint
 }
 
 public struct Wall {
-    let pos1, pos2: (x: Float, y: Float)
+    let pos1, pos2: CGPoint
 }
 
 public struct SimulationLayout {
