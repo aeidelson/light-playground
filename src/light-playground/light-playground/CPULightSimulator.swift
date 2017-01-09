@@ -80,10 +80,6 @@ public class CPULightSimulator: LightSimulator {
         // TODO: This should probably be segments rather than rays?
         let rays = 10000
 
-        //accumulator.randomizeSegments(n: rays)
-
-        // TODO: Intersect rays and convert into segments.
-
         var segments = [LightSegment]()
 
         traceRays(layout: layout, producedSegments: &segments, maxSegments: rays)
@@ -92,7 +88,7 @@ public class CPULightSimulator: LightSimulator {
 
         cachedImage = generateImage(rays: rays)
 
-        // TODO: Call on main thread
+        // TODO: Call on main thread when running in background
         onDataChange()
     }
 
@@ -173,8 +169,6 @@ public class CPULightSimulator: LightSimulator {
             var closestIntersectionPoint: CGPoint?
             var closestDistance = FLT_MAX
 
-            print("========= RAY =========")
-
             for wall in allWalls {
                 // TODO: Should move all the (constant) ray calculations out of this loop.
                 // Given the equation `y = mx + b`
@@ -184,7 +178,6 @@ public class CPULightSimulator: LightSimulator {
                 let wallSlope = safeDivide((wall.pos2.y - wall.pos1.y), (wall.pos2.x - wall.pos1.x))
                 if abs(raySlope - wallSlope) < 0.01 {
                     // They are rounghly parallel, stop processing.
-                    print(">> Roughly parallel")
                     continue
                 }
 
@@ -206,8 +199,7 @@ public class CPULightSimulator: LightSimulator {
                 let positiveCollisionYDirection = (collisionY - ray.originY) >= 0
 
                 guard positiveXRayDirection == positiveCollisionXDirection &&
-                    positiveYRayDirection == positiveCollisionYDirection else {
-                        print(">> Wrong direction"); continue }
+                    positiveYRayDirection == positiveCollisionYDirection else { continue }
 
                 // Check if the collision points are inside the wall segment. Some buffer is added to handle horizontal
                 // or vertical lines.
@@ -218,8 +210,7 @@ public class CPULightSimulator: LightSimulator {
 
                 let collisionInWallY = segmentYRange.contains(CGFloat(collisionY))
 
-                guard collisionInWallX && collisionInWallY else {
-                    print(">> No collision with walls"); continue }
+                guard collisionInWallX && collisionInWallY else { continue }
 
                 // Check if the collision points are closer than the current closest
                 let distFromOrigin =
@@ -233,13 +224,6 @@ public class CPULightSimulator: LightSimulator {
             }
 
             // Create a light segment using whatever the closest collision was
-
-            /*
-            if closestIntersectionPoint == nil {
-                // TODO: Should intercept with image bounds instead.
-                closestIntersectionPoint = CGPoint(x: ray.originX + ray.dX, y: ray.originY + ray.dY)
-            }
- */
 
             guard  let segmentEndPoint = closestIntersectionPoint else { preconditionFailure() }
 
