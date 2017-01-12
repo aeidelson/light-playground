@@ -134,8 +134,6 @@ public class CPULightSimulator: LightSimulator {
 
             // Rays from light have both a random origin and a random direction.
             let rayOrigin = randomPointOnCircle(center: lightChosen.pos, radius: lightRadius)
-            //let rayOrigin = lightChosen.pos
-            //let rayDirection = CGPoint(x: 1.0, y: 100.0)
             let rayDirection = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 10000.0)
             rayBuffer.append(LightRay(
                 originX: rayOrigin.x,
@@ -167,6 +165,7 @@ public class CPULightSimulator: LightSimulator {
             guard insideImageBounds(x: Int(ray.originX.rounded()), y: Int(ray.originY.rounded())) else { continue }
 
             var closestIntersectionPoint: CGPoint?
+            var closestIntersectionWall: Wall?
             var closestDistance = FLT_MAX
 
             for wall in allWalls {
@@ -219,15 +218,18 @@ public class CPULightSimulator: LightSimulator {
 
                 if distFromOrigin < closestDistance {
                     closestDistance = distFromOrigin
+                    closestIntersectionWall = wall
                     closestIntersectionPoint = CGPoint(x: CGFloat(collisionX), y: CGFloat(collisionY))
                 }
             }
 
             // Create a light segment using whatever the closest collision was
 
-            guard  let segmentEndPoint = closestIntersectionPoint else { preconditionFailure() }
+            guard let segmentEndPoint = closestIntersectionPoint else { preconditionFailure() }
+            guard let _ = closestIntersectionWall else { preconditionFailure() }
 
             // TODO: Should spawn rays if bouncing off wall
+
             producedSegments.append(LightSegment(
                 x0: Int(ray.originX.rounded()),
                 y0: Int(ray.originY.rounded()),
