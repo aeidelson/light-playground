@@ -1,3 +1,5 @@
+/*
+
 import Foundation
 import UIKit
 import CoreGraphics
@@ -411,3 +413,4 @@ class Accumulator {
         return (y - 1) * width * componentsPerPixel + (x - 1) * componentsPerPixel
     }
 }
+ */

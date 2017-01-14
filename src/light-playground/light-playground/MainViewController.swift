@@ -21,9 +21,11 @@ class MainViewController: UIViewController, CALayerDelegate {
 
         // The simulator relies on the layout bounds, so it only makes sense to start the simulator
         // after it has been laid out.
+        /*
         simulator = CPULightSimulator(
             imageWidth: Int(drawLayer.frame.size.width * drawLayer.contentsScale),
             imageHeight: Int(drawLayer.frame.size.height * drawLayer.contentsScale))
+         */
 
         simulator?.onDataChange = { [weak self] in
             self?.drawLayer.display()
