@@ -3,7 +3,7 @@ import CoreGraphics
 
 /// Is responsible for asynchronously tracing rays in the scene.
 protocol Tracer {
-    init(completionQueue: DispatchQueue)
+    init(completionQueue: DispatchQueue, simulationSize: CGSize)
     
     /// Will stop the currently running trace if there is one. `completion` method will be called on some provided
     /// completion queue.

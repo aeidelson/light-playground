@@ -8,6 +8,7 @@ class LightGrid {
         self.height = Int(size.height.rounded())
         self.totalPixels = width * height
         self.data = Array(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
+        //self.imagePixelBuffer = Array(repeating: 0, count: totalPixels * componentsPerPixel)
     }
 
     public func reset() {
@@ -74,11 +75,18 @@ class LightGrid {
 
     /// `brightness` is a constant to multiply times each pixel.
     public func renderImage(brightness: CGFloat) -> CGImage? {
+        // Lazy-allocate the pixel buffer. This is done manually rather than using the `lazy` feature of swift because
+        // that seems to make make memory access much slower.
+        if imagePixelBuffer == nil {
+            imagePixelBuffer = Array(repeating: 0, count: totalPixels * componentsPerPixel)
+        }
+        guard var imagePixelBuffer = imagePixelBuffer else { preconditionFailure() }
+
         precondition(totalPixels == imagePixelBuffer.count / componentsPerPixel)
         for i in 0..<totalPixels {
-            imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(CGFloat(data[i].r) * brightness)
-            imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(CGFloat(data[i].g) * brightness)
-            imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(CGFloat(data[i].b) * brightness)
+            imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(CGFloat(data[i].r) * brightness, 255))
+            imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(CGFloat(data[i].g) * brightness, 255))
+            imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(min(CGFloat(data[i].b) * brightness, 255))
 
         }
 
@@ -128,10 +136,9 @@ class LightGrid {
     private let componentsPerPixel = 4
     private let bitsPerComponent = 8
 
-    // Only some grids will be used for actually generating images, lazy load the large pixel buffer.
-    lazy var imagePixelBuffer: [UInt8] = {
-        return Array(repeating: 0, count: self.totalPixels * self.componentsPerPixel)
-    }()
+    /// Only some grids will be used for actually generating images, lazy load the large pixel buffer.
+    /// Lazy allocating is done manually since the lazy keyword in swift seems to severely slow things down.
+    var imagePixelBuffer: [UInt8]?
 }
 
 /// Represents a single pixel in the light grid.

@@ -21,11 +21,10 @@ class MainViewController: UIViewController, CALayerDelegate {
 
         // The simulator relies on the layout bounds, so it only makes sense to start the simulator
         // after it has been laid out.
-        /*
-        simulator = CPULightSimulator(
-            imageWidth: Int(drawLayer.frame.size.width * drawLayer.contentsScale),
-            imageHeight: Int(drawLayer.frame.size.height * drawLayer.contentsScale))
-         */
+        simulator = LightSimulator(size: CGSize(
+            width: drawLayer.frame.size.width * drawLayer.contentsScale,
+            height: drawLayer.frame.size.height * drawLayer.contentsScale
+        ))
 
         simulator?.onDataChange = { [weak self] in
             self?.drawLayer.display()
@@ -108,7 +107,6 @@ class MainViewController: UIViewController, CALayerDelegate {
     /// Should be called any time the state of input to the simulator changes.
     private func resetSimulator() {
         simulator?.start(layout: SimulationLayout(
-            approxRayCount: 10000,
             lights: lights,
             walls: walls))
     }

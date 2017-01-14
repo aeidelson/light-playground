@@ -16,7 +16,6 @@
 		8E72C9AE1E276FA50057C08A /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* LightGrid.swift */; };
 		8E72C9B01E277A8F0057C08A /* CPUTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AF1E277A8F0057C08A /* CPUTracer.swift */; };
 		8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
-		8E9D54691E19D91200E7C927 /* CPULightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54681E19D91200E7C927 /* CPULightSimulator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +30,6 @@
 		8E72C9AD1E276FA50057C08A /* LightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightGrid.swift; sourceTree = "<group>"; };
 		8E72C9AF1E277A8F0057C08A /* CPUTracer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPUTracer.swift; sourceTree = "<group>"; };
 		8E9D54661E19D40700E7C927 /* LightSimulator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightSimulator.swift; sourceTree = "<group>"; };
-		8E9D54681E19D91200E7C927 /* CPULightSimulator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPULightSimulator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,7 +64,6 @@
 			children = (
 				8E1475451E19ADD50094CB28 /* AppDelegate.swift */,
 				8E1475471E19ADD50094CB28 /* MainViewController.swift */,
-				8E9D54681E19D91200E7C927 /* CPULightSimulator.swift */,
 				8E9D54661E19D40700E7C927 /* LightSimulator.swift */,
 				8E72C9A91E2754400057C08A /* Tracer.swift */,
 				8E72C9AF1E277A8F0057C08A /* CPUTracer.swift */,
@@ -153,7 +150,6 @@
 			files = (
 				8E1475481E19ADD50094CB28 /* MainViewController.swift in Sources */,
 				8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */,
-				8E9D54691E19D91200E7C927 /* CPULightSimulator.swift in Sources */,
 				8E72C9B01E277A8F0057C08A /* CPUTracer.swift in Sources */,
 				8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */,
 				8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */,

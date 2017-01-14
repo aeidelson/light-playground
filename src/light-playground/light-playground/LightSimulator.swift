@@ -11,6 +11,7 @@ import CoreGraphics
             |       |        |      |
       LightGrid LightGrid LightGrid LightGrid
 
+
  - LightGrid: Holds the light accumulation data (and helpers to mutate or read that data)
 
  - Tracer: Each is responsible for (asynchronously) tracing some number of rays and producing an accumulated grid data
@@ -32,7 +33,6 @@ public struct Wall {
 }
 
 public struct SimulationLayout {
-    public let approxRayCount: UInt64
     public let lights: [Light]
     public let walls: [Wall]
 }
@@ -62,18 +62,28 @@ public struct LightSegment {
 /// All functions/variables must be called or accessed from main thread.
 public class LightSimulator {
     init(size: CGSize) {
-
+        previewTracer = CPUTracer(completionQueue: .main, simulationSize: size)
     }
 
     /// Will erase any existing rays.
     func start(layout: SimulationLayout) {
+        let raysToTrace = 10000
 
+        let brightness = CGFloat(exp(1 + 10 * exposure)) / CGFloat(raysToTrace)
+
+        previewTracer.startAsync(
+            layout: layout,
+            raysToTrace: raysToTrace
+        ) { grid in
+            cachedImage = grid.renderImage(brightness: brightness)
+            onDataChange()
+        }
     }
 
     /// Will stop any further processing. No-op if the simulator hasn't been started, and not required before
     /// calling start again.
     func stop() {
-
+        previewTracer.stop()
     }
 
     /// Will be called when a new snapshot is available, on the main thread.
@@ -87,5 +97,8 @@ public class LightSimulator {
 
     // MARK: Private
 
+    private let exposure = 0.5
+
+    private let previewTracer: Tracer
     private var cachedImage: CGImage?
 }
