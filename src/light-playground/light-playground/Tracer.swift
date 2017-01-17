@@ -3,8 +3,6 @@ import CoreGraphics
 
 /// Incrementally traces rays in the scene and batches of LightSegments.
 protocol Tracer {
-    init(simulationSize: CGSize, maxSegmentsToTrace: Int)
-
     /// Stops any running traces starts incrementally tracing.
     func restartTrace(layout: SimulationLayout)
 
@@ -16,22 +14,24 @@ protocol Tracer {
 }
 
 class CPUTracer: Tracer {
-    required init(simulationSize: CGSize, maxSegmentsToTrace: Int) {
+    required init(traceQueue: OperationQueue, simulationSize: CGSize, maxSegmentsToTrace: Int) {
+        self.traceQueue = traceQueue
         self.simulationSize = simulationSize
         self.maxSegmentsToTrace = maxSegmentsToTrace
-        self.segmentBatchSize = 1000
+        self.segmentBatchSize = 10_000
     }
 
     func restartTrace(layout: SimulationLayout) {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
-        stopCurrentTrace()
+        // Note: The current queue will be flushed automatically in LightSimulator, since `traceQueue` is managed
+        // automatically.
 
-        /// There's nothing to show if there are no lights.
+        // There's nothing to show if there are no lights.
         guard layout.lights.count > 0 else { return }
 
-        currentlyExecuting = DispatchWorkItem { [weak self] in
+        currentlyExecuting = BlockOperation { [weak self] in
             guard let strongSelf = self else { return }
             guard let workItem = strongSelf.currentlyExecuting else { return }
 
@@ -48,13 +48,11 @@ class CPUTracer: Tracer {
             }
         }
 
-        traceQueue.async(execute: currentlyExecuting!)
+        traceQueue.addOperation(currentlyExecuting!)
     }
 
     func stop() {
-        objc_sync_enter(self)
-        stopCurrentTrace()
-        objc_sync_exit(self)
+        traceQueue.cancelAllOperations()
     }
 
     var incrementalSegmentsObservable = Observable<[LightSegment]>()
@@ -62,10 +60,10 @@ class CPUTracer: Tracer {
     // MARK: Private
 
     /// The queue to run traces on.
-    private let traceQueue = DispatchQueue(label: "trace_queue")
+    private let traceQueue: OperationQueue
 
     /// A worker to performing the current trace. Should lock on self when changing or accessing this value.
-    private var currentlyExecuting: DispatchWorkItem?
+    private var currentlyExecuting: Operation?
 
     private let simulationSize: CGSize
     private let maxSegmentsToTrace: Int
@@ -73,10 +71,10 @@ class CPUTracer: Tracer {
     private let lightRadius: CGFloat = 10.0
 
     // Should lock on `self` when calling this.
-    private func stopCurrentTrace() {
-        currentlyExecuting?.cancel()
-        currentlyExecuting = nil
-    }
+    //private func stopCurrentTrace() {
+        //currentlyExecuting?.cancel()
+        //currentlyExecuting = nil
+    //}
 
     /// Synchronously produces light segments given the simulation layout.
     /// This shouldn't rely on any mutable state outside of the function, as this may be running in parallel to other

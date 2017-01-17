@@ -28,7 +28,7 @@ class MainViewController: UIViewController, CALayerDelegate {
 
         // TODO: Unsubscribe from the simulator.
         _ = simulator?.simulationSnapshotObservable.subscribe(onQueue: .main) {[weak self] _ in
-            print("Got the accumulated image, set needs display")
+            //print("Got the accumulated image, set needs display")
             self?.drawLayer.display()
         }
 
@@ -38,7 +38,7 @@ class MainViewController: UIViewController, CALayerDelegate {
     // MARK: CALayerDelegate
 
     func display(_ layer: CALayer) {
-        print("Got the render callback")
+        //print("Got the render callback")
         drawLayer.contents = simulator?.simulationSnapshotObservable.latest?.image
     }
 
@@ -58,7 +58,7 @@ class MainViewController: UIViewController, CALayerDelegate {
                     x: lightLogation.x * drawLayer.contentsScale,
                     y: lightLogation.y * drawLayer.contentsScale)))
             resetSimulator()
-            print("Add light!")
+            //print("Add light!")
         }
     }
 
@@ -78,7 +78,7 @@ class MainViewController: UIViewController, CALayerDelegate {
                     y: end.y * drawLayer.contentsScale)))
 
             resetSimulator()
-            print("Add wall!")
+            //print("Add wall!")
         default:
             break
         }

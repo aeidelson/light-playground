@@ -46,7 +46,7 @@ final public class Observable<T> {
         return latestInternal
     }
 
-    public func subscribe(onQueue: DispatchQueue, callback: @escaping (T) -> Void) -> String {
+    public func subscribe(onQueue: OperationQueue, callback: @escaping (T) -> Void) -> String {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
@@ -72,7 +72,7 @@ final public class Observable<T> {
             let onQueue = subscriber.0
             let block = subscriber.1
 
-            onQueue.async {
+            onQueue.addOperation {
                 block(value)
             }
         }
@@ -81,5 +81,11 @@ final public class Observable<T> {
     // MARK: Private
 
     private var latestInternal: T?
-    private var subsribers: [Token: (DispatchQueue, (T) -> Void)] = [:]
+    private var subsribers: [Token: (OperationQueue, (T) -> Void)] = [:]
+}
+
+func serialOperationQueue() -> OperationQueue {
+    let queue = OperationQueue()
+    queue.maxConcurrentOperationCount = 1
+    return queue
 }

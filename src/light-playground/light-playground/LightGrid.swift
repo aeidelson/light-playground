@@ -84,22 +84,7 @@ class LightGrid {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
-        // Lazy-allocate the pixel buffer. This is done manually rather than using the `lazy` feature of swift because
-        // that seems to make make memory access much slower.
-        /*
-        if imagePixelBuffer == nil {
-            print("creating pixel buffer")
-            let bufferSize = totalPixels * componentsPerPixel
-            var buffer: [UInt8] = Array(repeating: 0, count: bufferSize)
-            imagePixelBuffer = buffer
-            imageDataProvider = CGDataProvider(data: NSData(bytes: &buffer, length: bufferSize))
-        }
-        guard var imagePixelBuffer = imagePixelBuffer else { preconditionFailure() }
- */
-
         let bufferSize = totalPixels * componentsPerPixel
-        //var imagePixelBuffer: [UInt8] = Array(repeating: 0, count: bufferSize)
-
         let imagePixelBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
 
         for i in 0..<totalPixels {

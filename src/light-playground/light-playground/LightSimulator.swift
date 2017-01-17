@@ -11,8 +11,7 @@ public class SimulationSnapshot {
 }
 
 public protocol LightSimulator {
-    init(simulationSize: CGSize)
-
+    
     /// Will erase any existing rays.
     func restartSimulation(layout: SimulationLayout)
 
@@ -24,19 +23,33 @@ public protocol LightSimulator {
 
 public class CPULightSimulator: LightSimulator {
     public required init(simulationSize: CGSize) {
-        let totalMaxSegments = 100000
-        let numberOfTracers = 1
+        var managedQueues = [OperationQueue]()
 
-        for _ in 0..<numberOfTracers {
+        simulatorQueue = serialOperationQueue()
+        managedQueues.append(simulatorQueue)
+
+        let tracerSegmentMax = [5_000, 10_000_000]
+        for segmentMax in tracerSegmentMax {
+            let traceQueue = serialOperationQueue()
+            managedQueues.append(traceQueue)
+
             let tracer = CPUTracer(
+                traceQueue: traceQueue,
                 simulationSize: simulationSize,
-                maxSegmentsToTrace: totalMaxSegments/numberOfTracers)
+                maxSegmentsToTrace: segmentMax)
 
             tracers.append(tracer)
         }
+        
+        let accumulatorQueue = serialOperationQueue()
+        managedQueues.append(accumulatorQueue)
 
+        accumulator = CPUAccumulator(
+            accumulatorQueue: accumulatorQueue,
+            simulationSize: simulationSize,
+            tracers: tracers)
 
-        accumulator = CPUAccumulator(simulationSize: simulationSize, tracers: tracers)
+        managedSerialQueues = managedQueues
 
         // TODO: Unsubscribe from token on deinit
         _ = accumulator.imageObservable.subscribe(onQueue: simulatorQueue) { [weak self] image in
@@ -46,6 +59,11 @@ public class CPULightSimulator: LightSimulator {
     }
 
     public func restartSimulation(layout: SimulationLayout) {
+        // This must happen first, so the work is started below.
+        for queue in managedSerialQueues {
+            queue.cancelAllOperations()
+        }
+
         for tracer in tracers {
             tracer.restartTrace(layout: layout)
         }
@@ -66,6 +84,15 @@ public class CPULightSimulator: LightSimulator {
     private let accumulator: Accumulator
     private var tracers = [Tracer]()
 
+    // Contains queues which are automatically cleared when the simulation layout changes.
+    private var managedSerialQueues: [OperationQueue]
+
     /// The queue to use for any top-level simulator logic.
-    private let simulatorQueue = DispatchQueue(label: "simulator_queue")
+    private let simulatorQueue: OperationQueue
+
+    private func createManagedSerialQueue() -> OperationQueue {
+        let queue = serialOperationQueue()
+        managedSerialQueues.append(queue)
+        return queue
+    }
 }
