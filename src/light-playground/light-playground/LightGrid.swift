@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-// Encapsulates the accumulated light trace grid and provides related functions.
+// Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
 class LightGrid {
     public init(size: CGSize) {
         self.width = Int(size.width.rounded())
@@ -12,6 +12,9 @@ class LightGrid {
     }
 
     public func reset() {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+
         for i in 0..<totalPixels {
             data[i].r = 0
             data[i].g = 0
@@ -20,6 +23,9 @@ class LightGrid {
     }
 
     public func drawSegments(segments: [LightSegment]) {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+
         for segment in segments {
             // Taken almost directly from:
             // https://github.com/ssloy/tinyrenderer/wiki/Lesson-1:-Bresenham%E2%80%99s-Line-Drawing-Algorithm
@@ -75,14 +81,27 @@ class LightGrid {
 
     /// `brightness` is a constant to multiply times each pixel.
     public func renderImage(brightness: CGFloat) -> CGImage? {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+
         // Lazy-allocate the pixel buffer. This is done manually rather than using the `lazy` feature of swift because
         // that seems to make make memory access much slower.
+        /*
         if imagePixelBuffer == nil {
-            imagePixelBuffer = Array(repeating: 0, count: totalPixels * componentsPerPixel)
+            print("creating pixel buffer")
+            let bufferSize = totalPixels * componentsPerPixel
+            var buffer: [UInt8] = Array(repeating: 0, count: bufferSize)
+            imagePixelBuffer = buffer
+            imageDataProvider = CGDataProvider(data: NSData(bytes: &buffer, length: bufferSize))
         }
         guard var imagePixelBuffer = imagePixelBuffer else { preconditionFailure() }
+ */
 
-        precondition(totalPixels == imagePixelBuffer.count / componentsPerPixel)
+        let bufferSize = totalPixels * componentsPerPixel
+        //var imagePixelBuffer: [UInt8] = Array(repeating: 0, count: bufferSize)
+
+        let imagePixelBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+
         for i in 0..<totalPixels {
             imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(CGFloat(data[i].r) * brightness, 255))
             imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(CGFloat(data[i].g) * brightness, 255))
@@ -90,7 +109,13 @@ class LightGrid {
 
         }
 
-        let providerRef = CGDataProvider(data: NSData(bytes: &imagePixelBuffer, length: imagePixelBuffer.count))
+        let imageDataProvider = CGDataProvider(
+            data: NSData(
+                bytesNoCopy: UnsafeMutableRawPointer(imagePixelBuffer),
+                length: bufferSize,
+                freeWhenDone: true))
+
+        //imageDataProvider = CGDataProvider(data: NSData(bytes: &imagePixelBuffer, length: totalPixels * componentsPerPixel))
         let bitsPerPixel = componentsPerPixel * bitsPerComponent
 
         return CGImage(
@@ -102,7 +127,7 @@ class LightGrid {
             space: CGColorSpaceCreateDeviceRGB(),
             // Alpha is ignored.
             bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
-            provider: providerRef!,
+            provider: imageDataProvider!,
             decode: nil,
             shouldInterpolate: true,
             intent: .defaultIntent)
@@ -138,7 +163,8 @@ class LightGrid {
 
     /// Only some grids will be used for actually generating images, lazy load the large pixel buffer.
     /// Lazy allocating is done manually since the lazy keyword in swift seems to severely slow things down.
-    var imagePixelBuffer: [UInt8]?
+    //private var imagePixelBuffer: [UInt8]?
+    //private var imageDataProvider: CGDataProvider?
 }
 
 /// Represents a single pixel in the light grid.

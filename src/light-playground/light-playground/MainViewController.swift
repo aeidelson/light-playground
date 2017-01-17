@@ -21,23 +21,25 @@ class MainViewController: UIViewController, CALayerDelegate {
 
         // The simulator relies on the layout bounds, so it only makes sense to start the simulator
         // after it has been laid out.
-        simulator = LightSimulator(size: CGSize(
+        simulator = CPULightSimulator(simulationSize: CGSize(
             width: drawLayer.frame.size.width * drawLayer.contentsScale,
             height: drawLayer.frame.size.height * drawLayer.contentsScale
         ))
 
-        simulator?.onDataChange = { [weak self] in
+        // TODO: Unsubscribe from the simulator.
+        _ = simulator?.simulationSnapshotObservable.subscribe(onQueue: .main) {[weak self] _ in
+            print("Got the accumulated image, set needs display")
             self?.drawLayer.display()
         }
 
         resetSimulator()
-    }
+     }
 
     // MARK: CALayerDelegate
 
     func display(_ layer: CALayer) {
-        let snapshot = simulator?.latestSnapshot
-        drawLayer.contents = snapshot?.image
+        print("Got the render callback")
+        drawLayer.contents = simulator?.simulationSnapshotObservable.latest?.image
     }
 
     // MARK: Private
@@ -106,7 +108,7 @@ class MainViewController: UIViewController, CALayerDelegate {
 
     /// Should be called any time the state of input to the simulator changes.
     private func resetSimulator() {
-        simulator?.start(layout: SimulationLayout(
+        simulator?.restartSimulation(layout: SimulationLayout(
             lights: lights,
             walls: walls))
     }

@@ -12,9 +12,10 @@
 		8E14754B1E19ADD50094CB28 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E1475491E19ADD50094CB28 /* Main.storyboard */; };
 		8E14754D1E19ADD50094CB28 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754C1E19ADD50094CB28 /* Assets.xcassets */; };
 		8E1475501E19ADD50094CB28 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754E1E19ADD50094CB28 /* LaunchScreen.storyboard */; };
+		8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
+		8E2293AB1E2C1191005CD3CD /* Accumulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293AA1E2C1191005CD3CD /* Accumulator.swift */; };
 		8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
 		8E72C9AE1E276FA50057C08A /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* LightGrid.swift */; };
-		8E72C9B01E277A8F0057C08A /* CPUTracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AF1E277A8F0057C08A /* CPUTracer.swift */; };
 		8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
 /* End PBXBuildFile section */
 
@@ -26,9 +27,10 @@
 		8E14754C1E19ADD50094CB28 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8E14754F1E19ADD50094CB28 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8E1475511E19ADD50094CB28 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8E2293A61E2C0C84005CD3CD /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
+		8E2293AA1E2C1191005CD3CD /* Accumulator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Accumulator.swift; sourceTree = "<group>"; };
 		8E72C9A91E2754400057C08A /* Tracer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Tracer.swift; sourceTree = "<group>"; };
 		8E72C9AD1E276FA50057C08A /* LightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightGrid.swift; sourceTree = "<group>"; };
-		8E72C9AF1E277A8F0057C08A /* CPUTracer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPUTracer.swift; sourceTree = "<group>"; };
 		8E9D54661E19D40700E7C927 /* LightSimulator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightSimulator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -64,9 +66,10 @@
 			children = (
 				8E1475451E19ADD50094CB28 /* AppDelegate.swift */,
 				8E1475471E19ADD50094CB28 /* MainViewController.swift */,
+				8E2293A61E2C0C84005CD3CD /* Common.swift */,
 				8E9D54661E19D40700E7C927 /* LightSimulator.swift */,
 				8E72C9A91E2754400057C08A /* Tracer.swift */,
-				8E72C9AF1E277A8F0057C08A /* CPUTracer.swift */,
+				8E2293AA1E2C1191005CD3CD /* Accumulator.swift */,
 				8E72C9AD1E276FA50057C08A /* LightGrid.swift */,
 				8E1475491E19ADD50094CB28 /* Main.storyboard */,
 				8E14754C1E19ADD50094CB28 /* Assets.xcassets */,
@@ -149,11 +152,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				8E1475481E19ADD50094CB28 /* MainViewController.swift in Sources */,
+				8E2293AB1E2C1191005CD3CD /* Accumulator.swift in Sources */,
 				8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */,
-				8E72C9B01E277A8F0057C08A /* CPUTracer.swift in Sources */,
 				8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */,
 				8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */,
 				8E72C9AE1E276FA50057C08A /* LightGrid.swift in Sources */,
+				8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

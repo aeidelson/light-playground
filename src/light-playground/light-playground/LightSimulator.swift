@@ -1,104 +1,71 @@
 import Foundation
 import CoreGraphics
 
-/* Architecture
-
- The simulator has the following rough architecture:
-
-                   LightSimulator
-                /    /       \     \
-          Tracer  Tracer  Tracer Tracer
-            |       |        |      |
-      LightGrid LightGrid LightGrid LightGrid
-
-
- - LightGrid: Holds the light accumulation data (and helpers to mutate or read that data)
-
- - Tracer: Each is responsible for (asynchronously) tracing some number of rays and producing an accumulated grid data
-
- - LightSimulator: A clean interface for the UI layer to interact with
-
- Note: Outside of the LightGrid, everything operates in CG variables (CGFloat, CGImage, CGVector, etc.)
-
- */
-
-// TODO: Consider changing all coords here to ints.
-
-public struct Light {
-    let pos: CGPoint
-}
-
-public struct Wall {
-    let pos1, pos2: CGPoint
-}
-
-public struct SimulationLayout {
-    public let lights: [Light]
-    public let walls: [Wall]
-}
-
 /// Contains the result of the simulation (so far)
 public class SimulationSnapshot {
-    public init(image: CGImage?) {
+    public init(image: CGImage) {
         self.image = image
     }
 
-    public let image: CGImage?
+    public let image: CGImage
 }
 
-public struct LightColor {
-    public let r: UInt8
-    public let g: UInt8
-    public let b: UInt8
-    /// TODO: Does it make sense to also include intensity?
-}
-
-public struct LightSegment {
-    public let p0: CGPoint
-    public let p1: CGPoint
-    public let color: LightColor
-}
-
-/// All functions/variables must be called or accessed from main thread.
-public class LightSimulator {
-    init(size: CGSize) {
-        previewTracer = CPUTracer(completionQueue: .main, simulationSize: size)
-    }
+public protocol LightSimulator {
+    init(simulationSize: CGSize)
 
     /// Will erase any existing rays.
-    func start(layout: SimulationLayout) {
-        let raysToTrace = 10000
+    func restartSimulation(layout: SimulationLayout)
 
-        let brightness = CGFloat(exp(1 + 10 * exposure)) / CGFloat(raysToTrace)
+    /// Will stop any further processing. No-op if the simulator hasn't been started.
+    func stop()
 
-        previewTracer.startAsync(
-            layout: layout,
-            raysToTrace: raysToTrace
-        ) { grid in
-            cachedImage = grid.renderImage(brightness: brightness)
-            onDataChange()
+    var simulationSnapshotObservable: Observable<SimulationSnapshot> { get }
+}
+
+public class CPULightSimulator: LightSimulator {
+    public required init(simulationSize: CGSize) {
+        let totalMaxSegments = 100000
+        let numberOfTracers = 1
+
+        for _ in 0..<numberOfTracers {
+            let tracer = CPUTracer(
+                simulationSize: simulationSize,
+                maxSegmentsToTrace: totalMaxSegments/numberOfTracers)
+
+            tracers.append(tracer)
+        }
+
+
+        accumulator = CPUAccumulator(simulationSize: simulationSize, tracers: tracers)
+
+        // TODO: Unsubscribe from token on deinit
+        _ = accumulator.imageObservable.subscribe(onQueue: simulatorQueue) { [weak self] image in
+            guard let strongSelf = self else { return }
+            strongSelf.simulationSnapshotObservable.notify(SimulationSnapshot(image: image))
         }
     }
 
-    /// Will stop any further processing. No-op if the simulator hasn't been started, and not required before
-    /// calling start again.
-    func stop() {
-        previewTracer.stop()
+    public func restartSimulation(layout: SimulationLayout) {
+        for tracer in tracers {
+            tracer.restartTrace(layout: layout)
+        }
+
+        accumulator.reset()
     }
 
-    /// Will be called when a new snapshot is available, on the main thread.
-    var onDataChange:  () -> Void = { }
-
-    public var latestSnapshot: SimulationSnapshot {
-        precondition(Thread.isMainThread)
-
-        return SimulationSnapshot(image: cachedImage)
+    public func stop() {
+        for tracer in tracers {
+            tracer.stop()
+        }
     }
+
+    public var simulationSnapshotObservable = Observable<SimulationSnapshot>()
 
     // MARK: Private
 
-    private let exposure = 0.5
+    private let accumulator: Accumulator
+    private var tracers = [Tracer]()
 
-    private let previewTracer: Tracer
-    private var cachedImage: CGImage?
+    /// The queue to use for any top-level simulator logic.
+    private let simulatorQueue = DispatchQueue(label: "simulator_queue")
 }
