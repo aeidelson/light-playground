@@ -40,7 +40,7 @@ public class CPULightSimulator: LightSimulator {
 
             tracers.append(tracer)
         }
-        
+
         let accumulatorQueue = serialOperationQueue()
         managedQueues.append(accumulatorQueue)
 

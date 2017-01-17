@@ -97,8 +97,9 @@ class CPUTracer: Tracer {
             let lightChosen = layout.lights[i % layout.lights.count]
 
             // Rays from light have both a random origin and a random direction.
-            let rayOrigin = randomPointOnCircle(center: lightChosen.pos, radius: lightRadius)
-            let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 10000.0)
+            //let rayOrigin = randomPointOnCircle(center: lightChosen.pos, radius: lightRadius)
+            let rayOrigin = lightChosen.pos
+            let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
             let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
             rayQueue.append(LightRay(
                 origin: rayOrigin,
@@ -108,13 +109,15 @@ class CPUTracer: Tracer {
         }
 
         // Hardcode walls to prevent out of index.
-        let maxX = simulationSize.width - 1.0
-        let maxY = simulationSize.height - 1.0
+        let minX: CGFloat = 1.0
+        let minY: CGFloat = 1.0
+        let maxX: CGFloat = simulationSize.width - 2.0
+        let maxY: CGFloat = simulationSize.height - 2.0
         var allWalls = [
-            Wall(pos1: CGPoint(x: 0.0, y: 0.0), pos2: CGPoint(x: maxX, y: 0)),
-            Wall(pos1: CGPoint(x: 0.0, y: 0.0), pos2: CGPoint(x: 0.0, y: maxY)),
-            Wall(pos1: CGPoint(x: maxX, y: 0.0), pos2: CGPoint(x: maxX, y: maxY)),
-            Wall(pos1: CGPoint(x: 0.0, y: maxY), pos2: CGPoint(x: maxX, y: maxY))
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY)),
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY)),
+            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY)),
+            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY))
         ]
         allWalls.append(contentsOf: layout.walls)
 
@@ -124,12 +127,17 @@ class CPUTracer: Tracer {
         while rayQueue.count > 0 && producedSegments.count < maxSegments {
             let ray = rayQueue.removeFirst()
 
-            // For simplicty, we ignore any rays that originate outside the image
-            guard isInsideSimulationBounds(simulationSize: simulationSize, point: ray.origin) else { continue }
+            // For safety, we ignore any rays that originate outside the image
+            guard isInsideSimulationBounds(
+                minX: minX,
+                minY: minY,
+                maxX: maxX,
+                maxY: maxY,
+                point: ray.origin) else { continue }
 
             var closestIntersectionPoint: CGPoint?
             var closestIntersectionWall: Wall?
-            var closestDistance = FLT_MAX
+            var closestDistance = CGFloat.greatestFiniteMagnitude
 
             for wall in allWalls {
                 // TODO: Should move all the (constant) ray calculations out of this loop.
@@ -176,7 +184,7 @@ class CPUTracer: Tracer {
 
                 // Check if the collision points are closer than the current closest
                 let distFromOrigin =
-                    sqrt(pow(Float(ray.origin.x - collisionX), 2) + pow(Float(ray.origin.y - collisionY), 2))
+                    sqrt(pow(ray.origin.x - collisionX, 2) + pow(ray.origin.y - collisionY, 2))
 
 
                 if distFromOrigin < closestDistance {
@@ -228,7 +236,12 @@ private func safeDivide(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
     return c
 }
 
-private func isInsideSimulationBounds(simulationSize: CGSize, point: CGPoint) -> Bool {
-    return (point.x >= 0) && (point.x < simulationSize.width) &&
-        (point.y >= 0) && (point.y < simulationSize.height)
+private func isInsideSimulationBounds(
+    minX: CGFloat,
+    minY: CGFloat,
+    maxX: CGFloat,
+    maxY: CGFloat,
+    point: CGPoint) -> Bool {
+    return (point.x >= minX) && (point.x <= maxX) &&
+        (point.y >= minY) && (point.y <= maxY)
 }

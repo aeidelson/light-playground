@@ -27,40 +27,11 @@ class LightGrid {
         defer { objc_sync_exit(self) }
 
         for segment in segments {
-            // Taken almost directly from:
-            // https://github.com/ssloy/tinyrenderer/wiki/Lesson-1:-Bresenham%E2%80%99s-Line-Drawing-Algorithm
-            var steep = false
-            var x0 = Int(segment.p0.x.rounded())
-            var y0 = Int(segment.p0.y.rounded())
-            var x1 = Int(segment.p1.x.rounded())
-            var y1 = Int(segment.p1.y.rounded())
-
-            if abs(x0 - x1) < abs(y0 - y1) {
-                swap(&x0, &y0)
-                swap(&x1, &y1)
-                steep = true
-            }
-            if x0 > x1 {
-                swap(&x0, &x1)
-                swap(&y0, &y1)
-            }
-            let dx = x1 - x0
-            let dy = y1 - y0
-            let derror2 = abs(dy) * 2
-            var error2 = 0
-            var y = y0
-            for x in x0...x1 {
-                let index = steep ? indexFromLocation(y, x) : indexFromLocation(x, y)
-                data[index].r += UInt64(segment.color.r)
-                data[index].g += UInt64(segment.color.g)
-                data[index].b += UInt64(segment.color.b)
-
-                error2 += derror2
-                if error2 > dx {
-                    y += (y1 > y0 ? 1 : -1)
-                    error2 -= dx * 2
-                }
-            }
+            BresenhamLightGridSegmentDraw.drawSegment(
+                gridWidth: width,
+                gridHeight: height,
+                data: &data,
+                segment: segment)
         }
     }
 
@@ -91,7 +62,6 @@ class LightGrid {
             imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(CGFloat(data[i].r) * brightness, 255))
             imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(CGFloat(data[i].g) * brightness, 255))
             imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(min(CGFloat(data[i].b) * brightness, 255))
-
         }
 
         let imageDataProvider = CGDataProvider(
@@ -129,18 +99,6 @@ class LightGrid {
 
     // MARK: Private
 
-    /// Returns the index of the pixel, and is a 0-based index.
-    func indexFromLocation(_ x: Int, _ y: Int) -> Int {
-        #if DEBUG
-            precondition(x >= 0)
-            precondition(x < width)
-            precondition(y >= 0)
-            precondition(y < height)
-        #endif
-
-        return y * width + x
-    }
-
     // MARK: Variables for generating images.
 
     private let componentsPerPixel = 4
@@ -157,4 +115,261 @@ fileprivate struct LightGridPixel {
     public var r: UInt64
     public var g: UInt64
     public var b: UInt64
+}
+
+/// Returns the index of the pixel, and is a 0-based index.
+private func indexFromLocation(_ gridWidth: Int, _ gridHeight: Int, _ x: Int, _ y: Int) -> Int {
+    #if DEBUG
+        precondition(x >= 0)
+        precondition(x < gridWidth)
+        precondition(y >= 0)
+        precondition(y < gridHeight)
+    #endif
+
+    return y * gridWidth + x
+}
+
+/// A private class to contain all the nasty line drawing code.
+/// Taken almost directly from:
+/// https://github.com/ssloy/tinyrenderer/wiki/Lesson-1:-Bresenham%E2%80%99s-Line-Drawing-Algorithm
+private class BresenhamLightGridSegmentDraw {
+    static func drawSegment(
+        gridWidth: Int,
+        gridHeight: Int,
+        data: inout [LightGridPixel],
+        segment: LightSegment
+    ) {
+        var steep = false
+        var x0 = Int(segment.p0.x.rounded())
+        var y0 = Int(segment.p0.y.rounded())
+        var x1 = Int(segment.p1.x.rounded())
+        var y1 = Int(segment.p1.y.rounded())
+
+        if abs(x0 - x1) < abs(y0 - y1) {
+            swap(&x0, &y0)
+            swap(&x1, &y1)
+            steep = true
+        }
+        if x0 > x1 {
+            swap(&x0, &x1)
+            swap(&y0, &y1)
+        }
+        let dx = x1 - x0
+        let dy = y1 - y0
+        let derror2 = abs(dy) * 2
+        var error2 = 0
+        var y = y0
+        for x in x0...x1 {
+            let index = steep ?
+                indexFromLocation(gridWidth, gridHeight, y, x) :
+                indexFromLocation(gridWidth, gridHeight, x, y)
+            data[index].r += UInt64(segment.color.r)
+            data[index].g += UInt64(segment.color.g)
+            data[index].b += UInt64(segment.color.b)
+
+            error2 += derror2
+            if error2 > dx {
+                y += (y1 > y0 ? 1 : -1)
+                error2 -= dx * 2
+            }
+        }
+    }
+}
+
+/// A private class to contain all the nasty line drawing code.
+/// Taken almost directly from: http://rosettacode.org/wiki/Xiaolin_Wu%27s_line_algorithm#C
+private class WuLightGridSegmentDraw {
+    private static func plot(
+        gridWidth: Int,
+        gridHeight: Int,
+        data: inout [LightGridPixel],
+        x: Int,
+        y: Int,
+        color: LightColor,
+        br: CGFloat
+    ) {
+        let index = indexFromLocation(gridWidth, gridHeight, x, y)
+        data[index].r += UInt64(CGFloat(color.r) * br)
+        data[index].g += UInt64(CGFloat(color.g) * br)
+        data[index].b += UInt64(CGFloat(color.b) * br)
+    }
+
+    private static func ipart(_ x: CGFloat) -> Int {
+        return Int(x)
+    }
+
+    private static func round(_ x: CGFloat) -> Int {
+        return ipart(x + 0.5)
+    }
+
+    private static func fpart(_ x: CGFloat) -> CGFloat {
+        if x < 0 {
+            return 1 - (x - floor(x))
+        }
+        return x - floor(x)
+    }
+
+    private static func rfpart(_ x: CGFloat) -> CGFloat {
+        return 1 - fpart(x)
+    }
+
+    static func drawSegment(
+        gridWidth: Int,
+        gridHeight: Int,
+        data: inout [LightGridPixel],
+        segment: LightSegment
+    ) {
+        var x0 = segment.p0.x
+        var y0 = segment.p0.y
+        var x1 = segment.p1.x
+        var y1 = segment.p1.y
+
+        let steep = abs(y1 - y0) > abs(x1 - x0)
+
+        if steep {
+            swap(&x0, &y0)
+            swap(&x1, &y1)
+        }
+
+        if x0 > x1 {
+            swap(&x0, &x1)
+            swap(&y0, &y1)
+        }
+
+        // First endpoint
+        let dx = x1 - x0
+        let dy = y1 - y0
+        let gradient = dy / dx // TODO: Safe divide?
+
+        var xend = round(x0)
+        var yend = y0 + gradient * (CGFloat(xend) - x0)
+        var xgap = rfpart(x0 + 0.5)
+        let xpxl1 = xend
+        let ypxl1 = ipart(yend)
+
+        if steep {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: ypxl1,
+                y: xpxl1,
+                color: segment.color,
+                br: rfpart(yend) * xgap)
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: ypxl1+1,
+                y: xpxl1,
+                color: segment.color,
+                br: fpart(yend) * xgap)
+        } else {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: xpxl1,
+                y: ypxl1,
+                color: segment.color,
+                br: rfpart(yend) * xgap)
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: xpxl1,
+                y: ypxl1+1,
+                color: segment.color,
+                br: fpart(yend) * xgap)
+        }
+
+        var intery = yend + gradient
+
+        // Second endpoint
+        xend = round(x1)
+        yend = y1 + gradient * (CGFloat(xend) - x1)
+        xgap = fpart(x1 + 0.5)
+        let xpxl2 = xend
+        let ypxl2 = ipart(yend)
+
+        if steep {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: ypxl2,
+                y: xpxl2,
+                color: segment.color,
+                br: rfpart(yend) * xgap)
+
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: ypxl2+1,
+                y: xpxl2,
+                color: segment.color,
+                br: fpart(yend) * xgap)
+        } else {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: xpxl2,
+                y: ypxl2,
+                color: segment.color,
+                br: rfpart(yend) * xgap)
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: xpxl2,
+                y: ypxl2+1,
+                color: segment.color,
+                br: fpart(yend) * xgap)
+        }
+
+        // Main loop
+        if steep {
+            for x in (xpxl1 + 1)...(xpxl2 - 1) {
+                plot(
+                    gridWidth: gridWidth,
+                    gridHeight: gridHeight,
+                    data: &data,
+                    x: ipart(intery),
+                    y: x,
+                    color: segment.color,
+                    br: rfpart(intery))
+                plot(
+                    gridWidth: gridWidth,
+                    gridHeight: gridHeight,
+                    data: &data,
+                    x: ipart(intery)+1,
+                    y: x,
+                    color: segment.color,
+                    br: fpart(intery))
+                intery = intery + gradient
+            }
+        } else {
+            for x in (xpxl1 + 1)...(xpxl2 - 1) {
+                plot(
+                    gridWidth: gridWidth,
+                    gridHeight: gridHeight,
+                    data: &data,
+                    x: x,
+                    y: ipart(intery),
+                    color: segment.color,
+                    br: rfpart(intery))
+                plot(
+                    gridWidth: gridWidth,
+                    gridHeight: gridHeight,
+                    data: &data,
+                    x: x,
+                    y: ipart(intery)+1,
+                    color: segment.color,
+                    br: fpart(intery))
+                intery = intery + gradient
+            }
+        }
+    }
 }
