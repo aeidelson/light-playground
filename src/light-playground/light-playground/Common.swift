@@ -89,3 +89,11 @@ func serialOperationQueue() -> OperationQueue {
     queue.maxConcurrentOperationCount = 1
     return queue
 }
+
+func safeDivide(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
+    let c = a / b
+    if c.isInfinite {
+        return 9999999
+    }
+    return c
+}

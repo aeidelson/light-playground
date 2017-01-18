@@ -228,14 +228,6 @@ private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
     )
 }
 
-private func safeDivide(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
-    let c = a / b
-    if c.isInfinite {
-        return 9999999
-    }
-    return c
-}
-
 private func isInsideSimulationBounds(
     minX: CGFloat,
     minY: CGFloat,

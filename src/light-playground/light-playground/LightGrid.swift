@@ -27,7 +27,7 @@ class LightGrid {
         defer { objc_sync_exit(self) }
 
         for segment in segments {
-            BresenhamLightGridSegmentDraw.drawSegment(
+            WuLightGridSegmentDraw.drawSegment(
                 gridWidth: width,
                 gridHeight: height,
                 data: &data,
@@ -139,6 +139,19 @@ private class BresenhamLightGridSegmentDraw {
         data: inout [LightGridPixel],
         segment: LightSegment
     ) {
+
+        // Figure out the color for the segment.
+        var dxCGFloat = abs(segment.p1.x - segment.p0.x)
+        var dyCGFloat = abs(segment.p1.y - segment.p0.y)
+        if dyCGFloat > dxCGFloat {
+            swap(&dxCGFloat, &dyCGFloat)
+        }
+
+        let br = safeDivide(sqrt(dxCGFloat*dxCGFloat + dyCGFloat*dyCGFloat), dxCGFloat)
+        let colorR = UInt64(CGFloat(segment.color.r) * br)
+        let colorG = UInt64(CGFloat(segment.color.g) * br)
+        let colorB = UInt64(CGFloat(segment.color.b) * br)
+
         var steep = false
         var x0 = Int(segment.p0.x.rounded())
         var y0 = Int(segment.p0.y.rounded())
@@ -163,9 +176,9 @@ private class BresenhamLightGridSegmentDraw {
             let index = steep ?
                 indexFromLocation(gridWidth, gridHeight, y, x) :
                 indexFromLocation(gridWidth, gridHeight, x, y)
-            data[index].r += UInt64(segment.color.r)
-            data[index].g += UInt64(segment.color.g)
-            data[index].b += UInt64(segment.color.b)
+            data[index].r += colorR
+            data[index].g += colorG
+            data[index].b += colorB
 
             error2 += derror2
             if error2 > dx {
@@ -186,12 +199,14 @@ private class WuLightGridSegmentDraw {
         x: Int,
         y: Int,
         color: LightColor,
-        br: CGFloat
+        br: CGFloat,
+        brCoeff: CGFloat
     ) {
+        let finalBrightness = br * brCoeff
         let index = indexFromLocation(gridWidth, gridHeight, x, y)
-        data[index].r += UInt64(CGFloat(color.r) * br)
-        data[index].g += UInt64(CGFloat(color.g) * br)
-        data[index].b += UInt64(CGFloat(color.b) * br)
+        data[index].r += UInt64(CGFloat(color.r) * finalBrightness)
+        data[index].g += UInt64(CGFloat(color.g) * finalBrightness)
+        data[index].b += UInt64(CGFloat(color.b) * finalBrightness)
     }
 
     private static func ipart(_ x: CGFloat) -> Int {
@@ -239,7 +254,10 @@ private class WuLightGridSegmentDraw {
         // First endpoint
         let dx = x1 - x0
         let dy = y1 - y0
-        let gradient = dy / dx // TODO: Safe divide?
+        let gradient = dy / dx
+
+        let brCoeff = safeDivide(sqrt(dx*dx + dy*dy), dx)
+
 
         var xend = round(x0)
         var yend = y0 + gradient * (CGFloat(xend) - x0)
@@ -255,7 +273,8 @@ private class WuLightGridSegmentDraw {
                 x: ypxl1,
                 y: xpxl1,
                 color: segment.color,
-                br: rfpart(yend) * xgap)
+                br: rfpart(yend) * xgap,
+                brCoeff: brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
@@ -263,7 +282,8 @@ private class WuLightGridSegmentDraw {
                 x: ypxl1+1,
                 y: xpxl1,
                 color: segment.color,
-                br: fpart(yend) * xgap)
+                br: fpart(yend) * xgap,
+                brCoeff: brCoeff)
         } else {
             plot(
                 gridWidth: gridWidth,
@@ -272,7 +292,8 @@ private class WuLightGridSegmentDraw {
                 x: xpxl1,
                 y: ypxl1,
                 color: segment.color,
-                br: rfpart(yend) * xgap)
+                br: rfpart(yend) * xgap,
+                brCoeff: brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
@@ -280,7 +301,8 @@ private class WuLightGridSegmentDraw {
                 x: xpxl1,
                 y: ypxl1+1,
                 color: segment.color,
-                br: fpart(yend) * xgap)
+                br: fpart(yend) * xgap,
+                brCoeff: brCoeff)
         }
 
         var intery = yend + gradient
@@ -300,7 +322,8 @@ private class WuLightGridSegmentDraw {
                 x: ypxl2,
                 y: xpxl2,
                 color: segment.color,
-                br: rfpart(yend) * xgap)
+                br: rfpart(yend) * xgap,
+                brCoeff: brCoeff)
 
             plot(
                 gridWidth: gridWidth,
@@ -309,7 +332,8 @@ private class WuLightGridSegmentDraw {
                 x: ypxl2+1,
                 y: xpxl2,
                 color: segment.color,
-                br: fpart(yend) * xgap)
+                br: fpart(yend) * xgap,
+                brCoeff: brCoeff)
         } else {
             plot(
                 gridWidth: gridWidth,
@@ -318,7 +342,8 @@ private class WuLightGridSegmentDraw {
                 x: xpxl2,
                 y: ypxl2,
                 color: segment.color,
-                br: rfpart(yend) * xgap)
+                br: rfpart(yend) * xgap,
+                brCoeff: brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
@@ -326,7 +351,8 @@ private class WuLightGridSegmentDraw {
                 x: xpxl2,
                 y: ypxl2+1,
                 color: segment.color,
-                br: fpart(yend) * xgap)
+                br: fpart(yend) * xgap,
+                brCoeff: brCoeff)
         }
 
         // Main loop
@@ -339,7 +365,8 @@ private class WuLightGridSegmentDraw {
                     x: ipart(intery),
                     y: x,
                     color: segment.color,
-                    br: rfpart(intery))
+                    br: rfpart(intery),
+                    brCoeff: brCoeff)
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
@@ -347,7 +374,8 @@ private class WuLightGridSegmentDraw {
                     x: ipart(intery)+1,
                     y: x,
                     color: segment.color,
-                    br: fpart(intery))
+                    br: fpart(intery),
+                    brCoeff: brCoeff)
                 intery = intery + gradient
             }
         } else {
@@ -359,7 +387,8 @@ private class WuLightGridSegmentDraw {
                     x: x,
                     y: ipart(intery),
                     color: segment.color,
-                    br: rfpart(intery))
+                    br: rfpart(intery),
+                    brCoeff: brCoeff)
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
@@ -367,7 +396,8 @@ private class WuLightGridSegmentDraw {
                     x: x,
                     y: ipart(intery)+1,
                     color: segment.color,
-                    br: fpart(intery))
+                    br: fpart(intery),
+                    brCoeff: brCoeff)
                 intery = intery + gradient
             }
         }
