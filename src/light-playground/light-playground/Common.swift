@@ -39,6 +39,7 @@ func NewToken() -> Token {
 /// Can be used to manage subscribers to a stream of data.
 final public class Observable<T> {
 
+    // TODO: This could deadlock if accessed from onQueue while `waitUntilAllOperationsAreFinished` is being called!
     var latest: T? {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
@@ -46,12 +47,16 @@ final public class Observable<T> {
         return latestInternal
     }
 
-    public func subscribe(onQueue: OperationQueue, callback: @escaping (T) -> Void) -> String {
+    public func subscribe(
+        onQueue: OperationQueue,
+        maxAsyncOperationCount: Int = 30,
+        block: @escaping (T) -> Void
+    ) -> String {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
         let token = NewToken()
-        subsribers[token] = (onQueue, callback)
+        subsribers[token] = (onQueue: onQueue, maxAsyncOperationCount: maxAsyncOperationCount, block: block)
         return token
     }
 
@@ -68,12 +73,15 @@ final public class Observable<T> {
 
         latestInternal = value
 
+        // TODO: This has the potential to starve a subscriber because another subscriber has too many operations.
+        // Could we do better?
         for subscriber in subsribers.values {
-            let onQueue = subscriber.0
-            let block = subscriber.1
+            if subscriber.onQueue.operationCount > subscriber.maxAsyncOperationCount {
+                subscriber.onQueue.waitUntilAllOperationsAreFinished()
+            }
 
-            onQueue.addOperation {
-                block(value)
+            subscriber.onQueue.addOperation {
+                subscriber.block(value)
             }
         }
     }
@@ -81,7 +89,10 @@ final public class Observable<T> {
     // MARK: Private
 
     private var latestInternal: T?
-    private var subsribers: [Token: (OperationQueue, (T) -> Void)] = [:]
+    private var subsribers: [Token: (
+        onQueue: OperationQueue,
+        maxAsyncOperationCount: Int,
+        block: (T) -> Void)] = [:]
 }
 
 func serialOperationQueue() -> OperationQueue {

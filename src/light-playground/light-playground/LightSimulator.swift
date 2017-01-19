@@ -28,7 +28,8 @@ public class CPULightSimulator: LightSimulator {
         simulatorQueue = serialOperationQueue()
         managedQueues.append(simulatorQueue)
 
-        let tracerSegmentMax = [5_000, 10_000_000]
+        //let tracerSegmentMax = [5_000, 10_000_000]
+        let tracerSegmentMax = [10_000_000]
         for segmentMax in tracerSegmentMax {
             let traceQueue = serialOperationQueue()
             managedQueues.append(traceQueue)
@@ -59,16 +60,19 @@ public class CPULightSimulator: LightSimulator {
     }
 
     public func restartSimulation(layout: SimulationLayout) {
-        // This must happen first, so the work is started below.
+        // Flush all of the operation queues.
         for queue in managedSerialQueues {
             queue.cancelAllOperations()
         }
+        for queue in managedSerialQueues {
+            queue.waitUntilAllOperationsAreFinished()
+        }
+
+        accumulator.reset()
 
         for tracer in tracers {
             tracer.restartTrace(layout: layout)
         }
-
-        accumulator.reset()
     }
 
     public func stop() {

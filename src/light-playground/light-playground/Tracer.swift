@@ -31,9 +31,10 @@ class CPUTracer: Tracer {
         // There's nothing to show if there are no lights.
         guard layout.lights.count > 0 else { return }
 
-        currentlyExecuting = BlockOperation { [weak self] in
+        var traceOperation: Operation?
+        traceOperation = BlockOperation { [weak self] in
             guard let strongSelf = self else { return }
-            guard let workItem = strongSelf.currentlyExecuting else { return }
+            guard let workItem = traceOperation else { return }
 
             var segmentsLeft = strongSelf.maxSegmentsToTrace
 
@@ -48,7 +49,7 @@ class CPUTracer: Tracer {
             }
         }
 
-        traceQueue.addOperation(currentlyExecuting!)
+        traceQueue.addOperation(traceOperation!)
     }
 
     func stop() {
@@ -62,19 +63,10 @@ class CPUTracer: Tracer {
     /// The queue to run traces on.
     private let traceQueue: OperationQueue
 
-    /// A worker to performing the current trace. Should lock on self when changing or accessing this value.
-    private var currentlyExecuting: Operation?
-
     private let simulationSize: CGSize
     private let maxSegmentsToTrace: Int
     private let segmentBatchSize: Int
     private let lightRadius: CGFloat = 10.0
-
-    // Should lock on `self` when calling this.
-    //private func stopCurrentTrace() {
-        //currentlyExecuting?.cancel()
-        //currentlyExecuting = nil
-    //}
 
     /// Synchronously produces light segments given the simulation layout.
     /// This shouldn't rely on any mutable state outside of the function, as this may be running in parallel to other

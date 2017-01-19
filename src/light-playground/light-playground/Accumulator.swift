@@ -20,6 +20,8 @@ class CPUAccumulator: Accumulator {
             ) { [weak self] segments in
                 guard let strongSelf = self else { return }
 
+                print(accumulatorQueue.operationCount)
+
                 strongSelf.handleNewSegments(segments)
             }
         }
