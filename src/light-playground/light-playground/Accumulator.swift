@@ -26,7 +26,7 @@ class CPUAccumulator: Accumulator {
             ) { [weak self] segmentResult in
                 guard let strongSelf = self else { return }
 
-                print(accumulatorQueue.operationCount)
+                //print(accumulatorQueue.operationCount)
 
                 strongSelf.handleNewSegments(segmentResult)
 
@@ -73,7 +73,7 @@ class CPUAccumulator: Accumulator {
 
         if let imageUnwrapped = image {
             //print("Sending out accumulated image")
-            print("Total segments: \(totalSegmentCount)")
+            //print("Total segments: \(totalSegmentCount)")
             imageObservable.notify(imageUnwrapped)
         }
     }

@@ -11,47 +11,40 @@ class LightGrid {
         self.width = Int(size.width.rounded())
         self.height = Int(size.height.rounded())
         self.totalPixels = width * height
-        self.data = Array(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
-        //self.imagePixelBuffer = Array(repeating: 0, count: totalPixels * componentsPerPixel)
+
+        // The data that backs the grid needs to be as high-performance as possible, so we manually allocate it to
+        // have complete control over things.
+        self.data = UnsafeMutablePointer<LightGridPixel>.allocate(capacity: totalPixels)
+        self.data.initialize(to: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
+    }
+
+    deinit {
+        self.data.deallocate(capacity: totalPixels)
     }
 
     public func reset() {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
-        for i in 0..<totalPixels {
-            data[i].r = 0
-            data[i].g = 0
-            data[i].b = 0
-        }
+        self.data.initialize(to: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
     }
 
     public func drawSegments(segmentResult: LightSegmentTraceResult) {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
+
+        let start = Date()
         for i in 0..<segmentResult.segmentsActuallyTraced {
             WuLightGridSegmentDraw.drawSegment(
                 gridWidth: width,
                 gridHeight: height,
-                data: &data,
+                data: data,
                 segment: segmentResult.array.ptr[i])
         }
-    }
-
-    /// Adds the values of each pixel in each grid to this one.
-    /// Crashes if they aren't all the same size.
-    public func combine(grids: [LightGrid]) {
-        for grid in grids {
-            precondition(width == grid.width)
-            precondition(height == grid.height)
-
-            for i in 0..<totalPixels {
-                data[i].r += grid.data[i].r
-                data[i].g += grid.data[i].g
-                data[i].b += grid.data[i].b
-            }
-        }
+        let totalCount = segmentResult.segmentsActuallyTraced
+        let elapsed = Date().timeIntervalSince(start)
+        print("Avg: \(Double(elapsed) / Double(totalCount) * 1000000) microsec per segment :Took \(elapsed) sec for \(totalCount) rays")
     }
 
     /// `brightness` is a constant to multiply times each pixel.
@@ -99,9 +92,11 @@ class LightGrid {
 
     fileprivate let totalPixels: Int
 
-    fileprivate var data: [LightGridPixel]
+    //fileprivate var data: [LightGridPixel]
 
     // MARK: Private
+
+    private var data: UnsafeMutablePointer<LightGridPixel>
 
     private let context: CPULightSimulatorContext
 
@@ -113,9 +108,9 @@ class LightGrid {
 
 /// Represents a single pixel in the light grid.
 fileprivate struct LightGridPixel {
-    public var r: UInt64
-    public var g: UInt64
-    public var b: UInt64
+    public var r: UInt32
+    public var g: UInt32
+    public var b: UInt32
 }
 
 /// Returns the index of the pixel, and is a 0-based index.
@@ -137,7 +132,7 @@ private class BresenhamLightGridSegmentDraw {
     static func drawSegment(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: UnsafeMutablePointer<LightGridPixel>,
         segment: LightSegment
     ) {
 
@@ -149,9 +144,9 @@ private class BresenhamLightGridSegmentDraw {
         }
 
         let br = safeDivide(sqrt(dxCGFloat*dxCGFloat + dyCGFloat*dyCGFloat), dxCGFloat)
-        let colorR = UInt64(CGFloat(segment.color.r) * br)
-        let colorG = UInt64(CGFloat(segment.color.g) * br)
-        let colorB = UInt64(CGFloat(segment.color.b) * br)
+        let colorR = UInt32(CGFloat(segment.color.r) * br)
+        let colorG = UInt32(CGFloat(segment.color.g) * br)
+        let colorB = UInt32(CGFloat(segment.color.b) * br)
 
         var steep = false
         var x0 = Int(segment.p0.x.rounded())
@@ -196,7 +191,7 @@ private class WuLightGridSegmentDraw {
     private static func plot(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: UnsafeMutablePointer<LightGridPixel>,
         x: Int,
         y: Int,
         color: LightColor,
@@ -204,10 +199,14 @@ private class WuLightGridSegmentDraw {
         brCoeff: CGFloat
     ) {
         let finalBrightness = br * brCoeff
+
         let index = indexFromLocation(gridWidth, gridHeight, x, y)
-        data[index].r += UInt64(CGFloat(color.r) * finalBrightness)
-        data[index].g += UInt64(CGFloat(color.g) * finalBrightness)
-        data[index].b += UInt64(CGFloat(color.b) * finalBrightness)
+        let initialPixel = data[index]
+        
+        data[index].r = initialPixel.r + UInt32(CGFloat(color.r) * finalBrightness)
+        data[index].g = initialPixel.g + UInt32(CGFloat(color.g) * finalBrightness)
+        data[index].b = initialPixel.b + UInt32(CGFloat(color.b) * finalBrightness)
+
     }
 
     private static func ipart(_ x: CGFloat) -> Int {
@@ -232,7 +231,7 @@ private class WuLightGridSegmentDraw {
     static func drawSegment(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: UnsafeMutablePointer<LightGridPixel>,
         segment: LightSegment
     ) {
         var x0 = segment.p0.x
@@ -270,7 +269,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: ypxl1,
                 y: xpxl1,
                 color: segment.color,
@@ -279,7 +278,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: ypxl1+1,
                 y: xpxl1,
                 color: segment.color,
@@ -289,7 +288,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: xpxl1,
                 y: ypxl1,
                 color: segment.color,
@@ -298,7 +297,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: xpxl1,
                 y: ypxl1+1,
                 color: segment.color,
@@ -319,7 +318,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: ypxl2,
                 y: xpxl2,
                 color: segment.color,
@@ -329,7 +328,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: ypxl2+1,
                 y: xpxl2,
                 color: segment.color,
@@ -339,7 +338,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: xpxl2,
                 y: ypxl2,
                 color: segment.color,
@@ -348,7 +347,7 @@ private class WuLightGridSegmentDraw {
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
-                data: &data,
+                data: data,
                 x: xpxl2,
                 y: ypxl2+1,
                 color: segment.color,
@@ -357,12 +356,13 @@ private class WuLightGridSegmentDraw {
         }
 
         // Main loop
+        
         if steep {
             for x in (xpxl1 + 1)...(xpxl2 - 1) {
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
-                    data: &data,
+                    data: data,
                     x: ipart(intery),
                     y: x,
                     color: segment.color,
@@ -371,7 +371,7 @@ private class WuLightGridSegmentDraw {
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
-                    data: &data,
+                    data: data,
                     x: ipart(intery)+1,
                     y: x,
                     color: segment.color,
@@ -384,7 +384,7 @@ private class WuLightGridSegmentDraw {
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
-                    data: &data,
+                    data: data,
                     x: x,
                     y: ipart(intery),
                     color: segment.color,
@@ -393,7 +393,7 @@ private class WuLightGridSegmentDraw {
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
-                    data: &data,
+                    data: data,
                     x: x,
                     y: ipart(intery)+1,
                     color: segment.color,

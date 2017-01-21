@@ -128,7 +128,7 @@ class UnsafeArrayManager<T> {
     init() { }
 
     func create(size: Int, fillWith: T) -> UnsafeArrayWrapper<T> {
-        print("Create size \(size)")
+        //print("Create size \(size)")
 
         objc_sync_enter(freeArrays)
         defer { objc_sync_exit(freeArrays) }
@@ -156,7 +156,7 @@ class UnsafeArrayManager<T> {
     }
 
     func release(array: UnsafeArrayWrapper<T>) {
-        print("Release size \(array.count)")
+        //print("Release size \(array.count)")
 
         objc_sync_enter(freeArrays)
         defer { objc_sync_exit(freeArrays) }
@@ -176,7 +176,7 @@ class UnsafeArrayManager<T> {
     /// Called when we want to free all arrays. Should only be called if we know they aren't in use anymore (i.e. after
     /// the simulation has been canceled and the operation queue drained).
     func releaseAll() {
-        print("Release all")
+        //print("Release all")
 
         objc_sync_enter(freeArrays)
         defer { objc_sync_exit(freeArrays) }
