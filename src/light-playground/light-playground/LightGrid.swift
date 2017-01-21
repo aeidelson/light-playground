@@ -3,7 +3,11 @@ import CoreGraphics
 
 // Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
 class LightGrid {
-    public init(size: CGSize) {
+    public init(
+        context: CPULightSimulatorContext,
+        size: CGSize
+    ) {
+        self.context = context
         self.width = Int(size.width.rounded())
         self.height = Int(size.height.rounded())
         self.totalPixels = width * height
@@ -22,16 +26,16 @@ class LightGrid {
         }
     }
 
-    public func drawSegments(segments: [LightSegment]) {
+    public func drawSegments(segmentResult: LightSegmentTraceResult) {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
-        for segment in segments {
+        for i in 0..<segmentResult.segmentsActuallyTraced {
             WuLightGridSegmentDraw.drawSegment(
                 gridWidth: width,
                 gridHeight: height,
                 data: &data,
-                segment: segment)
+                segment: segmentResult.array.ptr[i])
         }
     }
 
@@ -99,15 +103,12 @@ class LightGrid {
 
     // MARK: Private
 
+    private let context: CPULightSimulatorContext
+
     // MARK: Variables for generating images.
 
     private let componentsPerPixel = 4
     private let bitsPerComponent = 8
-
-    /// Only some grids will be used for actually generating images, lazy load the large pixel buffer.
-    /// Lazy allocating is done manually since the lazy keyword in swift seems to severely slow things down.
-    //private var imagePixelBuffer: [UInt8]?
-    //private var imageDataProvider: CGDataProvider?
 }
 
 /// Represents a single pixel in the light grid.

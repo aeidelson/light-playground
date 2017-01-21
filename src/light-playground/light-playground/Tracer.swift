@@ -10,11 +10,17 @@ protocol Tracer {
     func stop()
 
     /// Will be used to broadcast batches of segments as they are calculated.
-    var incrementalSegmentsObservable: Observable<[LightSegment]> { get }
+    var incrementalSegmentsObservable:  Observable<LightSegmentTraceResult> { get }
 }
 
 class CPUTracer: Tracer {
-    required init(traceQueue: OperationQueue, simulationSize: CGSize, maxSegmentsToTrace: Int) {
+    required init(
+        context: CPULightSimulatorContext,
+        traceQueue: OperationQueue,
+        simulationSize: CGSize,
+        maxSegmentsToTrace: Int
+    ) {
+        self.context = context
         self.traceQueue = traceQueue
         self.simulationSize = simulationSize
         self.maxSegmentsToTrace = maxSegmentsToTrace
@@ -22,8 +28,7 @@ class CPUTracer: Tracer {
     }
 
     func restartTrace(layout: SimulationLayout) {
-        objc_sync_enter(self)
-        defer { objc_sync_exit(self) }
+        stop()
 
         // Note: The current queue will be flushed automatically in LightSimulator, since `traceQueue` is managed
         // automatically.
@@ -38,14 +43,26 @@ class CPUTracer: Tracer {
 
             var segmentsLeft = strongSelf.maxSegmentsToTrace
 
-            while !workItem.isCancelled && segmentsLeft > 0 {
+            while !workItem.isCancelled  && segmentsLeft > 0 {
                 let currentBatchSize = min(strongSelf.segmentBatchSize, segmentsLeft)
-                let segmentsTraced = strongSelf.traceSingleBatch(layout: layout, maxSegments: currentBatchSize)
+
+                // For efficiency, we always create arrays with the total batch size. The actual number of
+                // segments drawn will be returned from `traceSingleBatch`
+                let segmentArray = strongSelf.context.lightSegmentArrayManager.create(
+                    size: strongSelf.segmentBatchSize,
+                    fillWith: LightSegment(p0: CGPoint.zero, p1: CGPoint.zero, color: LightColor(r: 0, g: 0, b: 0)))
+
+                let traceResult = strongSelf.traceSingleBatch(
+                    layout: layout,
+                    maxSegments: currentBatchSize,
+                    resultArray: segmentArray)
+                let segmentsCount = traceResult.segmentsActuallyTraced
 
                 /// Do a final check to see if the work has been cancelled, before notifying anything.
                 guard !workItem.isCancelled else { continue }
-                segmentsLeft -= segmentsTraced.count
-                strongSelf.incrementalSegmentsObservable.notify(segmentsTraced)
+                segmentsLeft -= segmentsCount
+
+                strongSelf.incrementalSegmentsObservable.notify(traceResult)
             }
         }
 
@@ -56,9 +73,11 @@ class CPUTracer: Tracer {
         traceQueue.cancelAllOperations()
     }
 
-    var incrementalSegmentsObservable = Observable<[LightSegment]>()
+    var incrementalSegmentsObservable = Observable<LightSegmentTraceResult>()
 
     // MARK: Private
+
+    private let context: CPULightSimulatorContext
 
     /// The queue to run traces on.
     private let traceQueue: OperationQueue
@@ -73,8 +92,9 @@ class CPUTracer: Tracer {
     /// traces if a trace is in the process of being canceled.
     private func traceSingleBatch(
         layout: SimulationLayout,
-        maxSegments: Int
-    ) -> [LightSegment] {
+        maxSegments: Int,
+        resultArray: UnsafeArrayWrapper<LightSegment>
+    ) -> LightSegmentTraceResult {
         /// There's nothing to show if there are no lights.
         guard layout.lights.count > 0 else { preconditionFailure() }
 
@@ -113,10 +133,8 @@ class CPUTracer: Tracer {
         ]
         allWalls.append(contentsOf: layout.walls)
 
-        var producedSegments = [LightSegment]()
-        producedSegments.reserveCapacity(maxSegments)
-
-        while rayQueue.count > 0 && producedSegments.count < maxSegments {
+        var producedSegmentCount = 0
+        while rayQueue.count > 0 && producedSegmentCount < maxSegments {
             let ray = rayQueue.removeFirst()
 
             // For safety, we ignore any rays that originate outside the image
@@ -146,7 +164,6 @@ class CPUTracer: Tracer {
                 // Calculate `b` using: `b = y - mx`
                 let rayYIntercept = ray.origin.y - raySlope * ray.origin.x
                 let wallYIntercept = wall.pos1.y - wallSlope * wall.pos1.x
-
 
                 // Calculate x-collision (derived from equations above)
                 let collisionX = safeDivide((wallYIntercept - rayYIntercept), (raySlope - wallSlope))
@@ -192,14 +209,15 @@ class CPUTracer: Tracer {
             guard let _ = closestIntersectionWall else { preconditionFailure() }
             
             // TODO: Should spawn rays if bouncing off wall
-            
-            producedSegments.append(LightSegment(
+
+            resultArray.ptr[producedSegmentCount] = LightSegment(
                 p0: ray.origin,
                 p1: segmentEndPoint,
-                color: ray.color))
+                color: ray.color)
+            producedSegmentCount += 1
         }
 
-        return producedSegments
+        return (segmentsActuallyTraced: producedSegmentCount, array: resultArray)
     }
 }
 

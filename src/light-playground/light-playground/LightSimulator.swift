@@ -10,7 +10,7 @@ public class SimulationSnapshot {
     public let image: CGImage
 }
 
-public protocol LightSimulator {
+public protocol LightSimulator: class {
     
     /// Will erase any existing rays.
     func restartSimulation(layout: SimulationLayout)
@@ -21,32 +21,47 @@ public protocol LightSimulator {
     var simulationSnapshotObservable: Observable<SimulationSnapshot> { get }
 }
 
+/// A context object which instances used throughout the the simulator.
+class CPULightSimulatorContext {
+    init() {
+    }
+
+    public let lightSegmentArrayManager = UnsafeArrayManager<LightSegment>()
+}
+
 public class CPULightSimulator: LightSimulator {
     public required init(simulationSize: CGSize) {
-        var managedQueues = [OperationQueue]()
 
-        simulatorQueue = serialOperationQueue()
-        managedQueues.append(simulatorQueue)
+        context = CPULightSimulatorContext()
 
+        var managedQueues = [(DispatchQueue, OperationQueue)]()
+
+        let simulatorManagedQueue = serialOperationQueue()
+        managedQueues.append(simulatorManagedQueue)
+        simulatorQueue = simulatorManagedQueue.1
+
+        let tracerSegmentMax = [1_000_000]
         //let tracerSegmentMax = [5_000, 10_000_000]
-        let tracerSegmentMax = [10_000_000]
+        //let tracerSegmentMax = [1_000_000_000, 1_000_000_000, 1_000_000_000, 1_000_000_000]
         for segmentMax in tracerSegmentMax {
-            let traceQueue = serialOperationQueue()
-            managedQueues.append(traceQueue)
+            let traceManagedQueue = serialOperationQueue()
+            managedQueues.append(traceManagedQueue)
 
             let tracer = CPUTracer(
-                traceQueue: traceQueue,
+                context: context,
+                traceQueue: traceManagedQueue.1,
                 simulationSize: simulationSize,
                 maxSegmentsToTrace: segmentMax)
 
             tracers.append(tracer)
         }
 
-        let accumulatorQueue = serialOperationQueue()
-        managedQueues.append(accumulatorQueue)
+        let accumulatorManagedQueue = serialOperationQueue()
+        managedQueues.append(accumulatorManagedQueue)
 
         accumulator = CPUAccumulator(
-            accumulatorQueue: accumulatorQueue,
+            context: context,
+            accumulatorQueue: accumulatorManagedQueue.1,
             simulationSize: simulationSize,
             tracers: tracers)
 
@@ -61,14 +76,17 @@ public class CPULightSimulator: LightSimulator {
 
     public func restartSimulation(layout: SimulationLayout) {
         // Flush all of the operation queues.
-        for queue in managedSerialQueues {
-            queue.cancelAllOperations()
+        for managedQueue in managedSerialQueues {
+            managedQueue.1.cancelAllOperations()
         }
-        for queue in managedSerialQueues {
-            queue.waitUntilAllOperationsAreFinished()
+        for managedQueue in managedSerialQueues {
+            managedQueue.1.waitUntilAllOperationsAreFinished()
         }
 
         accumulator.reset()
+
+        // Clean up any light segment arrays that shouldn't be in use anymore (since we've killed all operations)
+        context.lightSegmentArrayManager.releaseAll()
 
         for tracer in tracers {
             tracer.restartTrace(layout: layout)
@@ -83,20 +101,19 @@ public class CPULightSimulator: LightSimulator {
 
     public var simulationSnapshotObservable = Observable<SimulationSnapshot>()
 
+    // MARK: Internal
+
+    let lightSegmentArrayManager = UnsafeArrayManager<LightSegment>()
+
     // MARK: Private
 
+    private let context: CPULightSimulatorContext
     private let accumulator: Accumulator
     private var tracers = [Tracer]()
 
     // Contains queues which are automatically cleared when the simulation layout changes.
-    private var managedSerialQueues: [OperationQueue]
+    private var managedSerialQueues: [(DispatchQueue, OperationQueue)]
 
     /// The queue to use for any top-level simulator logic.
     private let simulatorQueue: OperationQueue
-
-    private func createManagedSerialQueue() -> OperationQueue {
-        let queue = serialOperationQueue()
-        managedSerialQueues.append(queue)
-        return queue
-    }
 }

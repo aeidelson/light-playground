@@ -9,20 +9,29 @@ protocol Accumulator {
 }
 
 class CPUAccumulator: Accumulator {
-    required init(accumulatorQueue: OperationQueue, simulationSize: CGSize, tracers: [Tracer]) {
+    init(
+        context: CPULightSimulatorContext,
+        accumulatorQueue: OperationQueue,
+        simulationSize: CGSize,
+        tracers: [Tracer]
+    ) {
+        self.context = context
         self.accumulatorQueue = accumulatorQueue
-        self.grid = LightGrid(size: simulationSize)
+        self.grid = LightGrid(context: context, size: simulationSize)
 
         for tracer in tracers {
             // TODO: Unsubscribe using the returned token, on deinit.
             _ = tracer.incrementalSegmentsObservable.subscribe(
                 onQueue: accumulatorQueue
-            ) { [weak self] segments in
+            ) { [weak self] segmentResult in
                 guard let strongSelf = self else { return }
 
                 print(accumulatorQueue.operationCount)
 
-                strongSelf.handleNewSegments(segments)
+                strongSelf.handleNewSegments(segmentResult)
+
+                strongSelf.context.lightSegmentArrayManager.release(array: segmentResult.array)
+
             }
         }
     }
@@ -43,20 +52,20 @@ class CPUAccumulator: Accumulator {
 
     // MARK: Private
 
+    private let context: CPULightSimulatorContext
     private let grid: LightGrid
     private var totalSegmentCount: Int = 0
 
     /// Will be called on background queue.
-    private func handleNewSegments(_ segments: [LightSegment]) {
-        //print("Got new segments")
+    private func handleNewSegments(_ segmentResult: LightSegmentTraceResult) {
 
-        totalSegmentCount += segments.count
+        totalSegmentCount += segmentResult.segmentsActuallyTraced
 
         var image: CGImage?
 
         //print ("Drawing some segments")
 
-        grid.drawSegments(segments: segments)
+        grid.drawSegments(segmentResult: segmentResult)
         let exposure = CGFloat(0.55) // TODO: Move to constant
 
         //print ("Rendering image")

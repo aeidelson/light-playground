@@ -27,8 +27,9 @@ class MainViewController: UIViewController, CALayerDelegate {
         ))
 
         // TODO: Unsubscribe from the simulator.
-        _ = simulator?.simulationSnapshotObservable.subscribe(onQueue: .main) {[weak self] _ in
+        _ = simulator?.simulationSnapshotObservable.subscribe(onQueue: .main) {[weak self] snapshot in
             //print("Got the accumulated image, set needs display")
+            self?.latestImage = snapshot.image
             self?.drawLayer.display()
         }
 
@@ -39,11 +40,12 @@ class MainViewController: UIViewController, CALayerDelegate {
 
     func display(_ layer: CALayer) {
         //print("Got the render callback")
-        drawLayer.contents = simulator?.simulationSnapshotObservable.latest?.image
+        drawLayer.contents = latestImage
     }
 
     // MARK: Private
     private let drawLayer = CALayer()
+    private var latestImage: CGImage?
 
     // MARK: Handle user interaction
 
