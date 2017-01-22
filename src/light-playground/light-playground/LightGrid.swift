@@ -52,13 +52,14 @@ class LightGrid {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
+        let brightnessf = Float(brightness)
         let bufferSize = totalPixels * componentsPerPixel
         let imagePixelBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
 
         for i in 0..<totalPixels {
-            imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(CGFloat(data[i].r) * brightness, 255))
-            imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(CGFloat(data[i].g) * brightness, 255))
-            imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(min(CGFloat(data[i].b) * brightness, 255))
+            imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(Float(data[i].r) * brightnessf, 255))
+            imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(Float(data[i].g) * brightnessf, 255))
+            imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(min(Float(data[i].b) * brightnessf, 255))
         }
 
         let imageDataProvider = CGDataProvider(
@@ -137,16 +138,16 @@ private class BresenhamLightGridSegmentDraw {
     ) {
 
         // Figure out the color for the segment.
-        var dxCGFloat = abs(segment.p1.x - segment.p0.x)
-        var dyCGFloat = abs(segment.p1.y - segment.p0.y)
-        if dyCGFloat > dxCGFloat {
-            swap(&dxCGFloat, &dyCGFloat)
+        var dxFloat = abs(Float(segment.p1.x) - Float(segment.p0.x))
+        var dyFloat = abs(Float(segment.p1.y) - Float(segment.p0.y))
+        if dyFloat > dxFloat {
+            swap(&dxFloat, &dyFloat)
         }
 
-        let br = safeDivide(sqrt(dxCGFloat*dxCGFloat + dyCGFloat*dyCGFloat), dxCGFloat)
-        let colorR = UInt32(CGFloat(segment.color.r) * br)
-        let colorG = UInt32(CGFloat(segment.color.g) * br)
-        let colorB = UInt32(CGFloat(segment.color.b) * br)
+        let br = safeDividef(sqrtf(dxFloat*dxFloat + dyFloat*dyFloat), dxFloat)
+        let colorR = UInt32(Float(segment.color.r) * br)
+        let colorG = UInt32(Float(segment.color.g) * br)
+        let colorB = UInt32(Float(segment.color.b) * br)
 
         var steep = false
         var x0 = Int(segment.p0.x.rounded())
@@ -194,38 +195,43 @@ private class WuLightGridSegmentDraw {
         data: UnsafeMutablePointer<LightGridPixel>,
         x: Int,
         y: Int,
-        color: LightColor,
-        br: CGFloat,
-        brCoeff: CGFloat
+        color: (Float, Float, Float),
+        br: Float
     ) {
-        let finalBrightness = br * brCoeff
-
         let index = indexFromLocation(gridWidth, gridHeight, x, y)
         let initialPixel = data[index]
-        
-        data[index].r = initialPixel.r + UInt32(CGFloat(color.r) * finalBrightness)
-        data[index].g = initialPixel.g + UInt32(CGFloat(color.g) * finalBrightness)
-        data[index].b = initialPixel.b + UInt32(CGFloat(color.b) * finalBrightness)
 
+        data[index].r = initialPixel.r + UInt32(color.0 * br)
+        data[index].g = initialPixel.g + UInt32(color.1 * br)
+        data[index].b = initialPixel.b + UInt32(color.2 * br)
     }
 
-    private static func ipart(_ x: CGFloat) -> Int {
+    private static func ipart(_ x: Float) -> Int {
         return Int(x)
     }
 
-    private static func round(_ x: CGFloat) -> Int {
+    private static func round(_ x: Float) -> Int {
         return ipart(x + 0.5)
     }
 
-    private static func fpart(_ x: CGFloat) -> CGFloat {
+    private static func fpart(_ x: Float) -> Float {
         if x < 0 {
             return 1 - (x - floor(x))
         }
         return x - floor(x)
     }
 
-    private static func rfpart(_ x: CGFloat) -> CGFloat {
+    private static func rfpart(_ x: Float) -> Float {
         return 1 - fpart(x)
+    }
+
+    // An optimization for cases where we want both the rfpart and the fpart.
+    private static func rffpart(_ x: Float) -> (rfpart: Float, fpart: Float) {
+        let fp = fpart(x)
+        return (
+            rfpart: 1 - fp,
+            fpart: fp
+        )
     }
 
     static func drawSegment(
@@ -234,10 +240,14 @@ private class WuLightGridSegmentDraw {
         data: UnsafeMutablePointer<LightGridPixel>,
         segment: LightSegment
     ) {
-        var x0 = segment.p0.x
-        var y0 = segment.p0.y
-        var x1 = segment.p1.x
-        var y1 = segment.p1.y
+        var x0 = Float(segment.p0.x)
+        var y0 = Float(segment.p0.y)
+        var x1 = Float(segment.p1.x)
+        var y1 = Float(segment.p1.y)
+
+        // As an optimization, we convert the color to float once.
+        let lightColorFloat = (Float(segment.color.r), Float(segment.color.g), Float(segment.color.b))
+
 
         let steep = abs(y1 - y0) > abs(x1 - x0)
 
@@ -256,11 +266,11 @@ private class WuLightGridSegmentDraw {
         let dy = y1 - y0
         let gradient = dy / dx
 
-        let brCoeff = safeDivide(sqrt(dx*dx + dy*dy), dx)
+        let brCoeff = safeDividef(sqrtf(dx*dx + dy*dy), dx)
 
 
         var xend = round(x0)
-        var yend = y0 + gradient * (CGFloat(xend) - x0)
+        var yend = y0 + gradient * (Float(xend) - x0)
         var xgap = rfpart(x0 + 0.5)
         let xpxl1 = xend
         let ypxl1 = ipart(yend)
@@ -272,18 +282,16 @@ private class WuLightGridSegmentDraw {
                 data: data,
                 x: ypxl1,
                 y: xpxl1,
-                color: segment.color,
-                br: rfpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: rfpart(yend) * xgap * brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
                 data: data,
                 x: ypxl1+1,
                 y: xpxl1,
-                color: segment.color,
-                br: fpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: fpart(yend) * xgap * brCoeff)
         } else {
             plot(
                 gridWidth: gridWidth,
@@ -291,25 +299,23 @@ private class WuLightGridSegmentDraw {
                 data: data,
                 x: xpxl1,
                 y: ypxl1,
-                color: segment.color,
-                br: rfpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: rfpart(yend) * xgap * brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
                 data: data,
                 x: xpxl1,
                 y: ypxl1+1,
-                color: segment.color,
-                br: fpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: fpart(yend) * xgap * brCoeff)
         }
 
         var intery = yend + gradient
 
         // Second endpoint
         xend = round(x1)
-        yend = y1 + gradient * (CGFloat(xend) - x1)
+        yend = y1 + gradient * (Float(xend) - x1)
         xgap = fpart(x1 + 0.5)
         let xpxl2 = xend
         let ypxl2 = ipart(yend)
@@ -321,19 +327,16 @@ private class WuLightGridSegmentDraw {
                 data: data,
                 x: ypxl2,
                 y: xpxl2,
-                color: segment.color,
-                br: rfpart(yend) * xgap,
-                brCoeff: brCoeff)
-
+                color: lightColorFloat,
+                br: rfpart(yend) * xgap * brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
                 data: data,
                 x: ypxl2+1,
                 y: xpxl2,
-                color: segment.color,
-                br: fpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: fpart(yend) * xgap * brCoeff)
         } else {
             plot(
                 gridWidth: gridWidth,
@@ -341,65 +344,71 @@ private class WuLightGridSegmentDraw {
                 data: data,
                 x: xpxl2,
                 y: ypxl2,
-                color: segment.color,
-                br: rfpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: rfpart(yend) * xgap * brCoeff)
             plot(
                 gridWidth: gridWidth,
                 gridHeight: gridHeight,
                 data: data,
                 x: xpxl2,
                 y: ypxl2+1,
-                color: segment.color,
-                br: fpart(yend) * xgap,
-                brCoeff: brCoeff)
+                color: lightColorFloat,
+                br: fpart(yend) * xgap * brCoeff)
         }
 
-        // Main loop
-        
+        // Main loop. This is called a lot, so should be made as efficient as possible.
+
         if steep {
-            for x in (xpxl1 + 1)...(xpxl2 - 1) {
+            // For efficiency, we use the a while loop rather than the normal swift range.
+            var x = (xpxl1 + 1)
+            while x <= (xpxl2 - 1) {
+                let precalcIpart = ipart(intery)
+                let parts = rffpart(intery)
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
                     data: data,
-                    x: ipart(intery),
+                    x: precalcIpart,
                     y: x,
-                    color: segment.color,
-                    br: rfpart(intery),
-                    brCoeff: brCoeff)
+                    color: lightColorFloat,
+                    br: parts.rfpart * brCoeff)
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
                     data: data,
-                    x: ipart(intery)+1,
+                    x: precalcIpart+1,
                     y: x,
-                    color: segment.color,
-                    br: fpart(intery),
-                    brCoeff: brCoeff)
+                    color: lightColorFloat,
+                    br: parts.fpart * brCoeff)
                 intery = intery + gradient
+
+                x += 1
             }
         } else {
-            for x in (xpxl1 + 1)...(xpxl2 - 1) {
+            // For efficiency, we use the a while loop rather than the normal swift range.
+            var x = (xpxl1 + 1)
+            while x <= (xpxl2 - 1) {
+                let precalcIpart = ipart(intery)
+                let parts = rffpart(intery)
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
                     data: data,
                     x: x,
-                    y: ipart(intery),
-                    color: segment.color,
-                    br: rfpart(intery),
-                    brCoeff: brCoeff)
+                    y: precalcIpart,
+                    color: lightColorFloat,
+                    br: parts.rfpart * brCoeff)
                 plot(
                     gridWidth: gridWidth,
                     gridHeight: gridHeight,
                     data: data,
                     x: x,
-                    y: ipart(intery)+1,
-                    color: segment.color,
-                    br: fpart(intery),
-                    brCoeff: brCoeff)
+                    y: precalcIpart+1,
+                    color: lightColorFloat,
+                    br: parts.fpart * brCoeff)
                 intery = intery + gradient
+
+                x += 1
             }
         }
     }

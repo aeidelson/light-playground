@@ -18,13 +18,14 @@ class CPUTracer: Tracer {
         context: CPULightSimulatorContext,
         traceQueue: OperationQueue,
         simulationSize: CGSize,
-        maxSegmentsToTrace: Int
+        maxSegmentsToTrace: Int,
+        segmentBatchSize: Int
     ) {
         self.context = context
         self.traceQueue = traceQueue
         self.simulationSize = simulationSize
         self.maxSegmentsToTrace = maxSegmentsToTrace
-        self.segmentBatchSize = 10_000
+        self.segmentBatchSize = segmentBatchSize
     }
 
     func restartTrace(layout: SimulationLayout) {

@@ -40,10 +40,14 @@ public class CPULightSimulator: LightSimulator {
         managedQueues.append(simulatorManagedQueue)
         simulatorQueue = simulatorManagedQueue.1
 
-        let tracerSegmentMax = [1_000_000]
+        let tracerConfigs = [
+            (100_000, 1_000),
+            (1_000_000, 10_000),
+        ]
+
         //let tracerSegmentMax = [5_000, 10_000_000]
         //let tracerSegmentMax = [1_000_000_000, 1_000_000_000, 1_000_000_000, 1_000_000_000]
-        for segmentMax in tracerSegmentMax {
+        for config in tracerConfigs {
             let traceManagedQueue = serialOperationQueue()
             managedQueues.append(traceManagedQueue)
 
@@ -51,7 +55,8 @@ public class CPULightSimulator: LightSimulator {
                 context: context,
                 traceQueue: traceManagedQueue.1,
                 simulationSize: simulationSize,
-                maxSegmentsToTrace: segmentMax)
+                maxSegmentsToTrace: config.0,
+                segmentBatchSize: config.1)
 
             tracers.append(tracer)
         }

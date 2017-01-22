@@ -105,6 +105,14 @@ func safeDivide(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
     return c
 }
 
+func safeDividef(_ a: Float, _ b: Float) -> Float {
+    let c = a / b
+    if c.isInfinite {
+        return 9999999
+    }
+    return c
+}
+
 /// Due to some memory issues with swift not deallocating the segment array when using NSOperations queues, we
 /// manually manage memory for the array. We also include a seperate varable to record the actual number of segments
 /// traced, since the array could be larger.
