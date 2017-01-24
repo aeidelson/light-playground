@@ -63,7 +63,9 @@ public class CPULightSimulator: LightSimulator {
             tracerQueue.waitUntilAllOperationsAreFinished()
         }
         measure("grid.reset()") {
-            grid.reset()
+            let lock = grid.acquireLock()
+            grid.reset(lock: lock)
+            lock.release()
         }
 
         segmentsAccountedFor = 0
@@ -101,8 +103,8 @@ public class CPULightSimulator: LightSimulator {
 
 
     private var segmentsAccountedFor = 0
-    private let maxSegmentsToTrace = 1_000_000
-    private let maxSegmentsPerTracer = 10000
+    private let maxSegmentsToTrace = 11_000_000
+    private let maxSegmentsPerTracer = 30_000
 
     private let simulationSize: CGSize
 
@@ -114,7 +116,7 @@ public class CPULightSimulator: LightSimulator {
     /// The queue to run traces on
     private let tracerQueue: OperationQueue
 
-    private let concurrentOperations = 10
+    private let concurrentOperations = ProcessInfo.processInfo.activeProcessorCount
 
     /// The grid that everything is drawn to.
     private let grid: LightGrid

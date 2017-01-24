@@ -1,6 +1,20 @@
 import Foundation
 import CoreGraphics
 
+struct LightGridDrawLock {
+    fileprivate init(_ grid: LightGrid) {
+        self.grid = grid
+
+        objc_sync_enter(grid)
+    }
+
+    func release() {
+        objc_sync_exit(grid)
+    }
+
+    private let grid: LightGrid
+}
+
 // Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
 class LightGrid {
     public init(
@@ -22,40 +36,37 @@ class LightGrid {
         self.data.deallocate(capacity: totalPixels)
     }
 
-    public func reset() {
-        objc_sync_enter(self)
-        defer { objc_sync_exit(self) }
+    public func acquireLock() -> LightGridDrawLock {
+        return LightGridDrawLock(self)
+    }
 
+    public func reset(lock: LightGridDrawLock) {
         self.data.initialize(to: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
         totalSegmentCount = 0
 
         updateImage()
     }
 
-    public func drawSegments(segments: [LightSegment]) {
-        objc_sync_enter(self)
-        defer { objc_sync_exit(self) }
-
-
-        //let start = Date()
-        for segment in segments {
-            WuLightGridSegmentDraw.drawSegment(
-                gridWidth: width,
-                gridHeight: height,
-                data: data,
-                segment: segment)
+    public func drawSegments(lock: LightGridDrawLock, segments: [LightSegment]) {
+        measure("Draw \(segments.count) segments") {
+            for segment in segments {
+                WuLightGridSegmentDraw.drawSegment(
+                    gridWidth: width,
+                    gridHeight: height,
+                    data: data,
+                    segment: segment)
+            }
         }
 
         totalSegmentCount += segments.count
 
-        updateImage()
-
-        //let totalCount = segmentResult.segmentsActuallyTraced
-        //let elapsed = Date().timeIntervalSince(start)
-        //print("Avg: \(Double(elapsed) / Double(totalCount) * 1000000) microsec per segment :Took \(elapsed) sec for \(totalCount) rays")
+        measure("Draw image") {
+            updateImage()
+        }
     }
 
     private func updateImage() {
+        Swift.print("Segments traced: \(totalSegmentCount)")
         let exposure = Float(0.55) // TODO: Move to constant
 
         let brightness: Float
@@ -80,7 +91,6 @@ class LightGrid {
                 length: bufferSize,
                 freeWhenDone: true))
 
-        //imageDataProvider = CGDataProvider(data: NSData(bytes: &imagePixelBuffer, length: totalPixels * componentsPerPixel))
         let bitsPerPixel = componentsPerPixel * bitsPerComponent
 
         let image = CGImage(
@@ -98,8 +108,6 @@ class LightGrid {
             intent: .defaultIntent)
 
          if let imageUnwrapped = image {
-            //print("Sending out accumulated image")
-            //print("Total segments: \(totalSegmentCount)")
             imageObservable.notify(imageUnwrapped)
         }
     }

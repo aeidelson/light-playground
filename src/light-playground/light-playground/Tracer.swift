@@ -17,12 +17,21 @@ class Tracer {
 
             precondition(layout.lights.count > 0)
 
-            guard !strongOperation.isCancelled else { return }
+            // To make things as responsive as possible, we check if the operation is cancelled in a number of places:
+            // - Before doing anything
+            // - After tracing the segments
+            // - After acquiring a draw lock (which can take a while)
 
+            guard !strongOperation.isCancelled else { return }
             let segments = trace(layout: layout, simulationSize: simulationSize, maxSegments: maxSegmentsToTrace)
 
             guard !strongOperation.isCancelled else { return }
-            grid.drawSegments(segments: segments)
+
+            let lock = grid.acquireLock()
+            defer { lock.release() }
+            guard !strongOperation.isCancelled else { return }
+
+            grid.drawSegments(lock: lock, segments: segments)
         }
 
         return operation!
