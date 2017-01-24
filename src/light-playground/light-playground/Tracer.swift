@@ -1,101 +1,45 @@
 import Foundation
 import CoreGraphics
 
-/// Incrementally traces rays in the scene and batches of LightSegments.
-protocol Tracer {
-    /// Stops any running traces starts incrementally tracing.
-    func restartTrace(layout: SimulationLayout)
-
-    /// Is no-op if there isn't a trace running.
-    func stop()
-
-    /// Will be used to broadcast batches of segments as they are calculated.
-    var incrementalSegmentsObservable:  Observable<LightSegmentTraceResult> { get }
-}
-
-class CPUTracer: Tracer {
-    required init(
+class Tracer {
+    /// Constructs an operation to perform a trace of some number of rays.
+    static func makeTracer(
         context: CPULightSimulatorContext,
-        traceQueue: OperationQueue,
+        grid: LightGrid,
+        layout: SimulationLayout,
         simulationSize: CGSize,
-        maxSegmentsToTrace: Int,
-        segmentBatchSize: Int
-    ) {
-        self.context = context
-        self.traceQueue = traceQueue
-        self.simulationSize = simulationSize
-        self.maxSegmentsToTrace = maxSegmentsToTrace
-        self.segmentBatchSize = segmentBatchSize
-    }
+        maxSegmentsToTrace: Int
+    ) -> Operation {
+        var operation: BlockOperation?
+        operation = BlockOperation {
+            // TODO: retain cycle?
+            guard let strongOperation = operation else { return }
 
-    func restartTrace(layout: SimulationLayout) {
-        stop()
+            precondition(layout.lights.count > 0)
 
-        // Note: The current queue will be flushed automatically in LightSimulator, since `traceQueue` is managed
-        // automatically.
+            guard !strongOperation.isCancelled else { return }
 
-        // There's nothing to show if there are no lights.
-        guard layout.lights.count > 0 else { return }
+            let segments = trace(layout: layout, simulationSize: simulationSize, maxSegments: maxSegmentsToTrace)
 
-        var traceOperation: Operation?
-        traceOperation = BlockOperation { [weak self] in
-            guard let strongSelf = self else { return }
-            guard let workItem = traceOperation else { return }
-
-            var segmentsLeft = strongSelf.maxSegmentsToTrace
-
-            while !workItem.isCancelled  && segmentsLeft > 0 {
-                let currentBatchSize = min(strongSelf.segmentBatchSize, segmentsLeft)
-
-                // For efficiency, we always create arrays with the total batch size. The actual number of
-                // segments drawn will be returned from `traceSingleBatch`
-                let segmentArray = strongSelf.context.lightSegmentArrayManager.create(
-                    size: strongSelf.segmentBatchSize,
-                    fillWith: LightSegment(p0: CGPoint.zero, p1: CGPoint.zero, color: LightColor(r: 0, g: 0, b: 0)))
-
-                let traceResult = strongSelf.traceSingleBatch(
-                    layout: layout,
-                    maxSegments: currentBatchSize,
-                    resultArray: segmentArray)
-                let segmentsCount = traceResult.segmentsActuallyTraced
-
-                /// Do a final check to see if the work has been cancelled, before notifying anything.
-                guard !workItem.isCancelled else { continue }
-                segmentsLeft -= segmentsCount
-
-                strongSelf.incrementalSegmentsObservable.notify(traceResult)
-            }
+            guard !strongOperation.isCancelled else { return }
+            grid.drawSegments(segments: segments)
         }
 
-        traceQueue.addOperation(traceOperation!)
+        return operation!
     }
-
-    func stop() {
-        traceQueue.cancelAllOperations()
-    }
-
-    var incrementalSegmentsObservable = Observable<LightSegmentTraceResult>()
 
     // MARK: Private
 
-    private let context: CPULightSimulatorContext
-
-    /// The queue to run traces on.
-    private let traceQueue: OperationQueue
-
-    private let simulationSize: CGSize
-    private let maxSegmentsToTrace: Int
-    private let segmentBatchSize: Int
-    private let lightRadius: CGFloat = 10.0
+    private static let lightRadius: CGFloat = 10.0
 
     /// Synchronously produces light segments given the simulation layout.
     /// This shouldn't rely on any mutable state outside of the function, as this may be running in parallel to other
     /// traces if a trace is in the process of being canceled.
-    private func traceSingleBatch(
+    private static func trace(
         layout: SimulationLayout,
-        maxSegments: Int,
-        resultArray: UnsafeArrayWrapper<LightSegment>
-    ) -> LightSegmentTraceResult {
+        simulationSize: CGSize,
+        maxSegments: Int
+    ) -> [LightSegment] {
         /// There's nothing to show if there are no lights.
         guard layout.lights.count > 0 else { preconditionFailure() }
 
@@ -134,8 +78,10 @@ class CPUTracer: Tracer {
         ]
         allWalls.append(contentsOf: layout.walls)
 
-        var producedSegmentCount = 0
-        while rayQueue.count > 0 && producedSegmentCount < maxSegments {
+        var producedSegments = [LightSegment]()
+        producedSegments.reserveCapacity(maxSegments)
+
+        while rayQueue.count > 0 && producedSegments.count < maxSegments {
             let ray = rayQueue.removeFirst()
 
             // For safety, we ignore any rays that originate outside the image
@@ -211,14 +157,13 @@ class CPUTracer: Tracer {
             
             // TODO: Should spawn rays if bouncing off wall
 
-            resultArray.ptr[producedSegmentCount] = LightSegment(
+            producedSegments.append(LightSegment(
                 p0: ray.origin,
                 p1: segmentEndPoint,
-                color: ray.color)
-            producedSegmentCount += 1
+                color: ray.color))
         }
 
-        return (segmentsActuallyTraced: producedSegmentCount, array: resultArray)
+        return producedSegments
     }
 }
 

@@ -84,13 +84,16 @@ final public class Observable<T> {
         block: (T) -> Void)] = [:]
 }
 
-/// The backing dispatch queue isn't owned by the operation queue, so we hafto keep it around.
-func serialOperationQueue() -> (DispatchQueue, OperationQueue) {
-    let underlyingQueue = DispatchQueue(label: "", autoreleaseFrequency: .workItem)
+func serialOperationQueue() -> OperationQueue {
     let queue = OperationQueue()
-    //queue.underlyingQueue = underlyingQueue
     queue.maxConcurrentOperationCount = 1
-    return (underlyingQueue, queue)
+    return queue
+}
+
+func concurrentOperationQueue(_ maxConcurrentOperations: Int) -> OperationQueue {
+    let queue = OperationQueue()
+    queue.maxConcurrentOperationCount = maxConcurrentOperations
+    return queue
 }
 
 func safeDivide(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
@@ -108,6 +111,16 @@ func safeDividef(_ a: Float, _ b: Float) -> Float {
     }
     return c
 }
+
+func measure(_ label: String, block: () -> Void) {
+    let start = Date()
+
+    block()
+
+    Swift.print("Time to execute \(label): \(Date().timeIntervalSince(start) * 1000) ms")
+}
+
+/* TODO: Remove these if it turns out we actually don't need them.
 
 /// Due to some memory issues with swift not deallocating the segment array when using NSOperations queues, we
 /// manually manage memory for the array. We also include a seperate varable to record the actual number of segments
@@ -205,5 +218,4 @@ class UnsafeArrayManager<T> {
 
     private var freeArrays = [Int : [UnsafeArrayWrapper<T>]]()
 }
-
-
+*/

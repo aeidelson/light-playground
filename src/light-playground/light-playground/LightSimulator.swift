@@ -23,123 +23,99 @@ public protocol LightSimulator: class {
 
 /// A context object which instances used throughout the the simulator.
 class CPULightSimulatorContext {
-    init() {
-    }
-
-    public let lightSegmentArrayManager = UnsafeArrayManager<LightSegment>()
 }
 
 public class CPULightSimulator: LightSimulator {
     public required init(simulationSize: CGSize) {
 
-        context = CPULightSimulatorContext()
+        self.simulationSize = simulationSize
+        self.context = CPULightSimulatorContext()
 
-        var managedQueues = [(DispatchQueue, OperationQueue)]()
-
-        let simulatorManagedQueue = serialOperationQueue()
-        managedQueues.append(simulatorManagedQueue)
-        simulatorQueue = simulatorManagedQueue.1
-
-        let tracerConfigs = [
-            (100_000, 1_000),
-            (1_000_000, 10_000),
-        ]
-
-        //let tracerSegmentMax = [5_000, 10_000_000]
-        //let tracerSegmentMax = [1_000_000_000, 1_000_000_000, 1_000_000_000, 1_000_000_000]
-        for config in tracerConfigs {
-            let traceManagedQueue = serialOperationQueue()
-            managedQueues.append(traceManagedQueue)
-
-            let tracer = CPUTracer(
-                context: context,
-                traceQueue: traceManagedQueue.1,
-                simulationSize: simulationSize,
-                maxSegmentsToTrace: config.0,
-                segmentBatchSize: config.1)
-
-            tracers.append(tracer)
-        }
-
-        let accumulatorManagedQueue = serialOperationQueue()
-        managedQueues.append(accumulatorManagedQueue)
-
-        accumulator = CPUAccumulator(
-            context: context,
-            accumulatorQueue: accumulatorManagedQueue.1,
-            simulationSize: simulationSize,
-            tracers: tracers)
-
-        managedSerialQueues = managedQueues
+        self.simulatorQueue = serialOperationQueue()
+        self.tracerQueue = concurrentOperationQueue(10)
+        self.grid = LightGrid(context: context, size: simulationSize)
 
         // TODO: Unsubscribe from token on deinit
-        _ = accumulator.imageObservable.subscribe(onQueue: simulatorQueue) { [weak self] image in
+        _ = grid.imageObservable.subscribe(onQueue: simulatorQueue) { [weak self] image in
             guard let strongSelf = self else { return }
             strongSelf.simulationSnapshotObservable.notify(SimulationSnapshot(image: image))
         }
     }
 
     public func restartSimulation(layout: SimulationLayout) {
-        let start = Date()
-        // Flush all of the operation queues.
-        for managedQueue in managedSerialQueues {
-            managedQueue.1.cancelAllOperations()
+        stop()
+
+        // There's no light to trace.
+        guard layout.lights.count > 0 else { return }
+
+        // Seed the operation queue with a number of operations maxing out the queue (plus a couple).
+        for _ in 0..<(concurrentOperations+2) {
+            enqueueTracer(layout: layout)
         }
-        let operationsCleared = Date()
-        for managedQueue in managedSerialQueues {
-            managedQueue.1.cancelAllOperations()
-            managedQueue.1.waitUntilAllOperationsAreFinished()
-        }
-
-        let queuesFinished = Date()
-
-        accumulator.reset()
-
-        let accumulatorReset = Date()
-
-        // Clean up any light segment arrays that shouldn't be in use anymore (since we've killed all operations)
-        context.lightSegmentArrayManager.releaseAll()
-
-        let arraysReleased = Date()
-
-        for tracer in tracers {
-            tracer.restartTrace(layout: layout)
-        }
-
-        let tracerRestart = Date()
-
-        print("Simulation reset:")
-        print(">> Time to cancel operations: \(operationsCleared.timeIntervalSince(start) * 1000)")
-        print(">> Time to finish queues: \(queuesFinished.timeIntervalSince(operationsCleared) * 1000)")
-        print(">> Time to reset accumulator: \(accumulatorReset.timeIntervalSince(queuesFinished) * 1000)")
-        print(">> Time to release array: \(arraysReleased.timeIntervalSince(accumulatorReset) * 1000)")
-        print(">> Time to tracer restart: \(tracerRestart.timeIntervalSince(arraysReleased) * 1000)")
-
-
-
     }
 
     public func stop() {
-        for tracer in tracers {
-            tracer.stop()
+        measure("tracerQueue.cancelAllOperations()") {
+            tracerQueue.cancelAllOperations()
         }
+
+        measure("tracerQueue.waitUntilAllOperationsAreFinished()") {
+            tracerQueue.waitUntilAllOperationsAreFinished()
+        }
+        measure("grid.reset()") {
+            grid.reset()
+        }
+
+        segmentsAccountedFor = 0
     }
 
     public var simulationSnapshotObservable = Observable<SimulationSnapshot>()
 
-    // MARK: Internal
-
-    let lightSegmentArrayManager = UnsafeArrayManager<LightSegment>()
-
     // MARK: Private
 
-    private let context: CPULightSimulatorContext
-    private let accumulator: Accumulator
-    private var tracers = [Tracer]()
+    private func enqueueTracer(layout: SimulationLayout) {
+        print("QueueSize: \(tracerQueue.operationCount)")
+        let segmentsToTrace = min(maxSegmentsToTrace - segmentsAccountedFor, maxSegmentsPerTracer)
 
-    // Contains queues which are automatically cleared when the simulation layout changes.
-    private var managedSerialQueues: [(DispatchQueue, OperationQueue)]
+        guard segmentsToTrace != 0 else { return }
+
+        segmentsAccountedFor += segmentsToTrace
+
+        let tracer = Tracer.makeTracer(
+            context: context,
+            grid: grid,
+            layout: layout,
+            simulationSize: simulationSize,
+            maxSegmentsToTrace: segmentsToTrace)
+
+        // When the tracer finishes, enqueue another one.
+        tracer.completionBlock = { [weak self] in
+            // TODO: Retain cycle?
+            if !tracer.isCancelled {
+                self?.enqueueTracer(layout: layout)
+            }
+        }
+
+        tracerQueue.addOperation(tracer)
+    }
+
+
+    private var segmentsAccountedFor = 0
+    private let maxSegmentsToTrace = 1_000_000
+    private let maxSegmentsPerTracer = 10000
+
+    private let simulationSize: CGSize
+
+    private let context: CPULightSimulatorContext
 
     /// The queue to use for any top-level simulator logic.
     private let simulatorQueue: OperationQueue
+
+    /// The queue to run traces on
+    private let tracerQueue: OperationQueue
+
+    private let concurrentOperations = 10
+
+    /// The grid that everything is drawn to.
+    private let grid: LightGrid
 }

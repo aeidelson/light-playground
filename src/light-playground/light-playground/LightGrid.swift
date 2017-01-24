@@ -27,39 +27,51 @@ class LightGrid {
         defer { objc_sync_exit(self) }
 
         self.data.initialize(to: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
+        totalSegmentCount = 0
+
+        updateImage()
     }
 
-    public func drawSegments(segmentResult: LightSegmentTraceResult) {
+    public func drawSegments(segments: [LightSegment]) {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
 
         //let start = Date()
-        for i in 0..<segmentResult.segmentsActuallyTraced {
+        for segment in segments {
             WuLightGridSegmentDraw.drawSegment(
                 gridWidth: width,
                 gridHeight: height,
                 data: data,
-                segment: segmentResult.array.ptr[i])
+                segment: segment)
         }
+
+        totalSegmentCount += segments.count
+
+        updateImage()
+
         //let totalCount = segmentResult.segmentsActuallyTraced
         //let elapsed = Date().timeIntervalSince(start)
         //print("Avg: \(Double(elapsed) / Double(totalCount) * 1000000) microsec per segment :Took \(elapsed) sec for \(totalCount) rays")
     }
 
-    /// `brightness` is a constant to multiply times each pixel.
-    public func renderImage(brightness: CGFloat) -> CGImage? {
-        objc_sync_enter(self)
-        defer { objc_sync_exit(self) }
+    private func updateImage() {
+        let exposure = Float(0.55) // TODO: Move to constant
 
-        let brightnessf = Float(brightness)
+        let brightness: Float
+        if totalSegmentCount == 0 {
+            brightness = 0
+        } else {
+            brightness = calculateBrightness(segmentCount: totalSegmentCount, exposure: exposure)
+        }
+
         let bufferSize = totalPixels * componentsPerPixel
         let imagePixelBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
 
         for i in 0..<totalPixels {
-            imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(Float(data[i].r) * brightnessf, 255))
-            imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(Float(data[i].g) * brightnessf, 255))
-            imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(min(Float(data[i].b) * brightnessf, 255))
+            imagePixelBuffer[i * componentsPerPixel + 0] = UInt8(min(Float(data[i].r) * brightness, 255))
+            imagePixelBuffer[i * componentsPerPixel + 1] = UInt8(min(Float(data[i].g) * brightness, 255))
+            imagePixelBuffer[i * componentsPerPixel + 2] = UInt8(min(Float(data[i].b) * brightness, 255))
         }
 
         let imageDataProvider = CGDataProvider(
@@ -71,7 +83,7 @@ class LightGrid {
         //imageDataProvider = CGDataProvider(data: NSData(bytes: &imagePixelBuffer, length: totalPixels * componentsPerPixel))
         let bitsPerPixel = componentsPerPixel * bitsPerComponent
 
-        return CGImage(
+        let image = CGImage(
             width: width,
             height: height,
             bitsPerComponent: bitsPerComponent,
@@ -84,10 +96,18 @@ class LightGrid {
             decode: nil,
             shouldInterpolate: true,
             intent: .defaultIntent)
+
+         if let imageUnwrapped = image {
+            //print("Sending out accumulated image")
+            //print("Total segments: \(totalSegmentCount)")
+            imageObservable.notify(imageUnwrapped)
+        }
     }
 
     public let width: Int
     public let height: Int
+
+    public let imageObservable = Observable<CGImage>()
 
     // MARK: File Private
 
@@ -99,12 +119,18 @@ class LightGrid {
 
     private var data: UnsafeMutablePointer<LightGridPixel>
 
+    private var totalSegmentCount = 0
+
     private let context: CPULightSimulatorContext
 
     // MARK: Variables for generating images.
 
     private let componentsPerPixel = 4
     private let bitsPerComponent = 8
+}
+
+private func calculateBrightness(segmentCount: Int, exposure: Float)  -> Float {
+    return Float(exp(1 + 10 * exposure)) / Float(segmentCount)
 }
 
 /// Represents a single pixel in the light grid.
