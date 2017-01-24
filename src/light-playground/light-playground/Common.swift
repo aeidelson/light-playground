@@ -40,7 +40,7 @@ func NewToken() -> Token {
 final public class Observable<T> {
     public func subscribe(
         onQueue: OperationQueue,
-        maxAsyncOperationCount: Int = 30,
+        maxAsyncOperationCount: Int = 5,
         block: @escaping (T) -> Void
     ) -> String {
         objc_sync_enter(self)
@@ -63,19 +63,15 @@ final public class Observable<T> {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
 
-        // TODO: This has the potential to starve a subscriber because another subscriber has too many operations.
-        // Could we do better?
-
         for subscriber in subsribers.values {
-            // TODO: Should maybe add an operation and wait on that operation so we don't block forever if there's
-            // another thread notifying.
-            if subscriber.onQueue.operationCount > subscriber.maxAsyncOperationCount {
-                subscriber.onQueue.waitUntilAllOperationsAreFinished()
-            }
-
-            subscriber.onQueue.addOperation {
+            let operation = BlockOperation {
                 subscriber.block(value)
             }
+
+            subscriber.onQueue.addOperations(
+                [operation],
+                // TODO: This may end up favoring short-lived operations too much?
+                waitUntilFinished: subscriber.onQueue.operationCount > subscriber.maxAsyncOperationCount)
         }
     }
 

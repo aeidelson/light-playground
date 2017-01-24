@@ -80,22 +80,43 @@ public class CPULightSimulator: LightSimulator {
     }
 
     public func restartSimulation(layout: SimulationLayout) {
+        let start = Date()
         // Flush all of the operation queues.
         for managedQueue in managedSerialQueues {
             managedQueue.1.cancelAllOperations()
         }
+        let operationsCleared = Date()
         for managedQueue in managedSerialQueues {
+            managedQueue.1.cancelAllOperations()
             managedQueue.1.waitUntilAllOperationsAreFinished()
         }
 
+        let queuesFinished = Date()
+
         accumulator.reset()
+
+        let accumulatorReset = Date()
 
         // Clean up any light segment arrays that shouldn't be in use anymore (since we've killed all operations)
         context.lightSegmentArrayManager.releaseAll()
 
+        let arraysReleased = Date()
+
         for tracer in tracers {
             tracer.restartTrace(layout: layout)
         }
+
+        let tracerRestart = Date()
+
+        print("Simulation reset:")
+        print(">> Time to cancel operations: \(operationsCleared.timeIntervalSince(start) * 1000)")
+        print(">> Time to finish queues: \(queuesFinished.timeIntervalSince(operationsCleared) * 1000)")
+        print(">> Time to reset accumulator: \(accumulatorReset.timeIntervalSince(queuesFinished) * 1000)")
+        print(">> Time to release array: \(arraysReleased.timeIntervalSince(accumulatorReset) * 1000)")
+        print(">> Time to tracer restart: \(tracerRestart.timeIntervalSince(arraysReleased) * 1000)")
+
+
+
     }
 
     public func stop() {

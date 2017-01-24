@@ -34,7 +34,7 @@ class LightGrid {
         defer { objc_sync_exit(self) }
 
 
-        let start = Date()
+        //let start = Date()
         for i in 0..<segmentResult.segmentsActuallyTraced {
             WuLightGridSegmentDraw.drawSegment(
                 gridWidth: width,
@@ -42,9 +42,9 @@ class LightGrid {
                 data: data,
                 segment: segmentResult.array.ptr[i])
         }
-        let totalCount = segmentResult.segmentsActuallyTraced
-        let elapsed = Date().timeIntervalSince(start)
-        print("Avg: \(Double(elapsed) / Double(totalCount) * 1000000) microsec per segment :Took \(elapsed) sec for \(totalCount) rays")
+        //let totalCount = segmentResult.segmentsActuallyTraced
+        //let elapsed = Date().timeIntervalSince(start)
+        //print("Avg: \(Double(elapsed) / Double(totalCount) * 1000000) microsec per segment :Took \(elapsed) sec for \(totalCount) rays")
     }
 
     /// `brightness` is a constant to multiply times each pixel.
