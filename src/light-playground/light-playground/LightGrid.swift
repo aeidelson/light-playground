@@ -149,7 +149,7 @@ fileprivate struct LightGridPixel {
 }
 
 /// Returns the index of the pixel, and is a 0-based index.
-private func indexFromLocation(_ gridWidth: Int, _ gridHeight: Int, _ x: Int, _ y: Int) -> Int {
+@inline(__always) private func indexFromLocation(_ gridWidth: Int, _ gridHeight: Int, _ x: Int, _ y: Int) -> Int {
     #if DEBUG
         precondition(x >= 0)
         precondition(x < gridWidth)
@@ -223,7 +223,7 @@ private class BresenhamLightGridSegmentDraw {
 /// A private class to contain all the nasty line drawing code.
 /// Taken almost directly from: http://rosettacode.org/wiki/Xiaolin_Wu%27s_line_algorithm#C
 private class WuLightGridSegmentDraw {
-    private static func plot(
+    @inline(__always) private static func plot(
         gridWidth: Int,
         gridHeight: Int,
         data: UnsafeMutablePointer<LightGridPixel>,
@@ -240,27 +240,27 @@ private class WuLightGridSegmentDraw {
         data[index].b = initialPixel.b + UInt32(color.2 * br)
     }
 
-    private static func ipart(_ x: Float) -> Int {
+    @inline(__always) private static func ipart(_ x: Float) -> Int {
         return Int(x)
     }
 
-    private static func round(_ x: Float) -> Int {
+    @inline(__always) private static func round(_ x: Float) -> Int {
         return ipart(x + 0.5)
     }
 
-    private static func fpart(_ x: Float) -> Float {
+    @inline(__always) private static func fpart(_ x: Float) -> Float {
         if x < 0 {
             return 1 - (x - floor(x))
         }
         return x - floor(x)
     }
 
-    private static func rfpart(_ x: Float) -> Float {
+    @inline(__always) private static func rfpart(_ x: Float) -> Float {
         return 1 - fpart(x)
     }
 
     // An optimization for cases where we want both the rfpart and the fpart.
-    private static func rffpart(_ x: Float) -> (rfpart: Float, fpart: Float) {
+    @inline(__always) private static func rffpart(_ x: Float) -> (rfpart: Float, fpart: Float) {
         let fp = fpart(x)
         return (
             rfpart: 1 - fp,
