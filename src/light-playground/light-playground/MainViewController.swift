@@ -27,10 +27,12 @@ class MainViewController: UIViewController, CALayerDelegate {
         ))
 
         // TODO: Unsubscribe from the simulator.
-        _ = simulator?.simulationSnapshotObservable.subscribe(onQueue: .main) {[weak self] snapshot in
-            //print("Got the accumulated image, set needs display")
-            self?.latestImage = snapshot.image
-            self?.drawLayer.display()
+        simulator?.snapshotHandler = { snapshot in
+            DispatchQueue.main.async {[weak self] in
+                print("\(Date().timeIntervalSince1970): Got the accumulated image, set needs display")
+                self?.latestImage = snapshot.image
+                self?.drawLayer.display()
+            }
         }
 
         resetSimulator()

@@ -36,6 +36,7 @@ func NewToken() -> Token {
     return UUID().uuidString
 }
 
+/*
 /// Can be used to manage subscribers to a stream of data.
 final public class Observable<T> {
     public func subscribe(
@@ -64,6 +65,11 @@ final public class Observable<T> {
         defer { objc_sync_exit(self) }
 
         for subscriber in subsribers.values {
+            subscriber.onQueue.addOperation {
+                subscriber.block(value)
+            }
+
+            /*
             let operation = BlockOperation {
                 subscriber.block(value)
             }
@@ -72,8 +78,12 @@ final public class Observable<T> {
                 [operation],
                 // TODO: This may end up favoring short-lived operations too much?
                 waitUntilFinished: subscriber.onQueue.operationCount > subscriber.maxAsyncOperationCount)
+ 
+ */
         }
     }
+
+
 
     // MARK: Private
 
@@ -83,6 +93,7 @@ final public class Observable<T> {
         maxAsyncOperationCount: Int,
         block: (T) -> Void)] = [:]
 }
+     */
 
 func serialOperationQueue() -> OperationQueue {
     let queue = OperationQueue()
@@ -113,11 +124,13 @@ func safeDividef(_ a: Float, _ b: Float) -> Float {
 }
 
 func measure(_ label: String, block: () -> Void) {
-    let start = Date()
+    //let start = Date()
 
     block()
 
-    Swift.print("Time to execute \(label): \(Date().timeIntervalSince(start) * 1000) ms")
+    //let end = Date()
+
+    //Swift.print("\(end.timeIntervalSince1970): Time to execute \(label): \(end.timeIntervalSince(start) * 1000) ms")
 }
 
 /* TODO: Remove these if it turns out we actually don't need them.

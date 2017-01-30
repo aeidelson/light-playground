@@ -5,10 +5,10 @@ class Tracer {
     /// Constructs an operation to perform a trace of some number of rays.
     static func makeTracer(
         context: CPULightSimulatorContext,
-        grid: LightGrid,
+        rootGrid: LightGrid,
         layout: SimulationLayout,
         simulationSize: CGSize,
-        maxSegmentsToTrace: Int
+        segmentsToTrace: Int
     ) -> Operation {
         var operation: BlockOperation?
         operation = BlockOperation {
@@ -17,21 +17,24 @@ class Tracer {
 
             precondition(layout.lights.count > 0)
 
-            // To make things as responsive as possible, we check if the operation is cancelled in a number of places:
-            // - Before doing anything
-            // - After tracing the segments
-            // - After acquiring a draw lock (which can take a while)
-
             guard !strongOperation.isCancelled else { return }
-            let segments = trace(layout: layout, simulationSize: simulationSize, maxSegments: maxSegmentsToTrace)
+            let segments = trace(layout: layout, simulationSize: simulationSize, maxSegments: segmentsToTrace)
 
             guard !strongOperation.isCancelled else { return }
 
-            let lock = grid.acquireLock()
-            defer { lock.release() }
+            let tracerGrid = LightGrid(context: context, generateImage: false, size: simulationSize)
+            tracerGrid.drawSegments(segments: segments)
+
             guard !strongOperation.isCancelled else { return }
 
-            grid.drawSegments(lock: lock, segments: segments)
+            objc_sync_enter(rootGrid)
+            defer { objc_sync_exit(rootGrid) }
+            // One more check to make sure it is still not cancelled when the lock is done.
+            guard !strongOperation.isCancelled else { return }
+            rootGrid.aggregrate(grids: [tracerGrid])
+
+
+            print("Completed tracing segments: \(segmentsToTrace)")
         }
 
         return operation!

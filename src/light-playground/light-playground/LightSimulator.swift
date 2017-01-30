@@ -18,7 +18,7 @@ public protocol LightSimulator: class {
     /// Will stop any further processing. No-op if the simulator hasn't been started.
     func stop()
 
-    var simulationSnapshotObservable: Observable<SimulationSnapshot> { get }
+    var snapshotHandler: (SimulationSnapshot) -> Void { get set }
 }
 
 /// A context object which instances used throughout the the simulator.
@@ -32,79 +32,95 @@ public class CPULightSimulator: LightSimulator {
         self.context = CPULightSimulatorContext()
 
         self.simulatorQueue = serialOperationQueue()
-        self.tracerQueue = concurrentOperationQueue(10)
-        self.grid = LightGrid(context: context, size: simulationSize)
+        self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
+        
+        self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
 
         // TODO: Unsubscribe from token on deinit
-        _ = grid.imageObservable.subscribe(onQueue: simulatorQueue) { [weak self] image in
+        self.rootGrid.imageHandler = { [weak self] image in
             guard let strongSelf = self else { return }
-            strongSelf.simulationSnapshotObservable.notify(SimulationSnapshot(image: image))
+            print("\(Date().timeIntervalSince1970): Calling snapshotHandler with new image")
+            strongSelf.snapshotHandler(SimulationSnapshot(image: image))
         }
     }
 
     public func restartSimulation(layout: SimulationLayout) {
-        stop()
+        precondition(Thread.isMainThread)
 
-        // There's no light to trace.
-        guard layout.lights.count > 0 else { return }
+        print("\(Date().timeIntervalSince1970): Simulation restart called")
 
-        // Seed the operation queue with a number of operations maxing out the queue (plus a couple).
-        for _ in 0..<(concurrentOperations+2) {
-            enqueueTracer(layout: layout)
+        // The simulation is restarted on a background thread so we don't hold up the UI.
+        simulatorQueue.addOperation {
+            self.stop()
+
+            // There's no light to trace.
+            guard layout.lights.count > 0 else { return }
+
+            self.enqueueTracersIfNeeded(layout: layout)
         }
     }
 
     public func stop() {
-        measure("tracerQueue.cancelAllOperations()") {
+        measure("cancel operations and reset grid.") {
+            // We lock the grid to make sure it isn't being drawn to.
+            objc_sync_enter(rootGrid)
             tracerQueue.cancelAllOperations()
-        }
-
-        measure("tracerQueue.waitUntilAllOperationsAreFinished()") {
             tracerQueue.waitUntilAllOperationsAreFinished()
-        }
-        measure("grid.reset()") {
-            let lock = grid.acquireLock()
-            grid.reset(lock: lock)
-            lock.release()
+            rootGrid.reset()
+            objc_sync_exit(rootGrid)
         }
 
-        segmentsAccountedFor = 0
+        measure("createNewQueue") {
+            self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
+        }
+
+        traceSegmentsAccountedFor = 0
     }
 
-    public var simulationSnapshotObservable = Observable<SimulationSnapshot>()
+    public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
 
     // MARK: Private
 
-    private func enqueueTracer(layout: SimulationLayout) {
-        print("QueueSize: \(tracerQueue.operationCount)")
-        let segmentsToTrace = min(maxSegmentsToTrace - segmentsAccountedFor, maxSegmentsPerTracer)
-
-        guard segmentsToTrace != 0 else { return }
-
-        segmentsAccountedFor += segmentsToTrace
-
-        let tracer = Tracer.makeTracer(
-            context: context,
-            grid: grid,
-            layout: layout,
-            simulationSize: simulationSize,
-            maxSegmentsToTrace: segmentsToTrace)
-
-        // When the tracer finishes, enqueue another one.
-        tracer.completionBlock = { [weak self] in
-            // TODO: Retain cycle?
-            if !tracer.isCancelled {
-                self?.enqueueTracer(layout: layout)
+    private func enqueueTracersIfNeeded(layout: SimulationLayout) {
+        for _ in 0..<max((tracerQueueConcurrency - tracerQueue.operationCount), 0) {
+            // The first operation is special-cased as being interactive.
+            var tracerSize = standardTracerSize
+            if tracerQueue.operationCount == 0 {
+                tracerSize = interactiveTracerSize
             }
-        }
 
-        tracerQueue.addOperation(tracer)
+            tracerSize = min(tracerSize, maxSegmentsToTrace - traceSegmentsAccountedFor)
+
+            guard tracerSize > 0 else { return }
+
+            traceSegmentsAccountedFor += tracerSize
+
+            // A grid for this tracer to accumulate on.
+            var tracer: Operation?
+            tracer = Tracer.makeTracer(
+                context: context,
+                rootGrid: rootGrid,
+                layout: layout,
+                simulationSize: simulationSize,
+                segmentsToTrace: tracerSize)
+
+            tracer?.completionBlock = { [weak self] in
+                guard let strongTracer = tracer else { return }
+                guard !strongTracer.isCancelled else { return }
+
+                self?.simulatorQueue.addOperation { [weak self] in
+                    self?.enqueueTracersIfNeeded(layout: layout)
+                }
+            }
+            
+            tracerQueue.addOperation(tracer!)
+        }
     }
 
-
-    private var segmentsAccountedFor = 0
-    private let maxSegmentsToTrace = 11_000_000
-    private let maxSegmentsPerTracer = 30_000
+    private let interactiveTracerSize = 5_000
+    private let standardTracerSize = 10_000
+    private let maxSegmentsToTrace = 10_000_000
+    private var traceSegmentsAccountedFor = 0
 
     private let simulationSize: CGSize
 
@@ -114,10 +130,10 @@ public class CPULightSimulator: LightSimulator {
     private let simulatorQueue: OperationQueue
 
     /// The queue to run traces on
-    private let tracerQueue: OperationQueue
+    private var tracerQueue: OperationQueue
 
-    private let concurrentOperations = ProcessInfo.processInfo.activeProcessorCount
+    private let tracerQueueConcurrency = ProcessInfo.processInfo.activeProcessorCount
 
-    /// The grid that everything is drawn to.
-    private let grid: LightGrid
+    /// The grid that everything aggregrated to.
+    private let rootGrid: LightGrid
 }
