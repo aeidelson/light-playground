@@ -28,21 +28,17 @@ class LightGrid {
     }
 
     public func drawSegments(segments: [LightSegment]) {
-        measure("Draw \(segments.count) segments") {
-            for segment in segments {
-                WuLightGridSegmentDraw.drawSegment(
-                    gridWidth: width,
-                    gridHeight: height,
-                    data: &data,
-                    segment: segment)
-            }
+        for segment in segments {
+            WuLightGridSegmentDraw.drawSegment(
+                gridWidth: width,
+                gridHeight: height,
+                data: &data,
+                segment: segment)
         }
 
         totalSegmentCount += segments.count
 
-        //measure("Draw image") {
         updateImage()
-        //}
     }
 
     public func aggregrate(grids: [LightGrid]) {
@@ -65,7 +61,6 @@ class LightGrid {
     private func updateImage() {
         guard generateImage else { return }
 
-        //Swift.print("Segments traced: \(totalSegmentCount)")
         let exposure = Float(0.55) // TODO: Move to constant
 
         let brightness: Float

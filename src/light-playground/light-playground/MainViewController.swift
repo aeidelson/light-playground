@@ -41,7 +41,6 @@ class MainViewController: UIViewController, CALayerDelegate {
     // MARK: CALayerDelegate
 
     func display(_ layer: CALayer) {
-        //print("Got the render callback")
         drawLayer.contents = latestImage
     }
 
@@ -62,7 +61,6 @@ class MainViewController: UIViewController, CALayerDelegate {
                     x: lightLogation.x * drawLayer.contentsScale,
                     y: lightLogation.y * drawLayer.contentsScale)))
             resetSimulator()
-            //print("Add light!")
         }
     }
 
@@ -82,7 +80,6 @@ class MainViewController: UIViewController, CALayerDelegate {
                     y: end.y * drawLayer.contentsScale)))
 
             resetSimulator()
-            //print("Add wall!")
         default:
             break
         }

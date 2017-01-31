@@ -33,15 +33,8 @@ public class CPULightSimulator: LightSimulator {
 
         self.simulatorQueue = serialOperationQueue()
         self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
-        
-        self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
 
-        // TODO: Unsubscribe from token on deinit
-        self.rootGrid.imageHandler = { [weak self] image in
-            guard let strongSelf = self else { return }
-            print("\(Date().timeIntervalSince1970): Calling snapshotHandler with new image")
-            strongSelf.snapshotHandler(SimulationSnapshot(image: image))
-        }
+        _ = setupNewRootLightGrid()
     }
 
     public func restartSimulation(layout: SimulationLayout) {
@@ -61,19 +54,9 @@ public class CPULightSimulator: LightSimulator {
     }
 
     public func stop() {
-        measure("cancel operations and reset grid.") {
-            // We lock the grid to make sure it isn't being drawn to.
-            objc_sync_enter(rootGrid)
-            tracerQueue.cancelAllOperations()
-            tracerQueue.waitUntilAllOperationsAreFinished()
-            rootGrid.reset()
-            objc_sync_exit(rootGrid)
-        }
-
-        measure("createNewQueue") {
-            self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
-        }
-
+        tracerQueue.cancelAllOperations()
+        _ = setupNewRootLightGrid()
+        self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
         traceSegmentsAccountedFor = 0
     }
 
@@ -81,7 +64,22 @@ public class CPULightSimulator: LightSimulator {
 
     // MARK: Private
 
+    private func setupNewRootLightGrid() -> LightGrid {
+        objc_sync_enter(self.rootGrid)
+        self.rootGrid?.imageHandler = { _ in }
+        objc_sync_exit(self.rootGrid)
+
+        self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
+        self.rootGrid?.imageHandler = { [weak self] image in
+            guard let strongSelf = self else { return }
+            print("\(Date().timeIntervalSince1970): Calling snapshotHandler with new image")
+            strongSelf.snapshotHandler(SimulationSnapshot(image: image))
+        }
+        return self.rootGrid!
+    }
+
     private func enqueueTracersIfNeeded(layout: SimulationLayout) {
+        guard let rootGrid = self.rootGrid else { return }
         for _ in 0..<max((tracerQueueConcurrency - tracerQueue.operationCount), 0) {
             // The first operation is special-cased as being interactive.
             var tracerSize = standardTracerSize
@@ -135,5 +133,5 @@ public class CPULightSimulator: LightSimulator {
     private let tracerQueueConcurrency = ProcessInfo.processInfo.activeProcessorCount
 
     /// The grid that everything aggregrated to.
-    private let rootGrid: LightGrid
+    private var rootGrid: LightGrid?
 }

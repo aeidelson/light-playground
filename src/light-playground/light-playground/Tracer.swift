@@ -11,7 +11,7 @@ class Tracer {
         segmentsToTrace: Int
     ) -> Operation {
         var operation: BlockOperation?
-        operation = BlockOperation {
+        operation = BlockOperation { [weak rootGrid] in
             // TODO: retain cycle?
             guard let strongOperation = operation else { return }
 
@@ -27,14 +27,13 @@ class Tracer {
 
             guard !strongOperation.isCancelled else { return }
 
-            objc_sync_enter(rootGrid)
-            defer { objc_sync_exit(rootGrid) }
+            guard let strongRootGrid = rootGrid else { return }
+
+            objc_sync_enter(strongRootGrid)
+            defer { objc_sync_exit(strongRootGrid) }
             // One more check to make sure it is still not cancelled when the lock is done.
             guard !strongOperation.isCancelled else { return }
-            rootGrid.aggregrate(grids: [tracerGrid])
-
-
-            print("Completed tracing segments: \(segmentsToTrace)")
+            strongRootGrid.aggregrate(grids: [tracerGrid])
         }
 
         return operation!
