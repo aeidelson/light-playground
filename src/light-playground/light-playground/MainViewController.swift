@@ -29,7 +29,6 @@ class MainViewController: UIViewController, CALayerDelegate {
         // TODO: Unsubscribe from the simulator.
         simulator?.snapshotHandler = { snapshot in
             DispatchQueue.main.async {[weak self] in
-                print("\(Date().timeIntervalSince1970): Got the accumulated image, set needs display")
                 self?.latestImage = snapshot.image
                 self?.drawLayer.display()
             }
@@ -68,6 +67,20 @@ class MainViewController: UIViewController, CALayerDelegate {
         switch (currentInteractionMode, sender.state) {
         case (.wall, .began):
             wallStartLocation = sender.location(in: interactionView)
+        case (.wall, .changed):
+            guard let start = wallStartLocation else { break }
+            let end = sender.location(in: interactionView)
+
+            interactiveWall = Wall(
+                pos1: CGPoint(
+                    x: start.x * drawLayer.contentsScale,
+                    y: start.y * drawLayer.contentsScale),
+                pos2: CGPoint(
+                    x: end.x * drawLayer.contentsScale,
+                    y: end.y * drawLayer.contentsScale))
+
+            resetSimulator()
+
         case (.wall, .ended):
             guard let start = wallStartLocation else { break }
             let end = sender.location(in: interactionView)
@@ -78,6 +91,9 @@ class MainViewController: UIViewController, CALayerDelegate {
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale)))
+
+            // The interactive wall when building the wall is no longer relevant
+            interactiveWall = nil
 
             resetSimulator()
         default:
@@ -109,13 +125,28 @@ class MainViewController: UIViewController, CALayerDelegate {
 
     /// Should be called any time the state of input to the simulator changes.
     private func resetSimulator() {
-        simulator?.restartSimulation(layout: SimulationLayout(
-            lights: lights,
-            walls: walls))
+        let finalLights = lights
+        var finalWalls = walls
+        var isInteractive = false
+
+        if let strongInteractiveWall = interactiveWall {
+            finalWalls = finalWalls + [strongInteractiveWall]
+            isInteractive = true
+        }
+
+        let layout = SimulationLayout(
+            lights: finalLights,
+            walls: finalWalls)
+
+        simulator?.restartSimulation(
+            layout: layout,
+            isInteractive: isInteractive)
+
     }
 
     private var lights = [Light]()
     private var walls = [Wall]()
+    private var interactiveWall: Wall?
     private var simulator: LightSimulator?
 }
 

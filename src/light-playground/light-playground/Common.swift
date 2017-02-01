@@ -71,5 +71,10 @@ func measure(_ label: String, block: () -> Void) {
 
     let end = Date()
 
-    Swift.print("\(end.timeIntervalSince1970): Time to execute \(label): \(end.timeIntervalSince(start) * 1000) ms")
+    simLog("Time to execute \(label): \(end.timeIntervalSince(start) * 1000) ms")
+}
+
+func simLog(_ label: String) {
+    Swift.print("\(Date().timeIntervalSince1970): \(label)")
+
 }

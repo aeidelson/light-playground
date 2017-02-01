@@ -42,8 +42,6 @@ class LightGrid {
     }
 
     public func aggregrate(grids: [LightGrid]) {
-        print("\(Date().timeIntervalSince1970): Starting aggregation")
-
         for grid in grids {
             precondition(grid.width == width)
             precondition(grid.height == height)
@@ -102,7 +100,6 @@ class LightGrid {
             intent: .defaultIntent)
 
          if let imageUnwrapped = image {
-            print("\(Date().timeIntervalSince1970): Calling imageHandler with new image")
             imageHandler(imageUnwrapped)
         }
     }

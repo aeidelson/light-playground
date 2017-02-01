@@ -108,6 +108,7 @@
 				TargetAttributes = {
 					8E1475411E19ADD50094CB28 = {
 						CreatedOnToolsVersion = 8.1;
+						DevelopmentTeam = QNZDPXRTT8;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -277,6 +278,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = QNZDPXRTT8;
 				INFOPLIST_FILE = "light-playground/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
@@ -291,6 +293,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = QNZDPXRTT8;
 				INFOPLIST_FILE = "light-playground/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				"OTHER_SWIFT_FLAGS[arch=*]" = "-D RELEASE";
