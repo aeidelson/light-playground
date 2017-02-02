@@ -8,7 +8,8 @@ class Tracer {
         rootGrid: LightGrid,
         layout: SimulationLayout,
         simulationSize: CGSize,
-        segmentsToTrace: Int
+        segmentsToTrace: Int,
+        interactiveTrace: Bool
     ) -> Operation {
         var operation: BlockOperation?
         operation = BlockOperation { [weak rootGrid] in
@@ -22,18 +23,24 @@ class Tracer {
 
             guard !strongOperation.isCancelled else { return }
 
-            let tracerGrid = LightGrid(context: context, generateImage: false, size: simulationSize)
-            tracerGrid.drawSegments(segments: segments)
-
-            guard !strongOperation.isCancelled else { return }
-
             guard let strongRootGrid = rootGrid else { return }
 
-            objc_sync_enter(strongRootGrid)
-            defer { objc_sync_exit(strongRootGrid) }
-            // One more check to make sure it is still not cancelled when the lock is done.
-            guard !strongOperation.isCancelled else { return }
-            strongRootGrid.aggregrate(grids: [tracerGrid])
+            // In the case of an interactive trace, we know there is only one grid and tracer so we can write to it
+            // directly. Otherwise we create a grid just for this tracer and lock / agregate at the end.
+            if interactiveTrace {
+                strongRootGrid.drawSegments(segments: segments, lowQuality: true)
+            } else {
+                let tracerGrid = LightGrid(context: context, generateImage: false, size: simulationSize)
+                tracerGrid.drawSegments(segments: segments, lowQuality: false)
+
+                guard !strongOperation.isCancelled else { return }
+
+                objc_sync_enter(strongRootGrid)
+                defer { objc_sync_exit(strongRootGrid) }
+                // One more check to make sure it is still not cancelled when the grid is locked.
+                guard !strongOperation.isCancelled else { return }
+                strongRootGrid.aggregrate(grids: [tracerGrid])
+            }
         }
 
         return operation!

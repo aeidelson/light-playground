@@ -23,6 +23,7 @@ public protocol LightSimulator: class {
 
 /// A context object which instances used throughout the the simulator.
 class CPULightSimulatorContext {
+    //let imageAllocator: Allocator<>
 }
 
 public class CPULightSimulator: LightSimulator {
@@ -53,10 +54,12 @@ public class CPULightSimulator: LightSimulator {
             // There's no light to trace.
             guard layout.lights.count > 0 else { return }
 
-            strongSelf.traceSegmentsLeft = isInteractive ?
-                strongSelf.interactiveMaxSegmentsToTrace : strongSelf.finalMaxSegmentsToTrace
-
-            strongSelf.enqueueTracersIfNeeded()
+            if isInteractive {
+                strongSelf.enqueueInteractiveTracer()
+            } else {
+                strongSelf.finalTraceSegmentsLeft = strongSelf.finalMaxSegmentsToTrace
+                strongSelf.enqueueFinalTracersIfNeeded()
+            }
         }
     }
 
@@ -65,7 +68,7 @@ public class CPULightSimulator: LightSimulator {
         _ = setupNewRootLightGrid()
         self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
         self.tracerQueue.qualityOfService = .userInitiated
-        traceSegmentsLeft = 0
+        finalTraceSegmentsLeft = 0
     }
 
     public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
@@ -85,20 +88,29 @@ public class CPULightSimulator: LightSimulator {
         return self.rootGrid
     }
 
-    private func enqueueTracersIfNeeded() {
+    private func enqueueInteractiveTracer() {
+        let tracer = Tracer.makeTracer(
+            context: context,
+            rootGrid: rootGrid,
+            layout: currentLayout,
+            simulationSize: simulationSize,
+            segmentsToTrace: interactiveMaxSegmentsToTrace,
+            interactiveTrace: true)
+        // The operation is assigned the highest QoS.
+        tracer.qualityOfService = .userInteractive
+        tracerQueue.addOperation(tracer)
+    }
+
+    private func enqueueFinalTracersIfNeeded() {
         for _ in 0..<max((tracerQueueConcurrency - tracerQueue.operationCount), 0) {
             // The first operation is special-cased as being interactive.
             var tracerSize = standardTracerSize
-            /*
-            if tracerQueue.operationCount == 0 {
-                tracerSize = interactiveTracerSize
-            }*/
 
-            tracerSize = min(tracerSize, traceSegmentsLeft)
+            tracerSize = min(tracerSize, finalTraceSegmentsLeft)
 
             guard tracerSize > 0 else { return }
 
-            traceSegmentsLeft -= tracerSize
+            finalTraceSegmentsLeft -= tracerSize
 
             // A grid for this tracer to accumulate on.
             var tracer: Operation?
@@ -107,14 +119,18 @@ public class CPULightSimulator: LightSimulator {
                 rootGrid: rootGrid,
                 layout: currentLayout,
                 simulationSize: simulationSize,
-                segmentsToTrace: tracerSize)
+                segmentsToTrace: tracerSize,
+                interactiveTrace: false)
+
+            // The operation is assigned a QoS slightly lower than the interactive tracer.
+            tracer?.qualityOfService = .userInitiated
 
             tracer?.completionBlock = { [weak self] in
                 guard let strongTracer = tracer else { return }
                 guard !strongTracer.isCancelled else { return }
 
                 self?.simulatorQueue.addOperation { [weak self] in
-                    self?.enqueueTracersIfNeeded()
+                    self?.enqueueFinalTracersIfNeeded()
                 }
             }
 
@@ -125,7 +141,7 @@ public class CPULightSimulator: LightSimulator {
     private let standardTracerSize = 10_000
     private let interactiveMaxSegmentsToTrace = 200
     private let finalMaxSegmentsToTrace = 10_000_000
-    private var traceSegmentsLeft = 0
+    private var finalTraceSegmentsLeft = 0
 
 
     private let simulationSize: CGSize

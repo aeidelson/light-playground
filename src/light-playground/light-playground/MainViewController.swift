@@ -84,6 +84,7 @@ class MainViewController: UIViewController, CALayerDelegate {
         case (.wall, .ended):
             guard let start = wallStartLocation else { break }
             let end = sender.location(in: interactionView)
+
             walls.append(Wall(
                 pos1: CGPoint(
                     x: start.x * drawLayer.contentsScale,

@@ -27,13 +27,23 @@ class LightGrid {
         updateImage()
     }
 
-    public func drawSegments(segments: [LightSegment]) {
-        for segment in segments {
-            WuLightGridSegmentDraw.drawSegment(
-                gridWidth: width,
-                gridHeight: height,
-                data: &data,
-                segment: segment)
+    public func drawSegments(segments: [LightSegment], lowQuality: Bool) {
+        if lowQuality {
+            for segment in segments {
+                BresenhamLightGridSegmentDraw.drawSegment(
+                    gridWidth: width,
+                    gridHeight: height,
+                    data: &data,
+                    segment: segment)
+            }
+        } else {
+            for segment in segments {
+                WuLightGridSegmentDraw.drawSegment(
+                    gridWidth: width,
+                    gridHeight: height,
+                    data: &data,
+                    segment: segment)
+            }
         }
 
         totalSegmentCount += segments.count

@@ -76,5 +76,61 @@ func measure(_ label: String, block: () -> Void) {
 
 func simLog(_ label: String) {
     Swift.print("\(Date().timeIntervalSince1970): \(label)")
+}
 
+/// This holds a reference to the pool object and provides an interface to get a weak reference.
+class PoolObject<T: AnyObject> {
+    fileprivate init(value: T, pool: ReusablePool<T>) {
+        self.valueInternal = value
+        self.pool = pool
+    }
+
+    deinit {
+        precondition(valueInternal == nil, "release() must be called before the pool object is deallocated,")
+    }
+
+    public func release() {
+        guard let unwrapedValue = valueInternal else { preconditionFailure() }
+        pool?.add(unwrapedValue)
+        valueInternal = nil
+    }
+
+    public weak var valueWeak: T? {
+        return valueInternal
+
+    }
+
+    /// This will hold a strong reference until release is called.
+    private var valueInternal: T?
+
+    private weak var pool: ReusablePool<T>?
+}
+
+class ReusablePool<T: AnyObject> {
+    init(producer: @escaping () -> T) {
+        self.producer = producer
+    }
+
+    func borrow() -> PoolObject<T> {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+
+        let value: T
+        if freed.count > 0 {
+            value = freed.removeLast()
+        } else {
+            value = producer()
+        }
+        return PoolObject(value: value, pool: self)
+    }
+
+    func add(_ v: T) {
+        objc_sync_enter(self)
+        defer { objc_sync_exit(self) }
+
+        freed.append(v)
+    }
+
+    private var freed = [T]()
+    private let producer: () -> T
 }
