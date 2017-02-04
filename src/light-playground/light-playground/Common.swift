@@ -5,10 +5,15 @@ import CoreGraphics
 
 public struct Light {
     let pos: CGPoint
+    let color: LightColor
 }
 
 public struct Wall {
     let pos1, pos2: CGPoint
+
+    /// Percentage of the color to reflect. A value of zero will result in no reflection.
+    /// TODO: Technically a color would be more flexible?
+    let reflection: CGFloat
 }
 
 public struct SimulationLayout {
@@ -76,6 +81,37 @@ func measure(_ label: String, block: () -> Void) {
 
 func simLog(_ label: String) {
     Swift.print("\(Date().timeIntervalSince1970): \(label)")
+}
+
+func dotProduct(_ v1: CGVector, _ v2: CGVector) -> CGFloat {
+    return v1.dx * v2.dx + v1.dy * v2.dy
+}
+
+func magnitude(_ v: CGVector) -> CGFloat {
+    return sqrt(pow(v.dx, 2) + pow(v.dy, 2))
+}
+
+func normalize(_ v: CGVector) -> CGVector {
+    let m = magnitude(v)
+    return CGVector(
+        dx: v.dx / m,
+        dy: v.dy / m)
+}
+
+/// Returns the angle between two vectors (in radians).
+func angle(_ v1: CGVector, _ v2: CGVector) -> CGFloat {
+    return acos(dotProduct(v1, v2) / (magnitude(v1) * magnitude(v2)))
+}
+
+func absoluteAngle(_ v: CGVector) -> CGFloat{
+    return atan2(v.dx, v.dy)
+}
+
+func rotate(_ v: CGVector, _ angle: CGFloat) -> CGVector {
+    return CGVector(
+        dx: v.dx * cos(angle) - v.dy * sin(angle),
+        dy: v.dx * sin(angle) + v.dy * cos(angle)
+    )
 }
 
 /// This holds a reference to the pool object and provides an interface to get a weak reference.

@@ -66,7 +66,7 @@ class Tracer {
 
         // Prime rayBuffer with the rays emitting from lights.
         // TODO: Figure out how to make this work with reflections.
-        let initialRaysToCast = maxSegments
+        let initialRaysToCast = maxSegments / 2
 
         for i in 0..<initialRaysToCast {
             let lightChosen = layout.lights[i % layout.lights.count]
@@ -80,7 +80,7 @@ class Tracer {
                 origin: rayOrigin,
                 direction: rayDirection,
                 // For now just assuming white light
-                color: LightColor(r: 255, g: 255, b: 255)))
+                color: lightChosen.color))
         }
 
         // Hardcode walls to prevent out of index.
@@ -89,10 +89,10 @@ class Tracer {
         let maxX: CGFloat = simulationSize.width - 2.0
         let maxY: CGFloat = simulationSize.height - 2.0
         var allWalls = [
-            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY)),
-            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY)),
-            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY)),
-            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY))
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY), reflection: 0.0),
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY), reflection: 0.0),
+            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0),
+            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0)
         ]
         allWalls.append(contentsOf: layout.walls)
 
@@ -170,21 +170,67 @@ class Tracer {
             
             // Create a light segment using whatever the closest collision was
             
-            guard let segmentEndPoint = closestIntersectionPoint else { preconditionFailure() }
-            guard let _ = closestIntersectionWall else { preconditionFailure() }
-            
-            // TODO: Should spawn rays if bouncing off wall
+            guard let intersectionPoint = closestIntersectionPoint else { preconditionFailure() }
+            guard let intersectionWall = closestIntersectionWall else { preconditionFailure() }
+
+            // TODO: Prune rays that are too dark.
+            if intersectionWall.reflection > 0.01 {
+                let newColor = LightColor(
+                    r: UInt8(intersectionWall.reflection * CGFloat(ray.color.r)),
+                    g: UInt8(intersectionWall.reflection * CGFloat(ray.color.g)),
+                    b: UInt8(intersectionWall.reflection * CGFloat(ray.color.b)))
+
+                // TODO: Much of this can be done ahead of time.
+
+                // Calculate the normal of the wall
+                let dx = intersectionWall.pos2.x - intersectionWall.pos1.x
+                let dy = intersectionWall.pos2.y - intersectionWall.pos1.y
+
+                // To get the direction of the ray
+                let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
+
+                let normal1 = CGVector(dx: -dy, dy: dx)
+                let normal2 = CGVector(dx: dy, dy: -dx)
+
+                // The normal on the side of the wall opposite of the ray origin.
+                let normal: CGVector
+
+                // Which ever normal is closest to the direction of the incoming ray is assumed to be on the opposite
+                // side of the wall.
+                if angle(normal1, reverseIncomingDirection) < CGFloat(M_PI) {
+                    normal = normal1
+                } else {
+                    normal = normal2
+                }
+
+                let normalAngle = absoluteAngle(normal)
+                let reverseIncomingDirectionAngle = absoluteAngle(reverseIncomingDirection)
+
+                let newRaydirection = normalize(
+                    rotate(reverseIncomingDirection, 2 * (reverseIncomingDirectionAngle - normalAngle)))
+
+                /// Start the ray off with a small head-start so it doesn't collide with the wall it intersected with.
+                let bounceRayOrigin = CGPoint(
+                    x: intersectionPoint.x + newRaydirection.dx * 0.1,
+                    y: intersectionPoint.y + newRaydirection.dy * 0.1)
+
+                let bounceRay = LightRay(
+                    origin: bounceRayOrigin,
+                    direction: newRaydirection,
+                    color: newColor)
+
+                rayQueue.append(bounceRay)
+            }
 
             producedSegments.append(LightSegment(
                 p0: ray.origin,
-                p1: segmentEndPoint,
+                p1: intersectionPoint,
                 color: ray.color))
         }
 
         return producedSegments
     }
 }
-
 
 // MARK: Private
 

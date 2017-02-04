@@ -58,7 +58,11 @@ class MainViewController: UIViewController, CALayerDelegate {
             lights.append(Light(
                 pos: CGPoint(
                     x: lightLogation.x * drawLayer.contentsScale,
-                    y: lightLogation.y * drawLayer.contentsScale)))
+                    y: lightLogation.y * drawLayer.contentsScale),
+                color: LightColor(
+                    r: UInt8(arc4random_uniform(255)),
+                    g: UInt8(arc4random_uniform(255)),
+                    b: UInt8(arc4random_uniform(255)))))
             resetSimulator()
         }
     }
@@ -77,7 +81,8 @@ class MainViewController: UIViewController, CALayerDelegate {
                     y: start.y * drawLayer.contentsScale),
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
-                    y: end.y * drawLayer.contentsScale))
+                    y: end.y * drawLayer.contentsScale),
+                reflection: 0.75)
 
             resetSimulator()
 
@@ -91,7 +96,8 @@ class MainViewController: UIViewController, CALayerDelegate {
                     y: start.y * drawLayer.contentsScale),
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
-                    y: end.y * drawLayer.contentsScale)))
+                    y: end.y * drawLayer.contentsScale),
+                reflection: 0.75))
 
             // The interactive wall when building the wall is no longer relevant
             interactiveWall = nil

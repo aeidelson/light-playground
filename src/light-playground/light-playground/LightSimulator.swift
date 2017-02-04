@@ -138,6 +138,9 @@ public class CPULightSimulator: LightSimulator {
         }
     }
 
+    //private let standardTracerSize = 1000
+    //private let finalMaxSegmentsToTrace = 1000
+
     private let standardTracerSize = 10_000
     private let interactiveMaxSegmentsToTrace = 200
     private let finalMaxSegmentsToTrace = 10_000_000
