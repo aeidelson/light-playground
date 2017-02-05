@@ -35,16 +35,25 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     }
 
     // MARK: UIPopoverPresentationControllerDelegate
+
     func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
         return .none
     }
+
+    func popoverPresentationControllerShouldDismissPopover(
+        _ popoverPresentationController: UIPopoverPresentationController) -> Bool {
+        self.dismiss(animated: false)
+        return true
+    }
+
 
     // MARK: Internal
 
     func setInitialValues(
         exposure: CGFloat,
         lightColor: LightColor,
-        wallReflectivity: CGFloat
+        wallReflectivity: CGFloat,
+        wallDiffusion: CGFloat
     ) {
         exposureSlider.setValue(Float(exposure), animated: false)
 
@@ -53,6 +62,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightBlueSlider.setValue(Float(lightColor.b), animated: false)
 
         wallReflectivitySlider.setValue(Float(wallReflectivity), animated: false)
+        wallDiffusionSlider.setValue(Float(wallDiffusion), animated: false)
     }
 
     /// Called on viewWillAppear so setInitialValues can be called.
@@ -61,6 +71,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     var onExposureChange: (CGFloat) -> Void = { _ in }
     var onLightColorChange: (LightColor) -> Void = { _ in }
     var onWallReflectivityChange: (CGFloat) -> Void = { _ in }
+    var onWallDiffusionChange: (CGFloat) -> Void = { _ in }
 
     // MARK: Interface builder outlets
 
@@ -69,6 +80,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     @IBOutlet weak var lightGreenSlider: UISlider!
     @IBOutlet weak var lightBlueSlider: UISlider!
     @IBOutlet weak var wallReflectivitySlider: UISlider!
+    @IBOutlet weak var wallDiffusionSlider: UISlider!
 
     @IBAction func exposureChanged(_ sender: Any) {
         onExposureChange(CGFloat(exposureSlider.value))
@@ -88,6 +100,10 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
 
     @IBAction func wallReflectivityChanged(_ sender: Any) {
         onWallReflectivityChange(CGFloat(wallReflectivitySlider.value))
+    }
+
+    @IBAction func wallDiffusionChanged(_ sender: Any) {
+        onWallDiffusionChange(CGFloat(wallDiffusionSlider.value))
     }
 
     // MARK: Private

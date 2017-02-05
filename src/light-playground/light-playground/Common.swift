@@ -14,6 +14,9 @@ public struct Wall {
     /// Percentage of the color to reflect. A value of zero will result in no reflection.
     /// TODO: Technically a color would be more flexible?
     let reflection: CGFloat
+
+    /// A value from 0 to 1 indicating how much to deviate from the angle of reflection.
+    let diffusion: CGFloat
 }
 
 public struct SimulationLayout {

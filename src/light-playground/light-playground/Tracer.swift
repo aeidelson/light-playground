@@ -89,10 +89,10 @@ class Tracer {
         let maxX: CGFloat = simulationSize.width - 2.0
         let maxY: CGFloat = simulationSize.height - 2.0
         var allWalls = [
-            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY), reflection: 0.0),
-            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY), reflection: 0.0),
-            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0),
-            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0)
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY), reflection: 0.0, diffusion: 0.0),
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY), reflection: 0.0, diffusion: 0.0),
+            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0, diffusion: 0.0),
+            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0, diffusion: 0.0)
         ]
         allWalls.append(contentsOf: layout.walls)
 
@@ -206,17 +206,35 @@ class Tracer {
                 let normalAngle = absoluteAngle(normal)
                 let reverseIncomingDirectionAngle = absoluteAngle(reverseIncomingDirection)
 
-                let newRaydirection = normalize(
+                var newRayDirection = normalize(
                     rotate(reverseIncomingDirection, 2 * (reverseIncomingDirectionAngle - normalAngle)))
+
+                // Adjust the ray for diffusion:
+                if intersectionWall.diffusion > 0.0 {
+                    let newRayAngle = absoluteAngle(newRayDirection)
+
+                    // Find how far the ray is from the closest wall.
+                    let wallAngles = (normalAngle + CGFloat(M_PI_4), normalAngle - CGFloat(M_PI_4))
+                    let closestAngleDifference = min(abs(newRayAngle - wallAngles.0), abs(newRayAngle - wallAngles.0))
+
+                    // The maximum ammount the angle can change from diffusion.
+                    // This should be pi/8 normally, but if the of reflection is steep this will be the angle between
+                    // the reflection and the wall (With a very small ammount of buffer room for safety).
+                    let maxDiffuseAngle = min(CGFloat(M_PI / 8), closestAngleDifference - 0.1)
+                    let diffuseAngle = CGFloat(drand48()) * 2 * maxDiffuseAngle - maxDiffuseAngle
+                    newRayDirection = rotate(newRayDirection, diffuseAngle)
+                }
+
+
 
                 /// Start the ray off with a small head-start so it doesn't collide with the wall it intersected with.
                 let bounceRayOrigin = CGPoint(
-                    x: intersectionPoint.x + newRaydirection.dx * 0.1,
-                    y: intersectionPoint.y + newRaydirection.dy * 0.1)
+                    x: intersectionPoint.x + newRayDirection.dx * 0.1,
+                    y: intersectionPoint.y + newRayDirection.dy * 0.1)
 
                 let bounceRay = LightRay(
                     origin: bounceRayOrigin,
-                    direction: newRaydirection,
+                    direction: newRayDirection,
                     color: newColor)
 
                 rayQueue.append(bounceRay)

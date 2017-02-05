@@ -82,7 +82,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
-                reflection: wallReflectivity)
+                reflection: wallReflectivity,
+                diffusion: wallDiffusion)
 
             resetSimulator()
 
@@ -97,7 +98,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
-                reflection: wallReflectivity))
+                reflection: wallReflectivity,
+                diffusion: wallDiffusion))
 
             // The interactive wall when building the wall is no longer relevant
             interactiveWall = nil
@@ -125,7 +127,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             optionsViewController.setInitialValues(
                 exposure: strongSelf.exposure,
                 lightColor: strongSelf.lightColor,
-                wallReflectivity: strongSelf.wallReflectivity)
+                wallReflectivity: strongSelf.wallReflectivity,
+                wallDiffusion: strongSelf.wallDiffusion)
         }
 
         optionsViewController.onExposureChange = { [weak self] newExposure in
@@ -140,6 +143,12 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         optionsViewController.onWallReflectivityChange = { [weak self] newWallReflectivity in
             self?.wallReflectivity = newWallReflectivity
         }
+
+
+        optionsViewController.onWallDiffusionChange = { [weak self] newWallDiffusion in
+            self?.wallDiffusion = newWallDiffusion
+        }
+
 
         optionsViewController.modalPresentationStyle = .popover
         optionsViewController.popoverPresentationController?.barButtonItem = optionsButton
@@ -193,6 +202,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     private var exposure: CGFloat = 0.55
     private var lightColor = LightColor(r: 255, g: 255, b: 255)
     private var wallReflectivity: CGFloat = 0.75
+    private var wallDiffusion: CGFloat = 0.1
 
     // State of the simulation
     private var lights = [Light]()
