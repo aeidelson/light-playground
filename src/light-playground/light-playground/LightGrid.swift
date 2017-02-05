@@ -24,10 +24,10 @@ class LightGrid {
         }
         totalSegmentCount = 0
 
-        updateImage()
+        updateImage(exposure: 0.0)
     }
 
-    public func drawSegments(segments: [LightSegment], lowQuality: Bool) {
+    public func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool) {
         if lowQuality {
             for segment in segments {
                 BresenhamLightGridSegmentDraw.drawSegment(
@@ -48,10 +48,10 @@ class LightGrid {
 
         totalSegmentCount += segments.count
 
-        updateImage()
+        updateImage(exposure: layout.exposure)
     }
 
-    public func aggregrate(grids: [LightGrid]) {
+    public func aggregrate(layout: SimulationLayout, grids: [LightGrid]) {
         for grid in grids {
             precondition(grid.width == width)
             precondition(grid.height == height)
@@ -63,19 +63,17 @@ class LightGrid {
             }
             totalSegmentCount += grid.totalSegmentCount
         }
-        updateImage()
+        updateImage(exposure: layout.exposure)
     }
 
-    private func updateImage() {
+    private func updateImage(exposure: CGFloat) {
         guard generateImage else { return }
-
-        let exposure = Float(0.55) // TODO: Move to constant
 
         let brightness: Float
         if totalSegmentCount == 0 {
             brightness = 0
         } else {
-            brightness = calculateBrightness(segmentCount: totalSegmentCount, exposure: exposure)
+            brightness = calculateBrightness(segmentCount: totalSegmentCount, exposure: Float(exposure))
         }
 
         let bufferSize = totalPixels * componentsPerPixel

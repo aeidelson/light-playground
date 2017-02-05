@@ -17,6 +17,7 @@ public struct Wall {
 }
 
 public struct SimulationLayout {
+    public let exposure: CGFloat
     public let lights: [Light]
     public let walls: [Wall]
 }
@@ -33,7 +34,6 @@ public struct LightSegment {
     public let p1: CGPoint
     public let color: LightColor
 }
-
 
 public typealias Token = String
 

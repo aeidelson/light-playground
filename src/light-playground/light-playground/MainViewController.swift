@@ -1,9 +1,11 @@
 import UIKit
 
-class MainViewController: UIViewController, CALayerDelegate {
+class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentationControllerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.navigationController?.navigationBar.isHidden = true
 
         // Setup the draw layer
         drawLayer.delegate = self
@@ -51,6 +53,7 @@ class MainViewController: UIViewController, CALayerDelegate {
 
     @IBOutlet weak var interactionView: UIView!
     @IBOutlet weak var interactionModeControl: UISegmentedControl!
+    @IBOutlet weak var optionsButton: UIBarButtonItem!
 
     @IBAction func tapGesture(_ sender: UITapGestureRecognizer) {
         if case .light = currentInteractionMode {
@@ -59,10 +62,7 @@ class MainViewController: UIViewController, CALayerDelegate {
                 pos: CGPoint(
                     x: lightLogation.x * drawLayer.contentsScale,
                     y: lightLogation.y * drawLayer.contentsScale),
-                color: LightColor(
-                    r: UInt8(arc4random_uniform(255)),
-                    g: UInt8(arc4random_uniform(255)),
-                    b: UInt8(arc4random_uniform(255)))))
+                color: lightColor))
             resetSimulator()
         }
     }
@@ -82,7 +82,7 @@ class MainViewController: UIViewController, CALayerDelegate {
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
-                reflection: 0.75)
+                reflection: wallReflectivity)
 
             resetSimulator()
 
@@ -97,7 +97,7 @@ class MainViewController: UIViewController, CALayerDelegate {
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
-                reflection: 0.75))
+                reflection: wallReflectivity))
 
             // The interactive wall when building the wall is no longer relevant
             interactiveWall = nil
@@ -106,6 +106,44 @@ class MainViewController: UIViewController, CALayerDelegate {
         default:
             break
         }
+    }
+
+    @IBAction func clearButtonHit(_ sender: Any) {
+        self.walls = []
+        self.lights = []
+        self.interactiveWall = nil
+        resetSimulator()
+    }
+
+    @IBAction func optionsButtonHit(_ sender: Any) {
+        guard let viewController =
+            self.storyboard?.instantiateViewController(withIdentifier: "OptionsScreen") else { return }
+        guard let optionsViewController = viewController as? OptionsViewController else { preconditionFailure() }
+
+        optionsViewController.loadDefaults = { [weak self] in
+            guard let strongSelf = self else { return }
+            optionsViewController.setInitialValues(
+                exposure: strongSelf.exposure,
+                lightColor: strongSelf.lightColor,
+                wallReflectivity: strongSelf.wallReflectivity)
+        }
+
+        optionsViewController.onExposureChange = { [weak self] newExposure in
+            self?.exposure = newExposure
+            self?.resetSimulator()
+        }
+
+        optionsViewController.onLightColorChange = { [weak self] newLightColor in
+            self?.lightColor = newLightColor
+        }
+
+        optionsViewController.onWallReflectivityChange = { [weak self] newWallReflectivity in
+            self?.wallReflectivity = newWallReflectivity
+        }
+
+        optionsViewController.modalPresentationStyle = .popover
+        optionsViewController.popoverPresentationController?.barButtonItem = optionsButton
+        present(optionsViewController, animated: false, completion: nil)
     }
 
     /// Used to track where the start of a wall was.
@@ -142,15 +180,21 @@ class MainViewController: UIViewController, CALayerDelegate {
         }
 
         let layout = SimulationLayout(
+            exposure: exposure,
             lights: finalLights,
             walls: finalWalls)
 
         simulator?.restartSimulation(
             layout: layout,
             isInteractive: isInteractive)
-
     }
 
+    /// Options (with defaults) that are configurable in the OptionsController.
+    private var exposure: CGFloat = 0.55
+    private var lightColor = LightColor(r: 255, g: 255, b: 255)
+    private var wallReflectivity: CGFloat = 0.75
+
+    // State of the simulation
     private var lights = [Light]()
     private var walls = [Wall]()
     private var interactiveWall: Wall?

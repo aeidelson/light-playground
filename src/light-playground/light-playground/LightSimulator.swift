@@ -38,7 +38,7 @@ public class CPULightSimulator: LightSimulator {
         self.tracerQueue.qualityOfService = .userInitiated
 
         self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
-        self.currentLayout = SimulationLayout(lights: [], walls: [])
+        self.currentLayout = SimulationLayout(exposure: 0.0, lights: [], walls: [])
     }
 
     public func restartSimulation(layout: SimulationLayout, isInteractive: Bool) {
@@ -52,7 +52,11 @@ public class CPULightSimulator: LightSimulator {
             strongSelf.stop()
 
             // There's no light to trace.
-            guard layout.lights.count > 0 else { return }
+            guard layout.lights.count > 0 else {
+                // Reset the root grid to make sure it is cleared.
+                strongSelf.rootGrid.reset()
+                return
+            }
 
             if isInteractive {
                 strongSelf.enqueueInteractiveTracer()
