@@ -8,15 +8,32 @@ public struct Light {
     let color: LightColor
 }
 
-public struct Wall {
-    let pos1, pos2: CGPoint
+/// A common object that can be used in the declaration of shapes with volume.
+public struct VolumeAttributes {
+    public let indexOfRefraction: CGFloat
+}
 
-    /// Percentage of the color to reflect. A value of zero will result in no reflection.
-    /// TODO: Technically a color would be more flexible?
-    let reflection: CGFloat
+/// A common object that can be used in the declaration of the surface of shapes.
+public struct SurfaceAttributes {
+    /// Percentage of the light to absorb (rather than reflect). A value of zero will result in no absorption.
+    let absorption: CGFloat
 
     /// A value from 0 to 1 indicating how much to deviate from the angle of reflection.
     let diffusion: CGFloat
+}
+
+public struct Wall {
+    let pos1, pos2: CGPoint
+
+    let surfaceAttributes: SurfaceAttributes
+}
+
+public struct CircleShape {
+    let pos: CGPoint
+    let radius: CGFloat
+
+    let surfaceAttributes: SurfaceAttributes
+    let volumeAttributes: VolumeAttributes
 }
 
 public struct SimulationLayout {

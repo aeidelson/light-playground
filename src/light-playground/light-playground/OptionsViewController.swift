@@ -52,7 +52,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     func setInitialValues(
         exposure: CGFloat,
         lightColor: LightColor,
-        wallReflectivity: CGFloat,
+        wallAbsorption: CGFloat,
         wallDiffusion: CGFloat
     ) {
         exposureSlider.setValue(Float(exposure), animated: false)
@@ -61,7 +61,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightGreenSlider.setValue(Float(lightColor.g), animated: false)
         lightBlueSlider.setValue(Float(lightColor.b), animated: false)
 
-        wallReflectivitySlider.setValue(Float(wallReflectivity), animated: false)
+        wallAbsorptionSlider.setValue(Float(wallAbsorption), animated: false)
         wallDiffusionSlider.setValue(Float(wallDiffusion), animated: false)
     }
 
@@ -70,7 +70,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
 
     var onExposureChange: (CGFloat) -> Void = { _ in }
     var onLightColorChange: (LightColor) -> Void = { _ in }
-    var onWallReflectivityChange: (CGFloat) -> Void = { _ in }
+    var onWallAbsorptionChange: (CGFloat) -> Void = { _ in }
     var onWallDiffusionChange: (CGFloat) -> Void = { _ in }
 
     // MARK: Interface builder outlets
@@ -79,7 +79,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     @IBOutlet weak var lightRedSlider: UISlider!
     @IBOutlet weak var lightGreenSlider: UISlider!
     @IBOutlet weak var lightBlueSlider: UISlider!
-    @IBOutlet weak var wallReflectivitySlider: UISlider!
+    @IBOutlet weak var wallAbsorptionSlider: UISlider!
     @IBOutlet weak var wallDiffusionSlider: UISlider!
 
     @IBAction func exposureChanged(_ sender: Any) {
@@ -98,8 +98,8 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightColorChanged()
     }
 
-    @IBAction func wallReflectivityChanged(_ sender: Any) {
-        onWallReflectivityChange(CGFloat(wallReflectivitySlider.value))
+    @IBAction func wallAbsorptionChanged(_ sender: Any) {
+        onWallAbsorptionChange(CGFloat(wallAbsorptionSlider.value))
     }
 
     @IBAction func wallDiffusionChanged(_ sender: Any) {

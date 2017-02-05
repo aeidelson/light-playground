@@ -89,13 +89,18 @@ class Tracer {
         let minY: CGFloat = 1.0
         let maxX: CGFloat = simulationSize.width - 2.0
         let maxY: CGFloat = simulationSize.height - 2.0
-        var allWalls = [
-            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY), reflection: 0.0, diffusion: 0.0),
-            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY), reflection: 0.0, diffusion: 0.0),
-            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0, diffusion: 0.0),
-            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY), reflection: 0.0, diffusion: 0.0)
+        let surfaceAttributes = SurfaceAttributes(absorption: 1.0, diffusion: 0)
+        var allItems = [
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY),
+                surfaceAttributes: surfaceAttributes),
+            Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY),
+                 surfaceAttributes: surfaceAttributes),
+            Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY),
+                 surfaceAttributes: surfaceAttributes),
+            Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY),
+                 surfaceAttributes: surfaceAttributes)
         ]
-        allWalls.append(contentsOf: layout.walls)
+        allItems.append(contentsOf: layout.walls)
 
         var producedSegments = [LightSegment]()
         producedSegments.reserveCapacity(maxSegments)
@@ -112,121 +117,70 @@ class Tracer {
                 point: ray.origin) else { continue }
 
             var closestIntersectionPoint: CGPoint?
-            var closestIntersectionWall: Wall?
+            var closestIntersectionItem: LightIntersectionItem?
             var closestDistance = CGFloat.greatestFiniteMagnitude
 
-            for wall in allWalls {
-                // TODO: Should move all the (constant) ray calculations out of this loop.
-                // Given the equation `y = mx + b`
+            for item in allItems {
+                guard let intersectionPoint = item.intersectionPoint(ray: ray) else { continue }
 
-                // Calculate `m`:
-                let raySlope = safeDivide(ray.direction.dy, ray.direction.dx)
-                let wallSlope = safeDivide((wall.pos2.y - wall.pos1.y), (wall.pos2.x - wall.pos1.x))
-                if abs(raySlope - wallSlope) < 0.01 {
-                    // They are rounghly parallel, stop processing.
-                    continue
-                }
-
-                // Calculate `b` using: `b = y - mx`
-                let rayYIntercept = ray.origin.y - raySlope * ray.origin.x
-                let wallYIntercept = wall.pos1.y - wallSlope * wall.pos1.x
-
-                // Calculate x-collision (derived from equations above)
-                let collisionX = safeDivide((wallYIntercept - rayYIntercept), (raySlope - wallSlope))
-
-                // Calculate y intercept using `y = mx + b`
-                let collisionY = raySlope * collisionX + rayYIntercept
-
-                // Check if the collision points are on the correct side of the light ray
-                let positiveXRayDirection = ray.direction.dx >= 0
-                let positiveYRayDirection = ray.direction.dy >= 0
-                let positiveCollisionXDirection = (collisionX - ray.origin.x) >= 0
-                let positiveCollisionYDirection = (collisionY - ray.origin.y) >= 0
-
-                guard positiveXRayDirection == positiveCollisionXDirection &&
-                    positiveYRayDirection == positiveCollisionYDirection else { continue }
-
-                // Check if the collision points are inside the wall segment. Some buffer is added to handle horizontal
-                // or vertical lines.
-                let segmentXRange = (min(wall.pos1.x, wall.pos2.x)-0.5)...(max(wall.pos1.x, wall.pos2.x)+0.5)
-                let segmentYRange = (min(wall.pos1.y, wall.pos2.y)-0.5)...(max(wall.pos1.y, wall.pos2.y)+0.5)
-
-                let collisionInWallX = segmentXRange.contains(collisionX)
-
-                let collisionInWallY = segmentYRange.contains(collisionY)
-
-                guard collisionInWallX && collisionInWallY else { continue }
-
-                // Check if the collision points are closer than the current closest
+                // Check if the intersection points are closer than the current closest
                 let distFromOrigin =
-                    sqrt(pow(ray.origin.x - collisionX, 2) + pow(ray.origin.y - collisionY, 2))
+                    sqrt(pow(ray.origin.x - intersectionPoint.x, 2) + pow(ray.origin.y - intersectionPoint.y, 2))
 
 
                 if distFromOrigin < closestDistance {
                     closestDistance = distFromOrigin
-                    closestIntersectionWall = wall
-                    closestIntersectionPoint = CGPoint(x: collisionX, y: collisionY)
+                    closestIntersectionItem = item
+                    closestIntersectionPoint = intersectionPoint
                 }
             }
             
-            // Create a light segment using whatever the closest collision was
+            // Create a light segment using whatever the closest intersection was
             
             guard let intersectionPoint = closestIntersectionPoint else { preconditionFailure() }
-            guard let intersectionWall = closestIntersectionWall else { preconditionFailure() }
+            /// This must be set, since the grid is surrounded by walls.
+            guard let intersectionItem = closestIntersectionItem else { preconditionFailure() }
 
             // TODO: Prune rays that are too dark.
-            if intersectionWall.reflection > 0.01 {
+            if intersectionItem.surfaceAttributes.absorption < 0.99 {
+                let percentReflected = 1 - intersectionItem.surfaceAttributes.absorption
                 let newColor = LightColor(
-                    r: UInt8(intersectionWall.reflection * CGFloat(ray.color.r)),
-                    g: UInt8(intersectionWall.reflection * CGFloat(ray.color.g)),
-                    b: UInt8(intersectionWall.reflection * CGFloat(ray.color.b)))
+                    r: UInt8(percentReflected * CGFloat(ray.color.r)),
+                    g: UInt8(percentReflected * CGFloat(ray.color.g)),
+                    b: UInt8(percentReflected * CGFloat(ray.color.b)))
 
                 // TODO: Much of this can be done ahead of time and cleaned up.
 
-                // Calculate the normal of the wall
-                let dx = intersectionWall.pos2.x - intersectionWall.pos1.x
-                let dy = intersectionWall.pos2.y - intersectionWall.pos1.y
+                let normals = intersectionItem.calculateNormals(ray: ray, atPos: intersectionPoint)
 
-                // To get the direction of the ray
                 let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
 
-                let normal1 = CGVector(dx: -dy, dy: dx)
-                let normal2 = CGVector(dx: dy, dy: -dx)
-
-                // The normal on the side of the wall opposite of the ray origin.
-                let normal: CGVector
-
-                // Which ever normal is closest to the direction of the incoming ray is assumed to be on the opposite
-                // side of the wall.
-                if angle(normal1, reverseIncomingDirection) < CGFloat(M_PI) {
-                    normal = normal1
-                } else {
-                    normal = normal2
-                }
-
-                let normalAngle = absoluteAngle(normal)
+                let normalAngle = absoluteAngle(normals.reflectionNormal)
                 let reverseIncomingDirectionAngle = absoluteAngle(reverseIncomingDirection)
 
                 var newRayDirection = normalize(
                     rotate(reverseIncomingDirection, 2 * (reverseIncomingDirectionAngle - normalAngle)))
 
                 // Adjust the ray for diffusion:
-                if intersectionWall.diffusion > 0.0 {
+                if intersectionItem.surfaceAttributes.diffusion > 0.0 {
                     let newRayAngle = absoluteAngle(newRayDirection)
 
-                    // Find how far the ray is from the closest wall.
-                    let wallAngles = (normalAngle + CGFloat(M_PI_4), normalAngle - CGFloat(M_PI_4))
-                    let closestAngleDifference = min(abs(newRayAngle - wallAngles.0), abs(newRayAngle - wallAngles.0))
+                    // Find how far the ray is from the closest perpendicular part of the item.
+                    // TODO: Need to investigate if this works for non-wall items.
+                    let perpendicularAngles = (normalAngle + CGFloat(M_PI_4), normalAngle - CGFloat(M_PI_4))
+                    let closestAngleDifference =
+                        min(abs(newRayAngle - perpendicularAngles.0), abs(newRayAngle - perpendicularAngles.0))
 
                     // The maximum ammount the angle can change from diffusion.
                     // This should be pi/8 normally, but if the of reflection is steep this will be the angle between
-                    // the reflection and the wall (With a very small ammount of buffer room for safety).
-                    let maxDiffuseAngle = min(CGFloat(M_PI / 8), closestAngleDifference - 0.1)
+                    // the reflection and the item (With a very small ammount of buffer room for safety).
+                    let maxDiffuseAngle = min(
+                        CGFloat(M_PI / 8) * intersectionItem.surfaceAttributes.diffusion, closestAngleDifference - 0.1)
                     let diffuseAngle = CGFloat(drand48()) * 2 * maxDiffuseAngle - maxDiffuseAngle
                     newRayDirection = rotate(newRayDirection, diffuseAngle)
                 }
 
-                /// Start the ray off with a small head-start so it doesn't collide with the wall it intersected with.
+                /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
                 let bounceRayOrigin = CGPoint(
                     x: intersectionPoint.x + newRayDirection.dx * 0.1,
                     y: intersectionPoint.y + newRayDirection.dy * 0.1)
@@ -251,12 +205,6 @@ class Tracer {
 
 // MARK: Private
 
-private struct LightRay {
-    public let origin: CGPoint
-    public let direction: CGVector
-    public let color: LightColor
-}
-
 private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
     let radians = CGFloat(drand48() * 2.0 * M_PI)
     return CGPoint(
@@ -273,4 +221,108 @@ private func isInsideSimulationBounds(
     point: CGPoint) -> Bool {
     return (point.x >= minX) && (point.x <= maxX) &&
         (point.y >= minY) && (point.y <= maxY)
+}
+
+// MARK: Ray intersections
+
+fileprivate struct LightRay {
+    public let origin: CGPoint
+    public let direction: CGVector
+    public let color: LightColor
+}
+
+fileprivate protocol LightIntersectionItem {
+
+    /// All intersection items must have a surface and so they must have surface attributes.
+    var surfaceAttributes: SurfaceAttributes { get }
+
+    /// Not all intersection items have volume (i.e. walls), so this property is optional.
+    var volumeAttributes: VolumeAttributes? { get }
+
+    /// For a given ray, returns the point where the item and ray collide
+    func intersectionPoint(ray: LightRay) -> CGPoint?
+
+    /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
+    func calculateNormals(ray: LightRay, atPos: CGPoint) -> (reflectionNormal: CGVector, refractionNormal: CGVector)
+}
+
+extension Wall: LightIntersectionItem {
+    /// Walls don't have any volume.
+    fileprivate var volumeAttributes: VolumeAttributes? { return nil }
+
+    /// For a given ray, returns the point where the item and ray collide
+    fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
+        // TODO: Should move all the (constant) ray calculations out of this loop.
+        // Given the equation `y = mx + b`
+
+        // Calculate `m`:
+        let raySlope = safeDivide(ray.direction.dy, ray.direction.dx)
+        let wallSlope = safeDivide((pos2.y - pos1.y), (pos2.x - pos1.x))
+        if abs(raySlope - wallSlope) < 0.01 {
+            // They are rounghly parallel, stop processing.
+            return nil
+        }
+
+        // Calculate `b` using: `b = y - mx`
+        let rayYIntercept = ray.origin.y - raySlope * ray.origin.x
+        let wallYIntercept = pos1.y - wallSlope * pos1.x
+
+        // Calculate x-intersection (derived from equations above)
+        let intersectionX = safeDivide((wallYIntercept - rayYIntercept), (raySlope - wallSlope))
+
+        // Calculate y intercept using `y = mx + b`
+        let intersectionY = raySlope * intersectionX + rayYIntercept
+
+        // Check if the intersection points are on the correct side of the light ray
+        let positiveXRayDirection = ray.direction.dx >= 0
+        let positiveYRayDirection = ray.direction.dy >= 0
+        let positiveIntersectionXDirection = (intersectionX - ray.origin.x) >= 0
+        let positiveIntersectionYDirection = (intersectionY - ray.origin.y) >= 0
+
+        guard positiveXRayDirection == positiveIntersectionXDirection &&
+            positiveYRayDirection == positiveIntersectionYDirection else { return nil }
+
+        // Check if the intersection points are inside the wall segment. Some buffer is added to handle horizontal
+        // or vertical lines.
+        let segmentXRange = (min(pos1.x, pos2.x)-0.5)...(max(pos1.x, pos2.x)+0.5)
+        let segmentYRange = (min(pos1.y, pos2.y)-0.5)...(max(pos1.y, pos2.y)+0.5)
+
+        let intersectionInWallX = segmentXRange.contains(intersectionX)
+
+        let intersectionInWallY = segmentYRange.contains(intersectionY)
+
+        guard intersectionInWallX && intersectionInWallY else { return nil }
+
+        return CGPoint(x: intersectionX, y: intersectionY)
+    }
+
+    /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
+    fileprivate func calculateNormals(
+        ray: LightRay,
+        atPos: CGPoint
+    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+
+        // Calculate the normal of the wall
+        let dx = pos2.x - pos1.x
+        let dy = pos2.y - pos1.y
+
+        // To get the direction of the ray
+        let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
+
+        let normal1 = CGVector(dx: -dy, dy: dx)
+        let normal2 = CGVector(dx: dy, dy: -dx)
+
+        let reflectionNormal: CGVector
+        let refractionNormal: CGVector
+
+        if angle(normal1, reverseIncomingDirection) < CGFloat(M_PI) {
+            reflectionNormal = normal1
+            refractionNormal = normal2
+        } else {
+            reflectionNormal = normal2
+            refractionNormal = normal1
+        }
+
+        return (reflectionNormal: reflectionNormal, refractionNormal: refractionNormal)
+    }
 }

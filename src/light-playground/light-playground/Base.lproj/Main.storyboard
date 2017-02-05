@@ -242,16 +242,16 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Reflectivity" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iLW-TL-mVg">
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Absorption" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iLW-TL-mVg">
                                                     <rect key="frame" x="8" y="11" width="85" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.75" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="6I2-7C-8sS">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.25" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="6I2-7C-8sS">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
-                                                        <action selector="wallReflectivityChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="Klk-z4-t39"/>
+                                                        <action selector="wallAbsorptionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="lOV-p8-0VW"/>
                                                     </connections>
                                                 </slider>
                                             </subviews>
@@ -287,7 +287,6 @@
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
                                                         <action selector="wallDiffusionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="OQE-2h-iBd"/>
-                                                        <action selector="wallReflectivityChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="6ve-PQ-cUQ"/>
                                                     </connections>
                                                 </slider>
                                             </subviews>
@@ -316,8 +315,8 @@
                         <outlet property="lightBlueSlider" destination="xIV-z2-A9l" id="6Fe-gT-rsz"/>
                         <outlet property="lightGreenSlider" destination="Le7-gg-2IX" id="bDG-js-0wY"/>
                         <outlet property="lightRedSlider" destination="Gwj-vq-YNw" id="kIi-hM-6Ha"/>
+                        <outlet property="wallAbsorptionSlider" destination="6I2-7C-8sS" id="d1X-Ra-KHp"/>
                         <outlet property="wallDiffusionSlider" destination="SFi-Cs-rqw" id="haM-DX-JGH"/>
-                        <outlet property="wallReflectivitySlider" destination="6I2-7C-8sS" id="ybB-C2-rUB"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aeg-SI-uK2" userLabel="First Responder" sceneMemberID="firstResponder"/>
