@@ -28,7 +28,6 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             height: drawLayer.frame.size.height * drawLayer.contentsScale
         ))
 
-        // TODO: Unsubscribe from the simulator.
         simulator?.snapshotHandler = { snapshot in
             DispatchQueue.main.async {[weak self] in
                 self?.latestImage = snapshot.image

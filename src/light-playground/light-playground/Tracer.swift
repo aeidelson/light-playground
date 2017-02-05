@@ -64,8 +64,9 @@ class Tracer {
         var rayQueue = [LightRay]()
         rayQueue.reserveCapacity(maxSegments)
 
-        // Prime rayBuffer with the rays emitting from lights.
-        // TODO: Figure out how to make this work with reflections.
+        // Prime rayBuffer with the rays emitting from lights. Half of the remaining segments alloted are used for
+        // bounces.
+        // TODO: Figure out a smarter way to allow for more rays (maybe based on the number of objects in the scene?)
         let initialRaysToCast = maxSegments / 2
 
         for i in 0..<initialRaysToCast {
@@ -180,7 +181,7 @@ class Tracer {
                     g: UInt8(intersectionWall.reflection * CGFloat(ray.color.g)),
                     b: UInt8(intersectionWall.reflection * CGFloat(ray.color.b)))
 
-                // TODO: Much of this can be done ahead of time.
+                // TODO: Much of this can be done ahead of time and cleaned up.
 
                 // Calculate the normal of the wall
                 let dx = intersectionWall.pos2.x - intersectionWall.pos1.x
@@ -224,8 +225,6 @@ class Tracer {
                     let diffuseAngle = CGFloat(drand48()) * 2 * maxDiffuseAngle - maxDiffuseAngle
                     newRayDirection = rotate(newRayDirection, diffuseAngle)
                 }
-
-
 
                 /// Start the ray off with a small head-start so it doesn't collide with the wall it intersected with.
                 let bounceRayOrigin = CGPoint(

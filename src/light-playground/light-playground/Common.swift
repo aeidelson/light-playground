@@ -29,7 +29,6 @@ public struct LightColor {
     public let r: UInt8
     public let g: UInt8
     public let b: UInt8
-    /// TODO: Does it make sense to also include intensity?
 }
 
 public struct LightSegment {

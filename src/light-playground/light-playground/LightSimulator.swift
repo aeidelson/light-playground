@@ -23,7 +23,6 @@ public protocol LightSimulator: class {
 
 /// A context object which instances used throughout the the simulator.
 class CPULightSimulatorContext {
-    //let imageAllocator: Allocator<>
 }
 
 public class CPULightSimulator: LightSimulator {
@@ -141,9 +140,6 @@ public class CPULightSimulator: LightSimulator {
             tracerQueue.addOperation(tracer!)
         }
     }
-
-    //private let standardTracerSize = 1000
-    //private let finalMaxSegmentsToTrace = 1000
 
     private let standardTracerSize = 10_000
     private let interactiveMaxSegmentsToTrace = 200
