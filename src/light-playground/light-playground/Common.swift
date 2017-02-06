@@ -46,6 +46,20 @@ public struct LightColor {
     public let r: UInt8
     public let g: UInt8
     public let b: UInt8
+
+    /// Multiplies each component by the value, safe-guarding against overflow issues.
+    func multiplyBy(_ x: CGFloat) -> LightColor {
+        let newR = CGFloat(r) * x
+        let newG = CGFloat(g) * x
+        let newB = CGFloat(b) * x
+
+        return LightColor(
+            r: UInt8(min(max(newR, 0), 255)),
+            g: UInt8(min(max(newG, 0), 255)),
+            b: UInt8(min(max(newB, 0), 255))
+        )
+
+    }
 }
 
 public struct LightSegment {
