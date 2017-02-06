@@ -37,7 +37,7 @@ public class CPULightSimulator: LightSimulator {
         self.tracerQueue.qualityOfService = .userInitiated
 
         self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
-        self.currentLayout = SimulationLayout(exposure: 0.0, lights: [], walls: [])
+        self.currentLayout = SimulationLayout(exposure: 0.0, lights: [], walls: [], circleShapes: [])
     }
 
     public func restartSimulation(layout: SimulationLayout, isInteractive: Bool) {

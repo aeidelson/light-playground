@@ -93,7 +93,7 @@ class Tracer {
         let maxX: CGFloat = simulationSize.width - 2.0
         let maxY: CGFloat = simulationSize.height - 2.0
         let surfaceAttributes = SurfaceAttributes(absorption: 1.0, diffusion: 0)
-        var allItems = [
+        var allItems: [LightIntersectionItem] = [
             Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY),
                 surfaceAttributes: surfaceAttributes),
             Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY),
@@ -103,7 +103,8 @@ class Tracer {
             Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY),
                  surfaceAttributes: surfaceAttributes)
         ]
-        allItems.append(contentsOf: layout.walls)
+        allItems.append(contentsOf: layout.walls as [LightIntersectionItem])
+        allItems.append(contentsOf: layout.circleShapes as [LightIntersectionItem])
 
         var producedSegments = [LightSegment]()
         producedSegments.reserveCapacity(maxSegments)
@@ -168,7 +169,7 @@ class Tracer {
 
             // Fresnel equations determines how much is reflected vs refracted.
             let percentReflected: CGFloat
-            if let newAttributes = intersectionItem.volumeAttributes {
+            if let newAttributes = intersectionItem.optionalVolumeAttributes {
                 percentReflected = calculateReflectance(
                     fromVolume: VolumeAttributes(indexOfRefraction: 1.0),
                     toVolume: newAttributes,
@@ -264,6 +265,11 @@ private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
     )
 }
 
+fileprivate func calculateDistance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
+    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2))
+
+}
+
 private func isInsideSimulationBounds(
     minX: CGFloat,
     minY: CGFloat,
@@ -297,7 +303,7 @@ fileprivate protocol LightIntersectionItem {
     /// will be calculated based on the normal).
     /// TODO: Should consider using a translucency property on the surface to indicate if light can go through the
     /// object.
-    var volumeAttributes: VolumeAttributes? { get }
+    var optionalVolumeAttributes: VolumeAttributes? { get }
 
     /// For a given ray, returns the point where the item and ray collide
     func intersectionPoint(ray: LightRay) -> CGPoint?
@@ -308,7 +314,7 @@ fileprivate protocol LightIntersectionItem {
 
 extension Wall: LightIntersectionItem {
     /// Walls don't have any volume.
-    fileprivate var volumeAttributes: VolumeAttributes? { return nil }
+    fileprivate var optionalVolumeAttributes: VolumeAttributes? { return nil }
 
     /// For a given ray, returns the point where the item and ray collide
     fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
@@ -384,5 +390,62 @@ extension Wall: LightIntersectionItem {
         }
 
         return (reflectionNormal: reflectionNormal, refractionNormal: refractionNormal)
+    }
+}
+
+extension CircleShape: LightIntersectionItem {
+    fileprivate var optionalVolumeAttributes: VolumeAttributes? { return volumeAttributes }
+
+    fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
+        // Inspired heavily by the derivation here: http://math.stackexchange.com/a/311956
+
+        let x0 = ray.origin.x
+        let y0 = ray.origin.y
+
+        // The ending points are just the ray extrapolated to some very far location.
+        let x1 = ray.origin.x + ray.direction.dx * 100000
+        let y1 = ray.origin.y + ray.direction.dy * 100000
+
+        let h = pos.x
+        let k = pos.y
+        let r = radius
+
+        let a = pow(x1 - x0, 2) + pow(y1 - y0, 2)
+        let b = 2 * (x1 - x0) * (x0 - h) + 2 * (y1 - y0) * (y0 - k)
+        let c = pow(x0 - h, 2) + pow(y0 - k, 2) - pow(r, 2)
+
+        let det = pow(b, 2) - 4 * a * c
+
+        guard det >= 0 else { return nil }
+
+        let t = (2 * c) / (-b + sqrt(det))
+        guard t > 0 && t < 1 else { return nil }
+
+        return CGPoint(
+            x: (x1 - x0) * t + x0,
+            y: (y1 - y0) * t + y0)
+    }
+
+    fileprivate func calculateNormals(
+        ray: LightRay,
+        atPos: CGPoint
+    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+        let normalTowardsCenter = CGVector(
+            dx: pos.x - atPos.x,
+            dy: pos.y - atPos.y)
+
+        let normalAwayFromCenter = rotate(normalTowardsCenter, CGFloat(M_PI))
+
+        if calculateDistance(pos, ray.origin) >= radius {
+            // The ray originates from outside the circle.
+            return (
+                reflectionNormal: normalAwayFromCenter,
+                refractionNormal: normalTowardsCenter)
+        } else {
+            // The ray originates from inside the circle.
+            return (
+                reflectionNormal: normalTowardsCenter,
+                refractionNormal: normalAwayFromCenter)
+        }
     }
 }

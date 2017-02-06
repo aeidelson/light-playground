@@ -40,6 +40,7 @@ public struct SimulationLayout {
     public let exposure: CGFloat
     public let lights: [Light]
     public let walls: [Wall]
+    public let circleShapes: [CircleShape]
 }
 
 public struct LightColor {

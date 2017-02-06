@@ -55,14 +55,28 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     @IBOutlet weak var optionsButton: UIBarButtonItem!
 
     @IBAction func tapGesture(_ sender: UITapGestureRecognizer) {
-        if case .light = currentInteractionMode {
-            let lightLogation = sender.location(in: interactionView)
+        let tapLocationRaw = sender.location(in: interactionView)
+        let tapLocation = CGPoint(
+            x: tapLocationRaw.x * drawLayer.contentsScale,
+            y: tapLocationRaw.y * drawLayer.contentsScale)
+        switch currentInteractionMode {
+        case .light:
             lights.append(Light(
-                pos: CGPoint(
-                    x: lightLogation.x * drawLayer.contentsScale,
-                    y: lightLogation.y * drawLayer.contentsScale),
+                pos: tapLocation,
                 color: lightColor))
             resetSimulator()
+        case .circle:
+            circleShapes.append(CircleShape(
+                pos: tapLocation,
+                radius: 50,
+                surfaceAttributes: SurfaceAttributes(
+                    absorption: wallAbsorption,
+                    diffusion: wallDiffusion),
+                volumeAttributes: VolumeAttributes(
+                    indexOfRefraction: 1.5)))
+            resetSimulator()
+        default:
+            break
         }
     }
 
@@ -112,6 +126,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     }
 
     @IBAction func clearButtonHit(_ sender: Any) {
+        self.circleShapes = []
         self.walls = []
         self.lights = []
         self.interactiveWall = nil
@@ -163,6 +178,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     private enum InteractionMode {
         case light
         case wall
+        case circle
     }
 
     private var currentInteractionMode: InteractionMode {
@@ -171,6 +187,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             return .light
         case 1:
             return .wall
+        case 2:
+            return .circle
         default:
             preconditionFailure()
         }
@@ -192,7 +210,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         let layout = SimulationLayout(
             exposure: exposure,
             lights: finalLights,
-            walls: finalWalls)
+            walls: finalWalls,
+            circleShapes: circleShapes)
 
         simulator?.restartSimulation(
             layout: layout,
@@ -208,6 +227,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     // State of the simulation
     private var lights = [Light]()
     private var walls = [Wall]()
+    private var circleShapes = [CircleShape]()
     private var interactiveWall: Wall?
     private var simulator: LightSimulator?
 }
