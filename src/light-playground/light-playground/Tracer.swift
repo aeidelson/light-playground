@@ -89,7 +89,7 @@ class Tracer {
         let minY: CGFloat = 1.0
         let maxX: CGFloat = simulationSize.width - 2.0
         let maxY: CGFloat = simulationSize.height - 2.0
-        let shapeAttributes = ShapeAttributes(absorption: 1.0, diffusion: 0)
+        let shapeAttributes = ShapeAttributes(absorption: FractionalLightColor.total, diffusion: 0)
         var allItems: [SimulationItem] = [
             Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY),
                  shapeAttributes: shapeAttributes),
@@ -153,8 +153,10 @@ class Tracer {
                 color: ray.color))
 
             // TODO: Stop if the ray is too dark to begin with
-            guard intersectionSurfaceItem.shapeAttributes.absorption < 0.99 else { continue }
-            let colorAfterAbsorbtion =  ray.color.multiplyBy(1 - intersectionSurfaceItem.shapeAttributes.absorption)
+            let absorption = intersectionSurfaceItem.shapeAttributes.absorption
+            guard absorption.r < 0.99 || absorption.g < 0.99 || absorption.b < 0.99 else { continue }
+            let colorAfterAbsorption =
+                ray.color.multiplyBy(intersectionSurfaceItem.shapeAttributes.absorption.remainder())
 
             // Now we may spawn some more rays depending on the ray and attributes of the intersectionItem.
 
@@ -199,7 +201,7 @@ class Tracer {
                 rayQueue.append(LightRay(
                     origin: refractedProperties.origin,
                     direction: refractedProperties.direction,
-                    color: colorAfterAbsorbtion.multiplyBy(1 - percentReflected),
+                    color: colorAfterAbsorption.multiplyBy(1 - percentReflected),
                     mediumAttributes: newMedium))
             }
 
@@ -207,7 +209,7 @@ class Tracer {
             rayQueue.append(LightRay(
                 origin: reflectedProperties.origin,
                 direction: reflectedProperties.direction,
-                color: colorAfterAbsorbtion.multiplyBy(percentReflected),
+                color: colorAfterAbsorption.multiplyBy(percentReflected),
                 /// Because the ray is a reflection, it will share the same attributes as the original ray.
                 mediumAttributes: ray.mediumAttributes))
         }

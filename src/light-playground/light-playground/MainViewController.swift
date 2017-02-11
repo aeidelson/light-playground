@@ -70,8 +70,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                 pos: tapLocation,
                 radius: 50,
                 shapeAttributes: ShapeAttributes(
-                    absorption: wallAbsorption,
-                    diffusion: wallDiffusion,
+                    absorption: absorption,
+                    diffusion: diffusion,
                     indexOfRefraction: 1.5,
                     translucent: true)))
             resetSimulator()
@@ -96,8 +96,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
                 shapeAttributes: ShapeAttributes(
-                    absorption: wallAbsorption,
-                    diffusion: wallDiffusion))
+                    absorption: absorption,
+                    diffusion: diffusion))
 
             resetSimulator()
 
@@ -113,8 +113,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
                 shapeAttributes: ShapeAttributes(
-                    absorption: wallAbsorption,
-                    diffusion: wallDiffusion)))
+                    absorption: absorption,
+                    diffusion: diffusion)))
 
             // The interactive wall when building the wall is no longer relevant
             interactiveWall = nil
@@ -143,8 +143,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             optionsViewController.setInitialValues(
                 exposure: strongSelf.exposure,
                 lightColor: strongSelf.lightColor,
-                wallAbsorption: strongSelf.wallAbsorption,
-                wallDiffusion: strongSelf.wallDiffusion)
+                absorption: strongSelf.absorption,
+                diffusion: strongSelf.diffusion)
         }
 
         optionsViewController.onExposureChange = { [weak self] newExposure in
@@ -156,13 +156,13 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             self?.lightColor = newLightColor
         }
 
-        optionsViewController.onWallAbsorptionChange = { [weak self] newWallAbsorption in
-            self?.wallAbsorption = newWallAbsorption
+        optionsViewController.onAbsorptionChange = { [weak self] newAbsorption in
+            self?.absorption = newAbsorption
         }
 
 
-        optionsViewController.onWallDiffusionChange = { [weak self] newWallDiffusion in
-            self?.wallDiffusion = newWallDiffusion
+        optionsViewController.onDiffusionChange = { [weak self] newDiffusion in
+            self?.diffusion = newDiffusion
         }
 
         optionsViewController.onSaveButtonHit = { [weak self] in
@@ -230,8 +230,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     /// Options (with defaults) that are configurable in the OptionsController.
     private var exposure: CGFloat = 0.60
     private var lightColor = LightColor(r: 255, g: 255, b: 255)
-    private var wallAbsorption: CGFloat = 0.25
-    private var wallDiffusion: CGFloat = 0.1
+    private var absorption: FractionalLightColor = FractionalLightColor.zero
+    private var diffusion: CGFloat = 0.1
 
     // State of the simulation
     private var lights = [Light]()

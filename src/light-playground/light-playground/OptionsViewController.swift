@@ -52,8 +52,8 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     func setInitialValues(
         exposure: CGFloat,
         lightColor: LightColor,
-        wallAbsorption: CGFloat,
-        wallDiffusion: CGFloat
+        absorption: FractionalLightColor,
+        diffusion: CGFloat
     ) {
         exposureSlider.setValue(Float(exposure), animated: false)
 
@@ -61,8 +61,11 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightGreenSlider.setValue(Float(lightColor.g), animated: false)
         lightBlueSlider.setValue(Float(lightColor.b), animated: false)
 
-        wallAbsorptionSlider.setValue(Float(wallAbsorption), animated: false)
-        wallDiffusionSlider.setValue(Float(wallDiffusion), animated: false)
+        redAbsorptionSlider.setValue(Float(absorption.r), animated: false)
+        greenAbsorptionSlider.setValue(Float(absorption.g), animated: false)
+        blueAbsorptionSlider.setValue(Float(absorption.b), animated: false)
+
+        diffusionSlider.setValue(Float(diffusion), animated: false)
     }
 
     /// Called on viewWillAppear so setInitialValues can be called.
@@ -70,8 +73,8 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
 
     var onExposureChange: (CGFloat) -> Void = { _ in }
     var onLightColorChange: (LightColor) -> Void = { _ in }
-    var onWallAbsorptionChange: (CGFloat) -> Void = { _ in }
-    var onWallDiffusionChange: (CGFloat) -> Void = { _ in }
+    var onAbsorptionChange: (FractionalLightColor) -> Void = { _ in }
+    var onDiffusionChange: (CGFloat) -> Void = { _ in }
     var onSaveButtonHit: () -> Void = {}
 
     // MARK: Interface builder outlets
@@ -80,8 +83,10 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     @IBOutlet weak var lightRedSlider: UISlider!
     @IBOutlet weak var lightGreenSlider: UISlider!
     @IBOutlet weak var lightBlueSlider: UISlider!
-    @IBOutlet weak var wallAbsorptionSlider: UISlider!
-    @IBOutlet weak var wallDiffusionSlider: UISlider!
+    @IBOutlet weak var diffusionSlider: UISlider!
+    @IBOutlet weak var redAbsorptionSlider: UISlider!
+    @IBOutlet weak var greenAbsorptionSlider: UISlider!
+    @IBOutlet weak var blueAbsorptionSlider: UISlider!
 
     @IBAction func exposureChanged(_ sender: Any) {
         onExposureChange(CGFloat(exposureSlider.value))
@@ -99,12 +104,20 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightColorChanged()
     }
 
-    @IBAction func wallAbsorptionChanged(_ sender: Any) {
-        onWallAbsorptionChange(CGFloat(wallAbsorptionSlider.value))
+    @IBAction func diffusionChanged(_ sender: Any) {
+        onDiffusionChange(CGFloat(diffusionSlider.value))
     }
 
-    @IBAction func wallDiffusionChanged(_ sender: Any) {
-        onWallDiffusionChange(CGFloat(wallDiffusionSlider.value))
+    @IBAction func redAbsorptionChanged(_ sender: Any) {
+        absorptionChanged()
+    }
+
+    @IBAction func greenAbsorptionChanged(_ sender: Any) {
+        absorptionChanged()
+    }
+
+    @IBAction func blueAbsorptionChanged(_ sender: Any) {
+        absorptionChanged()
     }
 
     @IBAction func saveButtonHit(_ sender: Any) {
@@ -121,5 +134,12 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
             r: UInt8(lightRedSlider.value),
             g: UInt8(lightGreenSlider.value),
             b: UInt8(lightBlueSlider.value)))
+    }
+
+    private func absorptionChanged() {
+        onAbsorptionChange(FractionalLightColor(
+            r: CGFloat(redAbsorptionSlider.value),
+            g: CGFloat(greenAbsorptionSlider.value),
+            b: CGFloat(blueAbsorptionSlider.value)))
     }
 }

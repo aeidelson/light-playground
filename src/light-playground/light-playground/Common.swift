@@ -12,7 +12,7 @@ public struct Light {
 public struct ShapeAttributes {
 
     public init(
-        absorption: CGFloat = 0,
+        absorption: FractionalLightColor = FractionalLightColor.zero,
         diffusion: CGFloat = 0,
         indexOfRefraction: CGFloat = 0,
         translucent: Bool = false
@@ -23,8 +23,8 @@ public struct ShapeAttributes {
         self.translucent = translucent
     }
 
-    /// Percentage of the light to absorb (rather than reflect). A value of zero will result in no absorption.
-    public let absorption: CGFloat
+    /// Percentage of the light to absorb per color. A value of zero will result in no absorption.
+    public let absorption: FractionalLightColor
 
     /// A value from 0 to 1 indicating how much to deviate from the angle of reflection.
     public let diffusion: CGFloat
@@ -71,8 +71,44 @@ public struct LightColor {
             g: UInt8(min(max(newG, 0), 255)),
             b: UInt8(min(max(newB, 0), 255))
         )
-
     }
+
+    /// Multiplies by a fractional light color. Skips any safe-guarding since the FractionalLightColor is guarenteed
+    /// to be [0, 1] for each color.
+    func multiplyBy(_ x: FractionalLightColor) -> LightColor {
+        return LightColor(
+            r: UInt8(CGFloat(r) * x.r),
+            g: UInt8(CGFloat(g) * x.g),
+            b: UInt8(CGFloat(b) * x.b)
+        )
+    }
+}
+
+public struct FractionalLightColor {
+    init(r: CGFloat, g: CGFloat, b: CGFloat) {
+        precondition(r >= 0 && r <= 1.0)
+        precondition(g >= 0 && g <= 1.0)
+        precondition(b >= 0 && b <= 1.0)
+
+        self.r = r
+        self.g = g
+        self.b = b
+    }
+
+    /// Returns a new FractionalLightColor with whatever is left per-color.
+    public func remainder() -> FractionalLightColor {
+        return FractionalLightColor(
+            r: 1 - self.r,
+            g: 1 - self.g,
+            b: 1 - self.b)
+    }
+
+    public let r: CGFloat
+    public let g: CGFloat
+    public let b: CGFloat
+
+    public static let zero = FractionalLightColor(r: 0, g: 0, b: 0)
+    public static let total = FractionalLightColor(r: 1, g: 1, b: 1)
 }
 
 public struct LightSegment {
