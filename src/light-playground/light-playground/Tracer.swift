@@ -48,8 +48,6 @@ class Tracer {
 
     // MARK: Private
 
-    private static let lightRadius: CGFloat = 10.0
-
     /// Volume attributes applying to empty space in a scene.
     private static let spaceVolumeAttributes = VolumeAttributes(indexOfRefraction: 1)
 
@@ -76,10 +74,9 @@ class Tracer {
             let lightChosen = layout.lights[i % layout.lights.count]
 
             // Rays from light have both a random origin and a random direction.
-            //let rayOrigin = randomPointOnCircle(center: lightChosen.pos, radius: lightRadius)
             let rayOrigin = lightChosen.pos
             let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
-            let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
+            let rayDirection = NormalizedVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
             rayQueue.append(LightRay(
                 origin: rayOrigin,
                 direction: rayDirection,
@@ -162,10 +159,7 @@ class Tracer {
 
             let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
 
-            let normalAngle = absoluteAngle(normals.reflectionNormal)
-            let reverseIncomingDirectionAngle = absoluteAngle(reverseIncomingDirection)
-            let incomingAngleFromNormal = reverseIncomingDirectionAngle - normalAngle
-
+            let incomingAngleFromNormal = angle(normals.reflectionNormal, reverseIncomingDirection)
 
             // Fresnel equations determines how much is reflected vs refracted.
             let percentReflected: CGFloat
@@ -178,19 +172,18 @@ class Tracer {
                 percentReflected = 1.0
             }
 
-            // TODO: Use this to calculate the ammount transmitted and act on it:
-            //let percentTransmitted: CGFloat = 1.0 - percentReflected
-
             // Calculate a reflected ray.
 
             // TODO: Much of this can be done ahead of time and cleaned up.
             // TODO: Don't bother with the reflected ray if the ammount reflected is small.
 
             var reflectedRayDirection = normalize(
-                rotate(reverseIncomingDirection, 2 * incomingAngleFromNormal))
+                rotate(reverseIncomingDirection, -2 * incomingAngleFromNormal))
 
             // Adjust the reflected ray for diffusion:
             if intersectionItem.surfaceAttributes.diffusion > 0.0 {
+                let normalAngle = absoluteAngle(normals.reflectionNormal)
+
                 let reflectedRayAngle = absoluteAngle(reflectedRayDirection)
 
                 // Find how far the ray is from the closest perpendicular part of the item.
@@ -212,6 +205,40 @@ class Tracer {
             let reflectedRayOrigin = CGPoint(
                 x: intersectionPoint.x + reflectedRayDirection.dx * 0.1,
                 y: intersectionPoint.y + reflectedRayDirection.dy * 0.1)
+
+            // Calculate the refracted ray
+
+            if var newRayAttributes = intersectionItem.optionalVolumeAttributes {
+                // If the attributes are the same as the ray's current attributes, then assume the original ray
+                // intersected with the outer wall and is now in space.
+                // HACK: This assumption doesn't hold when objects overlap, and is generally error-prone. We probably
+                // need to be able to hit-test the ray's origin to determin the volume attributes (rather than storing
+                // them on the ray).
+                if newRayAttributes == ray.sourceVolumeAttributes {
+                    newRayAttributes = spaceVolumeAttributes
+                }
+
+                let percentTransmitted: CGFloat = 1.0 - percentReflected
+                let n1 = ray.sourceVolumeAttributes.indexOfRefraction
+                let n2 = newRayAttributes.indexOfRefraction
+
+                let refractedAngleFromNormal = asin(sin(incomingAngleFromNormal) * n1 / n2)
+
+                let rayDirection = rotate(normals.refractionNormal, refractedAngleFromNormal)
+
+                /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
+                let rayOrigin = CGPoint(
+                    x: intersectionPoint.x + rayDirection.dx * 0.1,
+                    y: intersectionPoint.y + rayDirection.dy * 0.1)
+
+                let refractedRay = LightRay(
+                    origin: rayOrigin,
+                    direction: rayDirection,
+                    color: ray.color.multiplyBy(percentTransmitted),
+                    sourceVolumeAttributes: newRayAttributes)
+
+                rayQueue.append(refractedRay)
+            }
 
             let reflectedRay = LightRay(
                 origin: reflectedRayOrigin,
@@ -284,7 +311,7 @@ private func isInsideSimulationBounds(
 
 fileprivate struct LightRay {
     public let origin: CGPoint
-    public let direction: CGVector
+    public let direction: NormalizedVector
     public let color: LightColor
 
     /// The volume attributes of where the ray was produced.
@@ -309,7 +336,8 @@ fileprivate protocol LightIntersectionItem {
     func intersectionPoint(ray: LightRay) -> CGPoint?
 
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
-    func calculateNormals(ray: LightRay, atPos: CGPoint) -> (reflectionNormal: CGVector, refractionNormal: CGVector)
+    func calculateNormals(ray: LightRay, atPos: CGPoint) ->
+        (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector)
 }
 
 extension Wall: LightIntersectionItem {
@@ -366,7 +394,7 @@ extension Wall: LightIntersectionItem {
     fileprivate func calculateNormals(
         ray: LightRay,
         atPos: CGPoint
-    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+    ) -> (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector) {
 
         // Calculate the normal of the wall
         let dx = pos2.x - pos1.x
@@ -375,13 +403,13 @@ extension Wall: LightIntersectionItem {
         // To get the direction of the ray
         let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
 
-        let normal1 = CGVector(dx: -dy, dy: dx)
-        let normal2 = CGVector(dx: dy, dy: -dx)
+        let normal1 = NormalizedVector(dx: -dy, dy: dx)
+        let normal2 = NormalizedVector(dx: dy, dy: -dx)
 
-        let reflectionNormal: CGVector
-        let refractionNormal: CGVector
+        let reflectionNormal: NormalizedVector
+        let refractionNormal: NormalizedVector
 
-        if angle(normal1, reverseIncomingDirection) < CGFloat(M_PI_2) {
+        if abs(angle(normal1, reverseIncomingDirection)) < CGFloat(M_PI_2) {
             reflectionNormal = normal1
             refractionNormal = normal2
         } else {
@@ -418,8 +446,19 @@ extension CircleShape: LightIntersectionItem {
 
         guard det >= 0 else { return nil }
 
-        let t = (2 * c) / (-b + sqrt(det))
-        guard t > 0 && t < 1 else { return nil }
+        let t1 = (-b + sqrt(det)) / (2 * a)
+        let t2 = (-b - sqrt(det)) / (2 * a)
+
+        let t: CGFloat
+        if t1 > 0 && t2 > 0 {
+            t = min(t1, t2)
+        } else if t1 > 0 {
+            t = t1
+        } else if t2 > 0 {
+            t = t2
+        } else {
+            return nil
+        }
 
         return CGPoint(
             x: (x1 - x0) * t + x0,
@@ -429,8 +468,8 @@ extension CircleShape: LightIntersectionItem {
     fileprivate func calculateNormals(
         ray: LightRay,
         atPos: CGPoint
-    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
-        let normalTowardsCenter = CGVector(
+    ) -> (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector) {
+        let normalTowardsCenter = NormalizedVector(
             dx: pos.x - atPos.x,
             dy: pos.y - atPos.y)
 

@@ -13,6 +13,13 @@ public struct VolumeAttributes {
     public let indexOfRefraction: CGFloat
 }
 
+/// HACK: This is temporarily implemented to support a hack in the tracer.
+extension VolumeAttributes: Equatable {
+    public static func ==(lhs: VolumeAttributes, rhs: VolumeAttributes) -> Bool {
+        return abs(lhs.indexOfRefraction - rhs.indexOfRefraction) < 0.01
+    }
+}
+
 /// A common object that can be used in the declaration of the surface of shapes.
 public struct SurfaceAttributes {
     /// Percentage of the light to absorb (rather than reflect). A value of zero will result in no absorption.
@@ -69,10 +76,17 @@ public struct LightSegment {
     public let color: LightColor
 }
 
-public typealias Token = String
+// A vector that is normalized on initialization.
+struct NormalizedVector {
+    public init(dx: CGFloat, dy: CGFloat) {
+        let mag = sqrt(pow(dx, 2) + pow(dy, 2))
 
-func NewToken() -> Token {
-    return UUID().uuidString
+        self.dx = dx / mag
+        self.dy = dy / mag
+    }
+
+    let dx: CGFloat
+    let dy: CGFloat
 }
 
 func serialOperationQueue() -> OperationQueue {
@@ -117,32 +131,32 @@ func simLog(_ label: String) {
     Swift.print("\(Date().timeIntervalSince1970): \(label)")
 }
 
-func dotProduct(_ v1: CGVector, _ v2: CGVector) -> CGFloat {
+func dotProduct(_ v1: NormalizedVector, _ v2: NormalizedVector) -> CGFloat {
     return v1.dx * v2.dx + v1.dy * v2.dy
 }
 
-func magnitude(_ v: CGVector) -> CGFloat {
+func magnitude(_ v: NormalizedVector) -> CGFloat {
     return sqrt(pow(v.dx, 2) + pow(v.dy, 2))
 }
 
-func normalize(_ v: CGVector) -> CGVector {
+func normalize(_ v: NormalizedVector) -> NormalizedVector {
     let m = magnitude(v)
-    return CGVector(
+    return NormalizedVector(
         dx: v.dx / m,
         dy: v.dy / m)
 }
 
-/// Returns the angle between two vectors (in radians).
-func angle(_ v1: CGVector, _ v2: CGVector) -> CGFloat {
-    return acos(dotProduct(v1, v2) / (magnitude(v1) * magnitude(v2)))
+/// Returns the angle of v2 relative to v1 (in radians).
+func angle(_ v1: NormalizedVector, _ v2: NormalizedVector) -> CGFloat {
+    return atan2(v2.dy, v2.dx) - atan2(v1.dy, v1.dx)
 }
 
-func absoluteAngle(_ v: CGVector) -> CGFloat{
+func absoluteAngle(_ v: NormalizedVector) -> CGFloat{
     return atan2(v.dx, v.dy)
 }
 
-func rotate(_ v: CGVector, _ angle: CGFloat) -> CGVector {
-    return CGVector(
+func rotate(_ v: NormalizedVector, _ angle: CGFloat) -> NormalizedVector {
+    return NormalizedVector(
         dx: v.dx * cos(angle) - v.dy * sin(angle),
         dy: v.dx * sin(angle) + v.dy * cos(angle)
     )
