@@ -72,6 +72,7 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     var onLightColorChange: (LightColor) -> Void = { _ in }
     var onWallAbsorptionChange: (CGFloat) -> Void = { _ in }
     var onWallDiffusionChange: (CGFloat) -> Void = { _ in }
+    var onSaveButtonHit: () -> Void = {}
 
     // MARK: Interface builder outlets
 
@@ -104,6 +105,11 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
 
     @IBAction func wallDiffusionChanged(_ sender: Any) {
         onWallDiffusionChange(CGFloat(wallDiffusionSlider.value))
+    }
+
+    @IBAction func saveButtonHit(_ sender: Any) {
+        dismiss(animated: false)
+        onSaveButtonHit()
     }
 
     // MARK: Private

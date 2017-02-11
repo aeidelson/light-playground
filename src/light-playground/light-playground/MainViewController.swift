@@ -165,6 +165,9 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             self?.wallDiffusion = newWallDiffusion
         }
 
+        optionsViewController.onSaveButtonHit = { [weak self] in
+            self?.saveImage()
+        }
 
         optionsViewController.modalPresentationStyle = .popover
         optionsViewController.popoverPresentationController?.barButtonItem = optionsButton
@@ -216,6 +219,12 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         simulator?.restartSimulation(
             layout: layout,
             isInteractive: isInteractive)
+    }
+
+    private func saveImage() {
+        guard let cgImage = latestImage else { return }
+        let image = UIImage(cgImage: cgImage)
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
     }
 
     /// Options (with defaults) that are configurable in the OptionsController.
