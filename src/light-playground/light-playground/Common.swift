@@ -8,39 +8,44 @@ public struct Light {
     let color: LightColor
 }
 
-/// A common object that can be used in the declaration of shapes with volume.
-public struct VolumeAttributes {
-    public let indexOfRefraction: CGFloat
-}
+/// A common object that can be used in the declaration of shapes.
+public struct ShapeAttributes {
 
-/// HACK: This is temporarily implemented to support a hack in the tracer.
-extension VolumeAttributes: Equatable {
-    public static func ==(lhs: VolumeAttributes, rhs: VolumeAttributes) -> Bool {
-        return abs(lhs.indexOfRefraction - rhs.indexOfRefraction) < 0.01
+    public init(
+        absorption: CGFloat = 0,
+        diffusion: CGFloat = 0,
+        indexOfRefraction: CGFloat = 0,
+        translucent: Bool = false
+    ) {
+        self.absorption = absorption
+        self.diffusion = diffusion
+        self.indexOfRefraction = indexOfRefraction
+        self.translucent = translucent
     }
-}
 
-/// A common object that can be used in the declaration of the surface of shapes.
-public struct SurfaceAttributes {
     /// Percentage of the light to absorb (rather than reflect). A value of zero will result in no absorption.
-    let absorption: CGFloat
+    public let absorption: CGFloat
 
     /// A value from 0 to 1 indicating how much to deviate from the angle of reflection.
-    let diffusion: CGFloat
+    public let diffusion: CGFloat
+
+    public let indexOfRefraction: CGFloat
+
+    /// Shapes with no volume (like walls) can't be translucent (the tracer doesn't handle this case gracefully yet).
+    public let translucent: Bool
 }
 
 public struct Wall {
     let pos1, pos2: CGPoint
 
-    let surfaceAttributes: SurfaceAttributes
+    let shapeAttributes: ShapeAttributes
 }
 
 public struct CircleShape {
     let pos: CGPoint
     let radius: CGFloat
 
-    let surfaceAttributes: SurfaceAttributes
-    let volumeAttributes: VolumeAttributes
+    let shapeAttributes: ShapeAttributes
 }
 
 public struct SimulationLayout {
@@ -79,7 +84,7 @@ public struct LightSegment {
 // A vector that is normalized on initialization.
 struct NormalizedVector {
     public init(dx: CGFloat, dy: CGFloat) {
-        let mag = sqrt(pow(dx, 2) + pow(dy, 2))
+        let mag = sqrt(sq(dx) + sq(dy))
 
         self.dx = dx / mag
         self.dy = dy / mag
@@ -136,7 +141,7 @@ func dotProduct(_ v1: NormalizedVector, _ v2: NormalizedVector) -> CGFloat {
 }
 
 func magnitude(_ v: NormalizedVector) -> CGFloat {
-    return sqrt(pow(v.dx, 2) + pow(v.dy, 2))
+    return sqrt(sq(v.dx) + sq(v.dy))
 }
 
 func normalize(_ v: NormalizedVector) -> NormalizedVector {
@@ -160,6 +165,10 @@ func rotate(_ v: NormalizedVector, _ angle: CGFloat) -> NormalizedVector {
         dx: v.dx * cos(angle) - v.dy * sin(angle),
         dy: v.dx * sin(angle) + v.dy * cos(angle)
     )
+}
+
+func sq(_ x: CGFloat) -> CGFloat {
+    return pow(x, 2)
 }
 
 /// This holds a reference to the pool object and provides an interface to get a weak reference.

@@ -49,7 +49,7 @@ class Tracer {
     // MARK: Private
 
     /// Volume attributes applying to empty space in a scene.
-    private static let spaceVolumeAttributes = VolumeAttributes(indexOfRefraction: 1)
+    private static let spaceAttributes = ShapeAttributes(indexOfRefraction: 1)
 
     /// Synchronously produces light segments given the simulation layout.
     /// This shouldn't rely on any mutable state outside of the function, as this may be running in parallel to other
@@ -81,7 +81,7 @@ class Tracer {
                 origin: rayOrigin,
                 direction: rayDirection,
                 color: lightChosen.color,
-                sourceVolumeAttributes: spaceVolumeAttributes))
+                mediumAttributes: spaceAttributes))
         }
 
         // Hardcode walls to prevent out of index.
@@ -89,19 +89,19 @@ class Tracer {
         let minY: CGFloat = 1.0
         let maxX: CGFloat = simulationSize.width - 2.0
         let maxY: CGFloat = simulationSize.height - 2.0
-        let surfaceAttributes = SurfaceAttributes(absorption: 1.0, diffusion: 0)
-        var allItems: [LightIntersectionItem] = [
+        let shapeAttributes = ShapeAttributes(absorption: 1.0, diffusion: 0)
+        var allItems: [SimulationItem] = [
             Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: maxX, y: minY),
-                surfaceAttributes: surfaceAttributes),
+                 shapeAttributes: shapeAttributes),
             Wall(pos1: CGPoint(x: minX, y: minY), pos2: CGPoint(x: minX, y: maxY),
-                 surfaceAttributes: surfaceAttributes),
+                 shapeAttributes: shapeAttributes),
             Wall(pos1: CGPoint(x: maxX, y: minY), pos2: CGPoint(x: maxX, y: maxY),
-                 surfaceAttributes: surfaceAttributes),
+                 shapeAttributes: shapeAttributes),
             Wall(pos1: CGPoint(x: minX, y: maxY), pos2: CGPoint(x: maxX, y: maxY),
-                 surfaceAttributes: surfaceAttributes)
+                 shapeAttributes: shapeAttributes)
         ]
-        allItems.append(contentsOf: layout.walls as [LightIntersectionItem])
-        allItems.append(contentsOf: layout.circleShapes as [LightIntersectionItem])
+        allItems.append(contentsOf: layout.walls as [SimulationItem])
+        allItems.append(contentsOf: layout.circleShapes as [SimulationItem])
 
         var producedSegments = [LightSegment]()
         producedSegments.reserveCapacity(maxSegments)
@@ -117,30 +117,34 @@ class Tracer {
                 maxY: maxY,
                 point: ray.origin) else { continue }
 
-            var closestIntersectionPoint: CGPoint?
-            var closestIntersectionItem: LightIntersectionItem?
             var closestDistance = CGFloat.greatestFiniteMagnitude
+            var closestIntersectionPoint: CGPoint?
+
+            /// This is the item whose wall the ray intersected with. It may be the item the ray is traveling through.
+            var closestIntersectionSurfaceItem: SimulationItem?
+
+            //var intersectionWallIsTranslucent: Bool
+            //var closestIntersectionItem: SimulationItem?
 
             for item in allItems {
-                guard let intersectionPoint = item.intersectionPoint(ray: ray) else { continue }
+                guard let possibleIntersectionPoint = item.intersectionPoint(ray: ray) else { continue }
 
                 // Check if the intersection points are closer than the current closest
                 let distFromOrigin =
-                    sqrt(pow(ray.origin.x - intersectionPoint.x, 2) + pow(ray.origin.y - intersectionPoint.y, 2))
+                    sqrt(
+                        sq(ray.origin.x - possibleIntersectionPoint.x) +
+                            sq(ray.origin.y - possibleIntersectionPoint.y))
 
 
                 if distFromOrigin < closestDistance {
                     closestDistance = distFromOrigin
-                    closestIntersectionItem = item
-                    closestIntersectionPoint = intersectionPoint
+                    closestIntersectionPoint = possibleIntersectionPoint
+                    closestIntersectionSurfaceItem = item
                 }
             }
-            
-            // Create a light segment using whatever the closest intersection was
-            
+
             guard let intersectionPoint = closestIntersectionPoint else { preconditionFailure() }
-            /// This must be set, since the grid is surrounded by walls.
-            guard let intersectionItem = closestIntersectionItem else { preconditionFailure() }
+            guard let intersectionSurfaceItem = closestIntersectionSurfaceItem else { preconditionFailure() }
 
             // Return the light segment for drawing of the ray.
             producedSegments.append(LightSegment(
@@ -148,106 +152,64 @@ class Tracer {
                 p1: intersectionPoint,
                 color: ray.color))
 
+            // TODO: Stop if the ray is too dark to begin with
+            guard intersectionSurfaceItem.shapeAttributes.absorption < 0.99 else { continue }
+            let colorAfterAbsorbtion =  ray.color.multiplyBy(1 - intersectionSurfaceItem.shapeAttributes.absorption)
+
             // Now we may spawn some more rays depending on the ray and attributes of the intersectionItem.
 
-            // TODO: Stop if the ray is too dark to begin with
-            guard intersectionItem.surfaceAttributes.absorption < 0.99 else { continue }
-
-            let colorAfterAbsorbtion =  ray.color.multiplyBy(1 - intersectionItem.surfaceAttributes.absorption)
-
-            let normals = intersectionItem.calculateNormals(ray: ray, atPos: intersectionPoint)
-
+            // Some commonly used variables are calculated.
+            let normals = intersectionSurfaceItem.calculateNormals(ray: ray, atPos: intersectionPoint)
             let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
-
             let incomingAngleFromNormal = angle(normals.reflectionNormal, reverseIncomingDirection)
 
-            // Fresnel equations determines how much is reflected vs refracted.
-            let percentReflected: CGFloat
-            if let newAttributes = intersectionItem.optionalVolumeAttributes {
-                percentReflected = calculateReflectance(
-                    fromVolume: VolumeAttributes(indexOfRefraction: 1.0),
-                    toVolume: newAttributes,
-                    incomingAngleFromNormal: incomingAngleFromNormal)
-            } else {
-                percentReflected = 1.0
-            }
-
-            // Calculate a reflected ray.
-
-            // TODO: Much of this can be done ahead of time and cleaned up.
+            // Calculate the reflected ray.
             // TODO: Don't bother with the reflected ray if the ammount reflected is small.
 
-            var reflectedRayDirection = normalize(
-                rotate(reverseIncomingDirection, -2 * incomingAngleFromNormal))
+            let reflectedProperties = calculateReflectedProperties(
+                intersectionPoint: intersectionPoint,
+                intersectedSurfaceAttributes: intersectionSurfaceItem.shapeAttributes,
+                reverseIncomingDirection: reverseIncomingDirection,
+                reflectionNormal: normals.reflectionNormal,
+                incomingAngleFromNormal: incomingAngleFromNormal)
 
-            // Adjust the reflected ray for diffusion:
-            if intersectionItem.surfaceAttributes.diffusion > 0.0 {
-                let normalAngle = absoluteAngle(normals.reflectionNormal)
+            // Calculate the refracted ray if the surface item is translucent.
+            var percentReflected: CGFloat = 1.0
 
-                let reflectedRayAngle = absoluteAngle(reflectedRayDirection)
+            if intersectionSurfaceItem.shapeAttributes.translucent {
+                // Find the medium that the new rayis going to enter.
+                let newItemTestPoint = CGPoint(
+                    x: intersectionPoint.x + ray.direction.dx * 0.1,
+                    y: intersectionPoint.y + ray.direction.dy * 0.1)
+                let newItem = pointItem(items: allItems, point: newItemTestPoint)
+                let newMedium = newItem?.shapeAttributes ?? spaceAttributes
 
-                // Find how far the ray is from the closest perpendicular part of the item.
-                // TODO: Need to investigate if this works for non-wall items.
-                let perpendicularAngles = (normalAngle + CGFloat(M_PI_4), normalAngle - CGFloat(M_PI_4))
-                let closestAngleDifference =
-                    min(abs(reflectedRayAngle - perpendicularAngles.0), abs(reflectedRayAngle - perpendicularAngles.0))
+                percentReflected = calculateReflectance(
+                    fromAttributes: ray.mediumAttributes,
+                    toAttributes: newMedium,
+                    incomingAngleFromNormal: incomingAngleFromNormal)
 
-                // The maximum ammount the angle can change from diffusion.
-                // This should be pi/8 normally, but if the of reflection is steep this will be the angle between
-                // the reflection and the item (With a very small ammount of buffer room for safety).
-                let maxDiffuseAngle = min(
-                    CGFloat(M_PI / 8) * intersectionItem.surfaceAttributes.diffusion, closestAngleDifference - 0.1)
-                let diffuseAngle = CGFloat(drand48()) * 2 * maxDiffuseAngle - maxDiffuseAngle
-                reflectedRayDirection = rotate(reflectedRayDirection, diffuseAngle)
+                let refractedProperties = calculateRefractedProperties(
+                    intersectionPoint: intersectionPoint,
+                    incomingAngleFromNormal: incomingAngleFromNormal,
+                    refractionNormal: normals.refractionNormal,
+                    oldMediumAttributes: ray.mediumAttributes,
+                    newMediumAttributes: newMedium)
+
+                rayQueue.append(LightRay(
+                    origin: refractedProperties.origin,
+                    direction: refractedProperties.direction,
+                    color: colorAfterAbsorbtion.multiplyBy(1 - percentReflected),
+                    mediumAttributes: newMedium))
             }
 
-            /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
-            let reflectedRayOrigin = CGPoint(
-                x: intersectionPoint.x + reflectedRayDirection.dx * 0.1,
-                y: intersectionPoint.y + reflectedRayDirection.dy * 0.1)
 
-            // Calculate the refracted ray
-
-            if var newRayAttributes = intersectionItem.optionalVolumeAttributes {
-                // If the attributes are the same as the ray's current attributes, then assume the original ray
-                // intersected with the outer wall and is now in space.
-                // HACK: This assumption doesn't hold when objects overlap, and is generally error-prone. We probably
-                // need to be able to hit-test the ray's origin to determin the volume attributes (rather than storing
-                // them on the ray).
-                if newRayAttributes == ray.sourceVolumeAttributes {
-                    newRayAttributes = spaceVolumeAttributes
-                }
-
-                let percentTransmitted: CGFloat = 1.0 - percentReflected
-                let n1 = ray.sourceVolumeAttributes.indexOfRefraction
-                let n2 = newRayAttributes.indexOfRefraction
-
-                let refractedAngleFromNormal = asin(sin(incomingAngleFromNormal) * n1 / n2)
-
-                let rayDirection = rotate(normals.refractionNormal, refractedAngleFromNormal)
-
-                /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
-                let rayOrigin = CGPoint(
-                    x: intersectionPoint.x + rayDirection.dx * 0.1,
-                    y: intersectionPoint.y + rayDirection.dy * 0.1)
-
-                let refractedRay = LightRay(
-                    origin: rayOrigin,
-                    direction: rayDirection,
-                    color: ray.color.multiplyBy(percentTransmitted),
-                    sourceVolumeAttributes: newRayAttributes)
-
-                rayQueue.append(refractedRay)
-            }
-
-            let reflectedRay = LightRay(
-                origin: reflectedRayOrigin,
-                direction: reflectedRayDirection,
+            rayQueue.append(LightRay(
+                origin: reflectedProperties.origin,
+                direction: reflectedProperties.direction,
                 color: colorAfterAbsorbtion.multiplyBy(percentReflected),
                 /// Because the ray is a reflection, it will share the same attributes as the original ray.
-                sourceVolumeAttributes: ray.sourceVolumeAttributes)
-
-            rayQueue.append(reflectedRay)
+                mediumAttributes: ray.mediumAttributes))
         }
 
         return producedSegments
@@ -259,29 +221,93 @@ class Tracer {
 /// Calculates the percentage of light that is reflected, using Fresnel equations.
 /// Equations taken from: https://en.wikipedia.org/wiki/Fresnel_equations
 private func calculateReflectance(
-    fromVolume: VolumeAttributes,
-    toVolume: VolumeAttributes,
+    fromAttributes: ShapeAttributes,
+    toAttributes: ShapeAttributes,
     incomingAngleFromNormal: CGFloat
 ) -> CGFloat {
-    let n1 = fromVolume.indexOfRefraction
-    let n2 = toVolume.indexOfRefraction
+    let n1 = fromAttributes.indexOfRefraction
+    let n2 = toAttributes.indexOfRefraction
 
     // Is used commonly
-    let ratioSinAngleSquared = pow((n1 / n2) * sin(incomingAngleFromNormal), 2)
+    let ratioSinAngleSquared = sq((n1 / n2) * sin(incomingAngleFromNormal))
 
     // Calculate Rs
     let rsPart1 = n1 * cos(incomingAngleFromNormal)
-    let rsPart2 = n2 * sqrt(1 - ratioSinAngleSquared)
-    let rs = pow((rsPart1 - rsPart2) / (rsPart1 + rsPart2), 2)
+    // HACK: To avoid imaginary numbers, we snap to 0.
+    let rsPart2 = n2 * sqrt(max(1 - ratioSinAngleSquared, 0))
+    let rs = sq((rsPart1 - rsPart2) / (rsPart1 + rsPart2))
 
     // Calculate Rp
-    let rpPart1 = n1 * sqrt(1 - ratioSinAngleSquared)
+    // HACK: To avoid imaginary numbers, we snap to 0.
+    let rpPart1 = n1 * sqrt(max(1 - ratioSinAngleSquared, 0))
     let rpPart2 = n2 * cos(incomingAngleFromNormal)
-    let rp = pow((rpPart1 - rpPart2) / (rpPart1 + rpPart2), 2)
+    let rp = sq((rpPart1 - rpPart2) / (rpPart1 + rpPart2))
 
 
     /// Protect against values > 1
     return min((rs + rp) / 2, 1.0)
+}
+
+/// Calculates the position and direction of the reflected ray.
+private func calculateReflectedProperties(
+    intersectionPoint: CGPoint,
+    intersectedSurfaceAttributes: ShapeAttributes,
+    reverseIncomingDirection: NormalizedVector,
+    reflectionNormal: NormalizedVector,
+    incomingAngleFromNormal: CGFloat
+) -> (origin: CGPoint, direction: NormalizedVector) {
+    var reflectedRayDirection = normalize(
+        rotate(reverseIncomingDirection, -2 * incomingAngleFromNormal))
+
+    // Adjust the reflected ray for diffusion:
+    if intersectedSurfaceAttributes.diffusion > 0.0 {
+        let normalAngle = absoluteAngle(reflectionNormal)
+
+        let reflectedRayAngle = absoluteAngle(reflectedRayDirection)
+
+        // Find how far the ray is from the closest perpendicular part of the item.
+        // TODO: Need to investigate if this works for non-wall items.
+        let perpendicularAngles = (normalAngle + CGFloat(M_PI_4), normalAngle - CGFloat(M_PI_4))
+        let closestAngleDifference =
+            min(abs(reflectedRayAngle - perpendicularAngles.0), abs(reflectedRayAngle - perpendicularAngles.0))
+
+        // The maximum ammount the angle can change from diffusion.
+        // This should be pi/8 normally, but if the of reflection is steep this will be the angle between
+        // the reflection and the item (With a very small ammount of buffer room for safety).
+        let maxDiffuseAngle = min(
+            CGFloat(M_PI / 8) * intersectedSurfaceAttributes.diffusion, closestAngleDifference - 0.1)
+        let diffuseAngle = CGFloat(drand48()) * 2 * maxDiffuseAngle - maxDiffuseAngle
+        reflectedRayDirection = rotate(reflectedRayDirection, diffuseAngle)
+    }
+
+    /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
+    let reflectedRayOrigin = CGPoint(
+        x: intersectionPoint.x + reflectedRayDirection.dx * 0.1,
+        y: intersectionPoint.y + reflectedRayDirection.dy * 0.1)
+
+    return (reflectedRayOrigin, reflectedRayDirection)
+}
+
+private func calculateRefractedProperties(
+    intersectionPoint: CGPoint,
+    incomingAngleFromNormal: CGFloat,
+    refractionNormal: NormalizedVector,
+    oldMediumAttributes: ShapeAttributes,
+    newMediumAttributes: ShapeAttributes
+) -> (origin: CGPoint, direction: NormalizedVector) {
+    let n1 = oldMediumAttributes.indexOfRefraction
+    let n2 = newMediumAttributes.indexOfRefraction
+
+    let refractedAngleFromNormal = asin(sin(incomingAngleFromNormal) * n1 / n2)
+
+    let rayDirection = rotate(refractionNormal, refractedAngleFromNormal)
+
+    /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
+    let origin = CGPoint(
+        x: intersectionPoint.x + rayDirection.dx * 0.1,
+        y: intersectionPoint.y + rayDirection.dy * 0.1)
+
+    return (origin: origin, direction: rayDirection)
 }
 
 private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
@@ -292,8 +318,8 @@ private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
     )
 }
 
-fileprivate func calculateDistance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
-    return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2))
+private func calculateDistance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
+    return sqrt(sq(p1.x - p2.x) + sq(p1.y - p2.y))
 
 }
 
@@ -307,6 +333,17 @@ private func isInsideSimulationBounds(
         (point.y >= minY) && (point.y <= maxY)
 }
 
+/// Gets the item at the given point (if there is one). Currently has undefined behavior if items are overlapping each
+/// other.
+private func pointItem(items: [SimulationItem], point: CGPoint) -> SimulationItem? {
+    for item in items {
+        if item.hitPoint(point: point) {
+            return item
+        }
+    }
+    return nil
+}
+
 // MARK: Ray intersections
 
 fileprivate struct LightRay {
@@ -314,23 +351,16 @@ fileprivate struct LightRay {
     public let direction: NormalizedVector
     public let color: LightColor
 
-    /// The volume attributes of where the ray was produced.
+    /// Attributes for the medium the ray is traveling in.
     /// For rays in space (i.e. coming from lights or in-between items), this will be `spaceVolumeAttributes`. For rays
-    /// inside of an object with volume, this will be that object's attributes.
-    public let sourceVolumeAttributes: VolumeAttributes
+    /// inside of an object , this will be that object's attributes.
+    public let mediumAttributes: ShapeAttributes
 }
 
-fileprivate protocol LightIntersectionItem {
+fileprivate protocol SimulationItem {
 
     /// All intersection items must have a surface and so they must have surface attributes.
-    var surfaceAttributes: SurfaceAttributes { get }
-
-    /// Not all intersection items have volume (i.e. walls), so this property is optional.
-    /// For now, this property being set indicates that light can go through the item (the ammount of light reflected
-    /// will be calculated based on the normal).
-    /// TODO: Should consider using a translucency property on the surface to indicate if light can go through the
-    /// object.
-    var optionalVolumeAttributes: VolumeAttributes? { get }
+    var shapeAttributes: ShapeAttributes { get }
 
     /// For a given ray, returns the point where the item and ray collide
     func intersectionPoint(ray: LightRay) -> CGPoint?
@@ -338,15 +368,16 @@ fileprivate protocol LightIntersectionItem {
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
     func calculateNormals(ray: LightRay, atPos: CGPoint) ->
         (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector)
+
+    /// Returns if the provided point is contained within the item.
+    func hitPoint(point: CGPoint) -> Bool
 }
 
-extension Wall: LightIntersectionItem {
-    /// Walls don't have any volume.
-    fileprivate var optionalVolumeAttributes: VolumeAttributes? { return nil }
+extension Wall: SimulationItem {
 
     /// For a given ray, returns the point where the item and ray collide
     fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
-        // TODO: Should move all the (constant) ray calculations out of this loop.
+        // TODO: Should move all the constant calculations to the wall shape.
         // Given the equation `y = mx + b`
 
         // Calculate `m`:
@@ -419,10 +450,13 @@ extension Wall: LightIntersectionItem {
 
         return (reflectionNormal: reflectionNormal, refractionNormal: refractionNormal)
     }
+
+    func hitPoint(point: CGPoint) -> Bool {
+        return false
+    }
 }
 
-extension CircleShape: LightIntersectionItem {
-    fileprivate var optionalVolumeAttributes: VolumeAttributes? { return volumeAttributes }
+extension CircleShape: SimulationItem {
 
     fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
         // Inspired heavily by the derivation here: http://math.stackexchange.com/a/311956
@@ -438,11 +472,11 @@ extension CircleShape: LightIntersectionItem {
         let k = pos.y
         let r = radius
 
-        let a = pow(x1 - x0, 2) + pow(y1 - y0, 2)
+        let a = sq(x1 - x0) + sq(y1 - y0)
         let b = 2 * (x1 - x0) * (x0 - h) + 2 * (y1 - y0) * (y0 - k)
-        let c = pow(x0 - h, 2) + pow(y0 - k, 2) - pow(r, 2)
+        let c = sq(x0 - h) + sq(y0 - k) - sq(r)
 
-        let det = pow(b, 2) - 4 * a * c
+        let det = sq(b) - 4 * a * c
 
         guard det >= 0 else { return nil }
 
@@ -486,5 +520,9 @@ extension CircleShape: LightIntersectionItem {
                 reflectionNormal: normalTowardsCenter,
                 refractionNormal: normalAwayFromCenter)
         }
+    }
+
+    func hitPoint(point: CGPoint) -> Bool {
+        return sqrt(sq(point.x-pos.x) + sq(point.y-pos.y)) <= radius
     }
 }

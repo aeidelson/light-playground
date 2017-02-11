@@ -69,11 +69,11 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             circleShapes.append(CircleShape(
                 pos: tapLocation,
                 radius: 50,
-                surfaceAttributes: SurfaceAttributes(
+                shapeAttributes: ShapeAttributes(
                     absorption: wallAbsorption,
-                    diffusion: wallDiffusion),
-                volumeAttributes: VolumeAttributes(
-                    indexOfRefraction: 1.5)))
+                    diffusion: wallDiffusion,
+                    indexOfRefraction: 1.5,
+                    translucent: true)))
             resetSimulator()
         default:
             break
@@ -95,7 +95,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
-                surfaceAttributes: SurfaceAttributes(
+                shapeAttributes: ShapeAttributes(
                     absorption: wallAbsorption,
                     diffusion: wallDiffusion))
 
@@ -112,7 +112,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                 pos2: CGPoint(
                     x: end.x * drawLayer.contentsScale,
                     y: end.y * drawLayer.contentsScale),
-                surfaceAttributes: SurfaceAttributes(
+                shapeAttributes: ShapeAttributes(
                     absorption: wallAbsorption,
                     diffusion: wallDiffusion)))
 
@@ -219,7 +219,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     }
 
     /// Options (with defaults) that are configurable in the OptionsController.
-    private var exposure: CGFloat = 0.55
+    private var exposure: CGFloat = 0.60
     private var lightColor = LightColor(r: 255, g: 255, b: 255)
     private var wallAbsorption: CGFloat = 0.25
     private var wallDiffusion: CGFloat = 0.1
