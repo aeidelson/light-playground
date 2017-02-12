@@ -13,11 +13,26 @@
 		8E14754D1E19ADD50094CB28 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754C1E19ADD50094CB28 /* Assets.xcassets */; };
 		8E1475501E19ADD50094CB28 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754E1E19ADD50094CB28 /* LaunchScreen.storyboard */; };
 		8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
+		8E322E6F1E512708001CE0FB /* light_playground_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E322E6E1E512708001CE0FB /* light_playground_tests.swift */; };
+		8E322E761E5127E7001CE0FB /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
+		8E322E771E512819001CE0FB /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
+		8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
+		8E322E791E512821001CE0FB /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* LightGrid.swift */; };
 		8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
 		8E72C9AE1E276FA50057C08A /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* LightGrid.swift */; };
 		8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
 		8ECE22391E45AB3A00237581 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ECE22381E45AB3A00237581 /* OptionsViewController.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8E322E711E512708001CE0FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8E14753A1E19ADD50094CB28 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8E1475411E19ADD50094CB28;
+			remoteInfo = "light-playground";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		8E1475421E19ADD50094CB28 /* light-playground.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "light-playground.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -28,6 +43,9 @@
 		8E14754F1E19ADD50094CB28 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8E1475511E19ADD50094CB28 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8E2293A61E2C0C84005CD3CD /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Common.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
+		8E322E6C1E512708001CE0FB /* light-playground-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "light-playground-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8E322E6E1E512708001CE0FB /* light_playground_tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = light_playground_tests.swift; sourceTree = "<group>"; };
+		8E322E701E512708001CE0FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8E72C9A91E2754400057C08A /* Tracer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Tracer.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		8E72C9AD1E276FA50057C08A /* LightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightGrid.swift; sourceTree = "<group>"; };
 		8E9D54661E19D40700E7C927 /* LightSimulator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightSimulator.swift; sourceTree = "<group>"; };
@@ -42,6 +60,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8E322E691E512708001CE0FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -49,6 +74,7 @@
 			isa = PBXGroup;
 			children = (
 				8E1475441E19ADD50094CB28 /* light-playground */,
+				8E322E6D1E512708001CE0FB /* light-playground-tests */,
 				8E1475431E19ADD50094CB28 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -57,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				8E1475421E19ADD50094CB28 /* light-playground.app */,
+				8E322E6C1E512708001CE0FB /* light-playground-tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -79,6 +106,15 @@
 			path = "light-playground";
 			sourceTree = "<group>";
 		};
+		8E322E6D1E512708001CE0FB /* light-playground-tests */ = {
+			isa = PBXGroup;
+			children = (
+				8E322E6E1E512708001CE0FB /* light_playground_tests.swift */,
+				8E322E701E512708001CE0FB /* Info.plist */,
+			);
+			path = "light-playground-tests";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -99,13 +135,31 @@
 			productReference = 8E1475421E19ADD50094CB28 /* light-playground.app */;
 			productType = "com.apple.product-type.application";
 		};
+		8E322E6B1E512708001CE0FB /* light-playground-tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8E322E731E512708001CE0FB /* Build configuration list for PBXNativeTarget "light-playground-tests" */;
+			buildPhases = (
+				8E322E681E512708001CE0FB /* Sources */,
+				8E322E691E512708001CE0FB /* Frameworks */,
+				8E322E6A1E512708001CE0FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8E322E721E512708001CE0FB /* PBXTargetDependency */,
+			);
+			name = "light-playground-tests";
+			productName = "light-playground-tests";
+			productReference = 8E322E6C1E512708001CE0FB /* light-playground-tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		8E14753A1E19ADD50094CB28 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0810;
+				LastSwiftUpdateCheck = 0820;
 				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Aaron Eidelson";
 				TargetAttributes = {
@@ -113,6 +167,11 @@
 						CreatedOnToolsVersion = 8.1;
 						DevelopmentTeam = QNZDPXRTT8;
 						ProvisioningStyle = Automatic;
+					};
+					8E322E6B1E512708001CE0FB = {
+						CreatedOnToolsVersion = 8.2.1;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 8E1475411E19ADD50094CB28;
 					};
 				};
 			};
@@ -130,6 +189,7 @@
 			projectRoot = "";
 			targets = (
 				8E1475411E19ADD50094CB28 /* light-playground */,
+				8E322E6B1E512708001CE0FB /* light-playground-tests */,
 			);
 		};
 /* End PBXProject section */
@@ -142,6 +202,13 @@
 				8E1475501E19ADD50094CB28 /* LaunchScreen.storyboard in Resources */,
 				8E14754D1E19ADD50094CB28 /* Assets.xcassets in Resources */,
 				8E14754B1E19ADD50094CB28 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8E322E6A1E512708001CE0FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,7 +229,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8E322E681E512708001CE0FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8E322E761E5127E7001CE0FB /* Tracer.swift in Sources */,
+				8E322E791E512821001CE0FB /* LightGrid.swift in Sources */,
+				8E322E771E512819001CE0FB /* Common.swift in Sources */,
+				8E322E6F1E512708001CE0FB /* light_playground_tests.swift in Sources */,
+				8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8E322E721E512708001CE0FB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8E1475411E19ADD50094CB28 /* light-playground */;
+			targetProxy = 8E322E711E512708001CE0FB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		8E1475491E19ADD50094CB28 /* Main.storyboard */ = {
@@ -309,6 +396,36 @@
 			};
 			name = Release;
 		};
+		8E322E741E512708001CE0FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				INFOPLIST_FILE = "light-playground-tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aeidelson.light-playground-tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/light-playground.app/light-playground";
+			};
+			name = Debug;
+		};
+		8E322E751E512708001CE0FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				INFOPLIST_FILE = "light-playground-tests/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.aeidelson.light-playground-tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 3.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/light-playground.app/light-playground";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -329,6 +446,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		8E322E731E512708001CE0FB /* Build configuration list for PBXNativeTarget "light-playground-tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8E322E741E512708001CE0FB /* Debug */,
+				8E322E751E512708001CE0FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
