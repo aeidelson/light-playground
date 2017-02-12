@@ -36,9 +36,37 @@ public struct ShapeAttributes {
 }
 
 public struct Wall {
-    let pos1, pos2: CGPoint
+    public init(
+        pos1: CGPoint,
+        pos2: CGPoint,
+        shapeAttributes: ShapeAttributes
+    ) {
+        self.pos1 = pos1
+        self.pos2 = pos2
+        self.shapeAttributes = shapeAttributes
 
+        // Do some of the calculations needed for ray tracing, ahead of time:
+        self.slope = safeDivide((pos2.y - pos1.y), (pos2.x - pos1.x))
+        self.yIntercept = pos1.y - slope * pos1.x
+        self.xRange = (min(pos1.x, pos2.x)-0.5)...(max(pos1.x, pos2.x)+0.5)
+        self.yRange = (min(pos1.y, pos2.y)-0.5)...(max(pos1.y, pos2.y)+0.5)
+
+        let dx = pos2.x - pos1.x
+        let dy = pos2.y - pos1.y
+        self.normals = (
+            NormalizedVector(dx: -dy, dy: dx),
+            NormalizedVector(dx: dy, dy: -dx))
+    }
+
+    let pos1, pos2: CGPoint
     let shapeAttributes: ShapeAttributes
+
+    /// Some precalculated variables to save re-calculating when tracing.
+    let slope: CGFloat
+    let yIntercept: CGFloat
+    let xRange: ClosedRange<CGFloat>
+    let yRange: ClosedRange<CGFloat>
+    let normals: (NormalizedVector, NormalizedVector)
 }
 
 public struct CircleShape {
@@ -168,6 +196,49 @@ func measure(_ label: String, block: () -> Void) {
     simLog("Time to execute \(label): \(end.timeIntervalSince(start) * 1000) ms")
 }
 
+struct MeasureTime {
+    public init(_ message: String) {
+        self.start = Date()
+        self.message = message
+    }
+
+    public func record() {
+        simLog("Time to execute \(message): \(Date().timeIntervalSince(start) * 1000) ms")
+    }
+
+    private let start: Date
+    private let message: String
+}
+
+/// Used to aggregate different calls to the same block of code.
+/// Doesn't handle async at all, should always be used from the same thread.
+class AggregateMeasureTime {
+    public init(_ message: String) {
+        self.message = message
+        self.totalMs = 0
+        self.measureCount = 0
+    }
+
+    public func start() {
+        startTime = Date()
+    }
+
+    public func stop() {
+        guard let startTime = startTime else { preconditionFailure() }
+        measureCount += 1
+        totalMs += UInt64((Date().timeIntervalSince(startTime) * 1000).rounded())
+    }
+
+    public func complete() {
+        simLog("Time to execute \(message): avg: \(Double(totalMs) / Double(measureCount)) count: \(measureCount)")
+    }
+
+    private let message: String
+    private var startTime: Date?
+    private var totalMs: UInt64
+    private var measureCount: UInt64
+}
+
 func simLog(_ label: String) {
     Swift.print("\(Date().timeIntervalSince1970): \(label)")
 }
@@ -178,13 +249,6 @@ func dotProduct(_ v1: NormalizedVector, _ v2: NormalizedVector) -> CGFloat {
 
 func magnitude(_ v: NormalizedVector) -> CGFloat {
     return sqrt(sq(v.dx) + sq(v.dy))
-}
-
-func normalize(_ v: NormalizedVector) -> NormalizedVector {
-    let m = magnitude(v)
-    return NormalizedVector(
-        dx: v.dx / m,
-        dy: v.dy / m)
 }
 
 /// Returns the angle of v2 relative to v1 (in radians).
