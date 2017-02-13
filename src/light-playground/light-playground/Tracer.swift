@@ -1,7 +1,7 @@
 import Foundation
 import CoreGraphics
 
-class Tracer {
+final class Tracer {
     /// Constructs an operation to perform a trace of some number of rays.
     static func makeTracer(
         context: CPULightSimulatorContext,

@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// Contains the result of the simulation (so far)
-public class SimulationSnapshot {
+public final class SimulationSnapshot {
     public init(image: CGImage) {
         self.image = image
     }
@@ -22,10 +22,10 @@ public protocol LightSimulator: class {
 }
 
 /// A context object which instances used throughout the the simulator.
-class CPULightSimulatorContext {
+struct CPULightSimulatorContext {
 }
 
-public class CPULightSimulator: LightSimulator {
+public final class CPULightSimulator: LightSimulator {
     public required init(simulationSize: CGSize) {
 
         self.simulationSize = simulationSize

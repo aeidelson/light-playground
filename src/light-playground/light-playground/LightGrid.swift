@@ -2,7 +2,7 @@ import Foundation
 import CoreGraphics
 
 // Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
-class LightGrid {
+final class LightGrid {
     public init(
         context: CPULightSimulatorContext,
         generateImage: Bool,
@@ -13,7 +13,7 @@ class LightGrid {
         self.height = Int(size.height.rounded())
         self.totalPixels = width * height
         self.generateImage = generateImage
-        self.data = Array<LightGridPixel>(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
+        self.data = ContiguousArray<LightGridPixel>(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
     }
 
     public func reset() {
@@ -121,7 +121,7 @@ class LightGrid {
 
     /// These are intended to be read when aggregrating grids.
     fileprivate let totalPixels: Int
-    fileprivate var data: [LightGridPixel]
+    fileprivate var data: ContiguousArray<LightGridPixel>
     fileprivate var totalSegmentCount = 0
 
     // MARK: Private
@@ -162,11 +162,11 @@ fileprivate struct LightGridPixel {
 /// A private class to contain all the nasty line drawing code.
 /// Taken almost directly from:
 /// https://github.com/ssloy/tinyrenderer/wiki/Lesson-1:-Bresenham%E2%80%99s-Line-Drawing-Algorithm
-private class BresenhamLightGridSegmentDraw {
+private final class BresenhamLightGridSegmentDraw {
     static func drawSegment(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: inout ContiguousArray<LightGridPixel>,
         segment: LightSegment
     ) {
 
@@ -221,11 +221,11 @@ private class BresenhamLightGridSegmentDraw {
 
 /// A private class to contain all the nasty line drawing code.
 /// Taken almost directly from: http://rosettacode.org/wiki/Xiaolin_Wu%27s_line_algorithm#C
-private class WuLightGridSegmentDraw {
+private final class WuLightGridSegmentDraw {
     @inline(__always) private static func plot(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: inout ContiguousArray<LightGridPixel>,
         x: Int,
         y: Int,
         color: (Float, Float, Float),
@@ -270,7 +270,7 @@ private class WuLightGridSegmentDraw {
     static func drawSegment(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: inout ContiguousArray<LightGridPixel>,
         segment: LightSegment
     ) {
         var x0 = Float(segment.p0.x)
@@ -448,11 +448,12 @@ private class WuLightGridSegmentDraw {
 }
 
 /// A modified version of the Wu line algorithm (above) that sacrifices quality (AA) for speed.
-private class WuFasterLightGridSegmentDraw {
+/// TODO: Apply all of these: https://github.com/apple/swift/blob/master/docs/OptimizationTips.rst#reducing-dynamic-dispatch
+private final class WuFasterLightGridSegmentDraw {
     @inline(__always) private static func plot(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: inout ContiguousArray<LightGridPixel>,
         x: Int,
         y: Int,
         color: (UInt32, UInt32,UInt32)
@@ -492,7 +493,7 @@ private class WuFasterLightGridSegmentDraw {
     static func drawSegment(
         gridWidth: Int,
         gridHeight: Int,
-        data: inout [LightGridPixel],
+        data: inout ContiguousArray<LightGridPixel>,
         segment: LightSegment
     ) {
         var x0 = Float(segment.p0.x)
