@@ -13,7 +13,7 @@ class light_playground_tests: XCTestCase {
     }
 
     func testBenchmarkTrace() {
-        let segments = 50_000
+        let segments = 20_000
 
         let context = CPULightSimulatorContext()
         let size = CGSize(width: 1080, height: 1920)
@@ -40,5 +40,37 @@ class light_playground_tests: XCTestCase {
             tracer.waitUntilFinished()
         }
     }
-    
+
+    func testBenchmarkDraw() {
+        let segments = 10_000
+
+        let context = CPULightSimulatorContext()
+        let size = CGSize(width: 1080, height: 1920)
+        let grid = LightGrid(context: context, generateImage: true, size: size)
+
+        let layout = SimulationLayout(
+            exposure: 0.55,
+            lights: [],
+            walls: [],
+            circleShapes: [])
+
+
+        var segmentArray: [LightSegment] = []
+        for _ in 0...segments {
+            let p0 = CGPoint(
+                x: CGFloat(arc4random_uniform(UInt32(size.width)-1)),
+                y: CGFloat(arc4random_uniform(UInt32(size.height)-1)))
+            let p1 = CGPoint(
+                x: CGFloat(arc4random_uniform(UInt32(size.width)-1)),
+                y: CGFloat(arc4random_uniform(UInt32(size.height)-1)))
+            segmentArray.append(LightSegment(
+                p0: p0,
+                p1: p1,
+                color: LightColor(r: 255, g: 255, b: 255)))
+        }
+
+        self.measure {
+            grid.drawSegments(layout: layout, segments: segmentArray, lowQuality: false)
+        }
+    }
 }

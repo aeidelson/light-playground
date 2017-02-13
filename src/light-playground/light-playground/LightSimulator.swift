@@ -72,6 +72,7 @@ public class CPULightSimulator: LightSimulator {
         self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
         self.tracerQueue.qualityOfService = .userInitiated
         finalTraceSegmentsLeft = 0
+        finalTracerCount = 0
     }
 
     public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
@@ -107,14 +108,11 @@ public class CPULightSimulator: LightSimulator {
     private func enqueueFinalTracersIfNeeded() {
         for _ in 0..<max((tracerQueueConcurrency - tracerQueue.operationCount), 0) {
             // The first operation is special-cased as being interactive.
-            var tracerSize = standardTracerSize
-
-            tracerSize = min(tracerSize, finalTraceSegmentsLeft)
+            let tracerSize = takeNextFinalSegmentCount()
 
             guard tracerSize > 0 else { return }
 
-            finalTraceSegmentsLeft -= tracerSize
-
+            print("tracerSize: \(tracerSize)")
             // A grid for this tracer to accumulate on.
             var tracer: Operation?
             tracer = Tracer.makeTracer(
@@ -141,14 +139,21 @@ public class CPULightSimulator: LightSimulator {
         }
     }
 
-    // Uncomment for testing:
-    //private let standardTracerSize = 500
-    //private let finalMaxSegmentsToTrace = 500
-
     private let interactiveMaxSegmentsToTrace = 200
-    private let standardTracerSize = 10_000
+    private let standardTracerSize = 20_000
     private let finalMaxSegmentsToTrace = 10_000_000
     private var finalTraceSegmentsLeft = 0
+
+    private var finalTracerCount = 0
+    private func takeNextFinalSegmentCount() -> Int {
+        finalTracerCount += 1
+        let segmentCount = standardTracerSize
+        let actualSegmentCount = min(segmentCount, finalTraceSegmentsLeft)
+
+        finalTraceSegmentsLeft -= actualSegmentCount
+        return segmentCount
+
+    }
 
 
     private let simulationSize: CGSize

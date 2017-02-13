@@ -54,8 +54,8 @@ public struct Wall {
         let dx = pos2.x - pos1.x
         let dy = pos2.y - pos1.y
         self.normals = (
-            NormalizedVector(dx: -dy, dy: dx),
-            NormalizedVector(dx: dy, dy: -dx))
+            CGVector(dx: -dy, dy: dx),
+            CGVector(dx: dy, dy: -dx))
     }
 
     let pos1, pos2: CGPoint
@@ -66,7 +66,7 @@ public struct Wall {
     let yIntercept: CGFloat
     let xRange: ClosedRange<CGFloat>
     let yRange: ClosedRange<CGFloat>
-    let normals: (NormalizedVector, NormalizedVector)
+    let normals: (CGVector, CGVector)
 }
 
 public struct CircleShape {
@@ -145,24 +145,13 @@ public struct LightSegment {
     public let color: LightColor
 }
 
-// A vector that is normalized on initialization.
-struct NormalizedVector {
-    public init(dx: CGFloat, dy: CGFloat) {
-        let mag = sqrt(sq(dx) + sq(dy))
-
-        self.dx = dx / mag
-        self.dy = dy / mag
-    }
-
+extension CGVector {
     /// Creates a new vector, rotated 180.
-    public func reverse() -> NormalizedVector {
-        return NormalizedVector(
+    public func reverse() -> CGVector {
+        return CGVector(
             dx: -dx,
             dy: -dy)
     }
-
-    let dx: CGFloat
-    let dy: CGFloat
 }
 
 func serialOperationQueue() -> OperationQueue {
@@ -250,27 +239,35 @@ func simLog(_ label: String) {
     Swift.print("\(Date().timeIntervalSince1970): \(label)")
 }
 
-func dotProduct(_ v1: NormalizedVector, _ v2: NormalizedVector) -> CGFloat {
+func dotProduct(_ v1: CGVector, _ v2: CGVector) -> CGFloat {
     return v1.dx * v2.dx + v1.dy * v2.dy
 }
 
-func magnitude(_ v: NormalizedVector) -> CGFloat {
+func magnitude(_ v: CGVector) -> CGFloat {
     return sqrt(sq(v.dx) + sq(v.dy))
 }
 
 /// Returns the angle of v2 relative to v1 (in radians).
-func angle(_ v1: NormalizedVector, _ v2: NormalizedVector) -> CGFloat {
+func angle(_ v1: CGVector, _ v2: CGVector) -> CGFloat {
     return atan2(v2.dy, v2.dx) - atan2(v1.dy, v1.dx)
 }
 
-func absoluteAngle(_ v: NormalizedVector) -> CGFloat{
+func absoluteAngle(_ v: CGVector) -> CGFloat{
     return atan2(v.dx, v.dy)
 }
 
-func rotate(_ v: NormalizedVector, _ angle: CGFloat) -> NormalizedVector {
-    return NormalizedVector(
+func rotate(_ v: CGVector, _ angle: CGFloat) -> CGVector {
+    return CGVector(
         dx: v.dx * cos(angle) - v.dy * sin(angle),
         dy: v.dx * sin(angle) + v.dy * cos(angle)
+    )
+}
+
+func advance(p: CGPoint, by v: CGFloat, towards direction: CGVector) -> CGPoint {
+    let m = magnitude(direction)
+    return CGPoint(
+        x: p.x + (v * direction.dx / m),
+        y: p.y + (v * direction.dy / m)
     )
 }
 

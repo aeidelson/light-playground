@@ -76,7 +76,7 @@ class Tracer {
             // Rays from light have both a random origin and a random direction.
             let rayOrigin = lightChosen.pos
             let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
-            let rayDirection = NormalizedVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
+            let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
             rayQueue.append(LightRay(
                 origin: rayOrigin,
                 direction: rayDirection,
@@ -176,9 +176,7 @@ class Tracer {
 
             if intersectionSurfaceItem.shapeAttributes.translucent {
                 // Find the medium that the new rayis going to enter.
-                let newItemTestPoint = CGPoint(
-                    x: intersectionPoint.x + ray.direction.dx * 0.1,
-                    y: intersectionPoint.y + ray.direction.dy * 0.1)
+                let newItemTestPoint = advance(p: intersectionPoint, by: 0.1, towards: ray.direction)
 
                 let newItem = pointItem(items: allItems, point: newItemTestPoint)
                 let newMedium = newItem?.shapeAttributes ?? spaceAttributes
@@ -251,10 +249,10 @@ private func calculateReflectance(
 private func calculateReflectedProperties(
     intersectionPoint: CGPoint,
     intersectedSurfaceAttributes: ShapeAttributes,
-    reverseIncomingDirection: NormalizedVector,
-    reflectionNormal: NormalizedVector,
+    reverseIncomingDirection: CGVector,
+    reflectionNormal: CGVector,
     incomingAngleFromNormal: CGFloat
-) -> (origin: CGPoint, direction: NormalizedVector) {
+) -> (origin: CGPoint, direction: CGVector) {
     var reflectedRayDirection = rotate(reverseIncomingDirection, -2 * incomingAngleFromNormal)
 
     // Adjust the reflected ray for diffusion:
@@ -279,9 +277,7 @@ private func calculateReflectedProperties(
     }
 
     /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
-    let reflectedRayOrigin = CGPoint(
-        x: intersectionPoint.x + reflectedRayDirection.dx * 0.1,
-        y: intersectionPoint.y + reflectedRayDirection.dy * 0.1)
+    let reflectedRayOrigin = advance(p: intersectionPoint, by: 0.1, towards: reflectedRayDirection)
 
     return (reflectedRayOrigin, reflectedRayDirection)
 }
@@ -289,10 +285,10 @@ private func calculateReflectedProperties(
 private func calculateRefractedProperties(
     intersectionPoint: CGPoint,
     incomingAngleFromNormal: CGFloat,
-    refractionNormal: NormalizedVector,
+    refractionNormal: CGVector,
     oldMediumAttributes: ShapeAttributes,
     newMediumAttributes: ShapeAttributes
-) -> (origin: CGPoint, direction: NormalizedVector) {
+) -> (origin: CGPoint, direction: CGVector) {
     let n1 = oldMediumAttributes.indexOfRefraction
     let n2 = newMediumAttributes.indexOfRefraction
 
@@ -301,9 +297,7 @@ private func calculateRefractedProperties(
     let rayDirection = rotate(refractionNormal, refractedAngleFromNormal)
 
     /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
-    let origin = CGPoint(
-        x: intersectionPoint.x + rayDirection.dx * 0.1,
-        y: intersectionPoint.y + rayDirection.dy * 0.1)
+    let origin = advance(p: intersectionPoint, by: 0.1, towards: rayDirection)
 
     return (origin: origin, direction: rayDirection)
 }
@@ -346,7 +340,7 @@ private func pointItem(items: [SimulationItem], point: CGPoint) -> SimulationIte
 
 fileprivate struct LightRay {
     public let origin: CGPoint
-    public let direction: NormalizedVector
+    public let direction: CGVector
     public let color: LightColor
 
     /// Attributes for the medium the ray is traveling in.
@@ -365,7 +359,7 @@ fileprivate protocol SimulationItem {
 
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
     func calculateNormals(ray: LightRay, atPos: CGPoint) ->
-        (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector)
+        (reflectionNormal: CGVector, refractionNormal: CGVector)
 
     /// Returns if the provided point is contained within the item.
     func hitPoint(point: CGPoint) -> Bool
@@ -416,12 +410,12 @@ extension Wall: SimulationItem {
     fileprivate func calculateNormals(
         ray: LightRay,
         atPos: CGPoint
-    ) -> (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector) {
+    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
         // To get the direction of the ray
         let reverseIncomingDirection = ray.direction.reverse()
 
-        let reflectionNormal: NormalizedVector
-        let refractionNormal: NormalizedVector
+        let reflectionNormal: CGVector
+        let refractionNormal: CGVector
 
         if abs(angle(self.normals.0, reverseIncomingDirection)) < CGFloat(M_PI_2) {
             reflectionNormal = self.normals.0
@@ -485,8 +479,8 @@ extension CircleShape: SimulationItem {
     fileprivate func calculateNormals(
         ray: LightRay,
         atPos: CGPoint
-    ) -> (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector) {
-        let normalTowardsCenter = NormalizedVector(
+    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+        let normalTowardsCenter = CGVector(
             dx: pos.x - atPos.x,
             dy: pos.y - atPos.y)
 
