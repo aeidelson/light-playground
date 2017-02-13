@@ -158,7 +158,7 @@ class Tracer {
 
             // Some commonly used variables are calculated.
             let normals = intersectionSurfaceItem.calculateNormals(ray: ray, atPos: intersectionPoint)
-            let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
+            let reverseIncomingDirection = ray.direction.reverse()
             let incomingAngleFromNormal = angle(normals.reflectionNormal, reverseIncomingDirection)
 
             // Calculate the reflected ray.
@@ -418,7 +418,7 @@ extension Wall: SimulationItem {
         atPos: CGPoint
     ) -> (reflectionNormal: NormalizedVector, refractionNormal: NormalizedVector) {
         // To get the direction of the ray
-        let reverseIncomingDirection = rotate(ray.direction, CGFloat(M_PI))
+        let reverseIncomingDirection = ray.direction.reverse()
 
         let reflectionNormal: NormalizedVector
         let refractionNormal: NormalizedVector
@@ -490,7 +490,7 @@ extension CircleShape: SimulationItem {
             dx: pos.x - atPos.x,
             dy: pos.y - atPos.y)
 
-        let normalAwayFromCenter = rotate(normalTowardsCenter, CGFloat(M_PI))
+        let normalAwayFromCenter = normalTowardsCenter.reverse()
 
         if calculateDistance(pos, ray.origin) >= radius {
             // The ray originates from outside the circle.

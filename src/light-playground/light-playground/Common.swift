@@ -154,6 +154,13 @@ struct NormalizedVector {
         self.dy = dy / mag
     }
 
+    /// Creates a new vector, rotated 180.
+    public func reverse() -> NormalizedVector {
+        return NormalizedVector(
+            dx: -dx,
+            dy: -dy)
+    }
+
     let dx: CGFloat
     let dy: CGFloat
 }
