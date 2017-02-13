@@ -63,8 +63,9 @@ final class Tracer {
         /// There's nothing to show if there are no lights.
         guard layout.lights.count > 0 else { preconditionFailure() }
 
-        var rayQueue = [LightRay]()
-        rayQueue.reserveCapacity(maxSegments)
+        let rayQueue = CircularBufferQueue<LightRay>(
+            capacity: maxSegments,
+            empty: LightRay.zero)
 
         // Prime rayBuffer with the rays emitting from lights. Half of the remaining segments alloted are used for
         // bounces.
@@ -78,7 +79,7 @@ final class Tracer {
             let rayOrigin = lightChosen.pos
             let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
             let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
-            rayQueue.append(LightRay(
+            rayQueue.enqueue(LightRay(
                 origin: rayOrigin,
                 direction: rayDirection,
                 color: lightChosen.color,
@@ -107,8 +108,7 @@ final class Tracer {
         var producedSegments = [LightSegment]()
         producedSegments.reserveCapacity(maxSegments)
 
-        while rayQueue.count > 0 && producedSegments.count < maxSegments {
-            let ray = rayQueue.removeFirst()
+        while let ray = rayQueue.dequeue(), producedSegments.count < maxSegments {
 
             // For safety, we ignore any rays that originate outside the image
             guard isInsideSimulationBounds(
@@ -131,7 +131,6 @@ final class Tracer {
                 let distFromOrigin = sqrt(
                     sq(ray.origin.x - possibleIntersectionPoint.x) +
                         sq(ray.origin.y - possibleIntersectionPoint.y))
-
 
                 if distFromOrigin < closestDistance {
                     closestDistance = distFromOrigin
@@ -194,7 +193,7 @@ final class Tracer {
                     oldMediumAttributes: ray.mediumAttributes,
                     newMediumAttributes: newMedium)
 
-                rayQueue.append(LightRay(
+                rayQueue.enqueue(LightRay(
                     origin: refractedProperties.origin,
                     direction: refractedProperties.direction,
                     color: colorAfterAbsorption.multiplyBy(1 - percentReflected),
@@ -202,7 +201,7 @@ final class Tracer {
             }
 
 
-            rayQueue.append(LightRay(
+            rayQueue.enqueue(LightRay(
                 origin: reflectedProperties.origin,
                 direction: reflectedProperties.direction,
                 color: colorAfterAbsorption.multiplyBy(percentReflected),
@@ -340,14 +339,20 @@ private func pointItem(items: [SimulationItem], point: CGPoint) -> SimulationIte
 // MARK: Ray intersections
 
 fileprivate struct LightRay {
-    public let origin: CGPoint
-    public let direction: CGVector
-    public let color: LightColor
+    let origin: CGPoint
+    let direction: CGVector
+    let color: LightColor
 
     /// Attributes for the medium the ray is traveling in.
     /// For rays in space (i.e. coming from lights or in-between items), this will be `spaceVolumeAttributes`. For rays
     /// inside of an object , this will be that object's attributes.
-    public let mediumAttributes: ShapeAttributes
+    let mediumAttributes: ShapeAttributes
+
+    static let zero = LightRay(
+        origin: CGPoint.zero,
+        direction: CGVector.zero,
+        color: LightColor.zero,
+        mediumAttributes: ShapeAttributes.zero)
 }
 
 fileprivate protocol SimulationItem {

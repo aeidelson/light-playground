@@ -228,10 +228,10 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     }
 
     /// Options (with defaults) that are configurable in the OptionsController.
-    private var exposure: CGFloat = 0.60
+    private var exposure: CGFloat = 0.55
     private var lightColor = LightColor(r: 255, g: 255, b: 255)
     private var absorption: FractionalLightColor = FractionalLightColor.zero
-    private var diffusion: CGFloat = 0.1
+    private var diffusion: CGFloat = 0
 
     // State of the simulation
     private var lights = [Light]()

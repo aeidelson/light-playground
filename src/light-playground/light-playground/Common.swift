@@ -33,6 +33,12 @@ public struct ShapeAttributes {
 
     /// Shapes with no volume (like walls) can't be translucent (the tracer doesn't handle this case gracefully yet).
     public let translucent: Bool
+
+    static let zero = ShapeAttributes(
+        absorption: FractionalLightColor.zero,
+        diffusion: 0,
+        indexOfRefraction: 0,
+        translucent: false)
 }
 
 public struct Wall {
@@ -110,6 +116,8 @@ public struct LightColor {
             b: UInt8(CGFloat(b) * x.b)
         )
     }
+
+    static let zero = LightColor(r: 0, g: 0, b: 0)
 }
 
 public struct FractionalLightColor {
@@ -273,4 +281,51 @@ func advance(p: CGPoint, by v: CGFloat, towards direction: CGVector) -> CGPoint 
 
 func sq(_ x: CGFloat) -> CGFloat {
     return pow(x, 2)
+}
+
+/// A queue implemented using a fixed-length circular buffer.
+class CircularBufferQueue<T> {
+    public init(capacity: Int, empty: T) {
+        self.data = ContiguousArray(repeating: empty, count: capacity)
+    }
+
+    /// Is a no-op if the queue is at capacity.
+    public func enqueue(_ v: T) {
+        if firstItemIndex == nextIndexToInsertAt {
+            return
+        }
+
+        data[nextIndexToInsertAt] = v
+        if firstItemIndex == nil {
+            firstItemIndex = nextIndexToInsertAt
+        }
+
+        nextIndexToInsertAt = advanceIndex(nextIndexToInsertAt)
+    }
+
+    public func dequeue() -> T? {
+        guard let firstItemIndex = firstItemIndex else { return nil }
+
+        let toReturn = data[firstItemIndex]
+        let newIndex = advanceIndex(firstItemIndex)
+        // Check if we ran out of items
+        if newIndex == nextIndexToInsertAt {
+            self.firstItemIndex = nil
+        } else {
+            self.firstItemIndex = newIndex
+        }
+
+        return toReturn
+    }
+
+    // MARK: Private
+
+    var nextIndexToInsertAt = 0
+    var firstItemIndex: Int? = nil
+
+    private var data: ContiguousArray<T>
+
+    private func advanceIndex(_ i: Int) -> Int {
+        return (i + 1) % data.count
+    }
 }
