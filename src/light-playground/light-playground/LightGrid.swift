@@ -38,7 +38,7 @@ class LightGrid {
             }
         } else {
             for segment in segments {
-                WuLightGridSegmentDraw.drawSegment(
+                WuFasterLightGridSegmentDraw.drawSegment(
                     gridWidth: width,
                     gridHeight: height,
                     data: &data,
@@ -439,6 +439,172 @@ private class WuLightGridSegmentDraw {
                     y: precalcIpart+1,
                     color: lightColorFloat,
                     br: parts.fpart * brCoeff)
+                intery = intery + gradient
+
+                x += 1
+            }
+        }
+    }
+}
+
+/// A modified version of the Wu line algorithm (above) that sacrifices quality (AA) for speed.
+private class WuFasterLightGridSegmentDraw {
+    @inline(__always) private static func plot(
+        gridWidth: Int,
+        gridHeight: Int,
+        data: inout [LightGridPixel],
+        x: Int,
+        y: Int,
+        color: (UInt32, UInt32,UInt32)
+    ) {
+        let index = indexFromLocation(gridWidth, gridHeight, x, y)
+        let initialPixel = data[index]
+
+        data[index].r = initialPixel.r + color.0
+        data[index].g = initialPixel.g + color.1
+        data[index].b = initialPixel.b + color.2
+    }
+
+    @inline(__always) private static func ipart(_ x: Float) -> Int {
+        return Int(x)
+    }
+
+    @inline(__always) private static func round(_ x: Float) -> Int {
+        return ipart(x + 0.5)
+    }
+
+    @inline(__always) private static func fpart(_ x: Float) -> Float {
+        if x < 0 {
+            return 1 - (x - floor(x))
+        }
+        return x - floor(x)
+    }
+
+    // An optimization for cases where we want both the rfpart and the fpart.
+    @inline(__always) private static func rffpart(_ x: Float) -> (rfpart: Float, fpart: Float) {
+        let fp = fpart(x)
+        return (
+            rfpart: 1 - fp,
+            fpart: fp
+        )
+    }
+
+    static func drawSegment(
+        gridWidth: Int,
+        gridHeight: Int,
+        data: inout [LightGridPixel],
+        segment: LightSegment
+    ) {
+        var x0 = Float(segment.p0.x)
+        var y0 = Float(segment.p0.y)
+        var x1 = Float(segment.p1.x)
+        var y1 = Float(segment.p1.y)
+
+        let steep = abs(y1 - y0) > abs(x1 - x0)
+
+        if steep {
+            swap(&x0, &y0)
+            swap(&x1, &y1)
+        }
+
+        if x0 > x1 {
+            swap(&x0, &x1)
+            swap(&y0, &y1)
+        }
+
+        let dx = x1 - x0
+        let dy = y1 - y0
+        let gradient = dy / dx
+        let brCoeff = safeDividef(sqrtf(dx*dx + dy*dy), dx)
+
+        // As an optimization, we convert the color to float once.
+        let lightColorUInt32 = (
+            UInt32((Float(segment.color.r) * brCoeff).rounded()),
+            UInt32((Float(segment.color.g) * brCoeff).rounded()),
+            UInt32((Float(segment.color.b) * brCoeff).rounded()))
+
+        // First endpoint
+        var xend = round(x0)
+        var yend = y0 + gradient * (Float(xend) - x0)
+        let xpxl1 = xend
+        let ypxl1 = ipart(yend)
+
+        if steep {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: ypxl1,
+                y: xpxl1,
+                color: lightColorUInt32)
+        } else {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: xpxl1,
+                y: ypxl1,
+                color: lightColorUInt32)
+        }
+
+        var intery = yend + gradient
+
+        // Second endpoint
+        xend = round(x1)
+        yend = y1 + gradient * (Float(xend) - x1)
+        let xpxl2 = xend
+        let ypxl2 = ipart(yend)
+
+        if steep {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: ypxl2,
+                y: xpxl2,
+                color: lightColorUInt32)
+        } else {
+            plot(
+                gridWidth: gridWidth,
+                gridHeight: gridHeight,
+                data: &data,
+                x: xpxl2,
+                y: ypxl2,
+                color: lightColorUInt32)
+        }
+
+        // Main loop. This is called a lot, so should be made as efficient as possible.
+
+        if steep {
+            // For efficiency, we use the a while loop rather than the normal swift range.
+            var x = (xpxl1 + 1)
+            while x <= (xpxl2 - 1) {
+                let precalcIpart = Int(intery.rounded())
+
+                plot(
+                    gridWidth: gridWidth,
+                    gridHeight: gridHeight,
+                    data: &data,
+                    x: precalcIpart,
+                    y: x,
+                    color: lightColorUInt32)
+                intery = intery + gradient
+
+                x += 1
+            }
+        } else {
+            // For efficiency, we use the a while loop rather than the normal swift range.
+            var x = (xpxl1 + 1)
+            while x <= (xpxl2 - 1) {
+                let precalcIpart = Int(intery.rounded())
+
+                plot(
+                    gridWidth: gridWidth,
+                    gridHeight: gridHeight,
+                    data: &data,
+                    x: x,
+                    y: precalcIpart,
+                    color: lightColorUInt32)
                 intery = intery + gradient
 
                 x += 1
