@@ -112,7 +112,6 @@ public class CPULightSimulator: LightSimulator {
 
             guard tracerSize > 0 else { return }
 
-            print("tracerSize: \(tracerSize)")
             // A grid for this tracer to accumulate on.
             var tracer: Operation?
             tracer = Tracer.makeTracer(
