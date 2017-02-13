@@ -54,7 +54,8 @@ class Tracer {
     /// Synchronously produces light segments given the simulation layout.
     /// This shouldn't rely on any mutable state outside of the function, as this may be running in parallel to other
     /// traces if a trace is in the process of being canceled.
-    private static func trace(
+    /// Note: Made internal for testing.
+    internal static func trace(
         layout: SimulationLayout,
         simulationSize: CGSize,
         maxSegments: Int
