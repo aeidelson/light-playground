@@ -154,7 +154,6 @@ public final class CPULightSimulator: LightSimulator {
 
     }
 
-
     private let simulationSize: CGSize
 
     private let context: CPULightSimulatorContext

@@ -281,7 +281,6 @@ private final class WuLightGridSegmentDraw {
         // As an optimization, we convert the color to float once.
         let lightColorFloat = (Float(segment.color.r), Float(segment.color.g), Float(segment.color.b))
 
-
         let steep = abs(y1 - y0) > abs(x1 - x0)
 
         if steep {
@@ -300,7 +299,6 @@ private final class WuLightGridSegmentDraw {
         let gradient = dy / dx
 
         let brCoeff = safeDividef(sqrtf(dx*dx + dy*dy), dx)
-
 
         var xend = round(x0)
         var yend = y0 + gradient * (Float(xend) - x0)

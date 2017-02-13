@@ -46,7 +46,6 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         return true
     }
 
-
     // MARK: Internal
 
     func setInitialValues(

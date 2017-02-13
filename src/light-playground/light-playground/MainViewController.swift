@@ -160,7 +160,6 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             self?.absorption = newAbsorption
         }
 
-
         optionsViewController.onDiffusionChange = { [weak self] newDiffusion in
             self?.diffusion = newDiffusion
         }

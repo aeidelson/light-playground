@@ -200,7 +200,6 @@ final class Tracer {
                     mediumAttributes: newMedium))
             }
 
-
             rayQueue.enqueue(LightRay(
                 origin: reflectedProperties.origin,
                 direction: reflectedProperties.direction,
@@ -239,7 +238,6 @@ private func calculateReflectance(
     let rpPart1 = n1 * sqrt(max(1 - ratioSinAngleSquared, 0))
     let rpPart2 = n2 * cos(incomingAngleFromNormal)
     let rp = sq((rpPart1 - rpPart2) / (rpPart1 + rpPart2))
-
 
     /// Protect against values > 1
     return min((rs + rp) / 2, 1.0)
