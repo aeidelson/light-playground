@@ -2,18 +2,27 @@ import Foundation
 import CoreGraphics
 
 // Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
+// Setting a `renderImageProperties` triggers an update to the image.
 final class LightGrid {
     public init(
         context: CPULightSimulatorContext,
-        generateImage: Bool,
-        size: CGSize
+        size: CGSize,
+        initialRenderProperties: RenderImageProperties?
     ) {
         self.context = context
         self.width = Int(size.width.rounded())
         self.height = Int(size.height.rounded())
         self.totalPixels = width * height
-        self.generateImage = generateImage
+        self.renderProperties = initialRenderProperties
         self.data = ContiguousArray<LightGridPixel>(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
+    }
+
+    public var renderProperties: RenderImageProperties? {
+        didSet {
+            if let renderProperties = renderProperties {
+                updateImage(renderProperties: renderProperties)
+            }
+        }
     }
 
     public func reset() {
@@ -24,7 +33,9 @@ final class LightGrid {
         }
         totalSegmentCount = 0
 
-        updateImage(exposure: 0.0)
+        if let renderProperties = renderProperties {
+            updateImage(renderProperties: renderProperties)
+        }
     }
 
     public func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool) {
@@ -48,7 +59,9 @@ final class LightGrid {
 
         totalSegmentCount += segments.count
 
-        updateImage(exposure: layout.exposure)
+        if let renderProperties = renderProperties {
+            updateImage(renderProperties: renderProperties)
+        }
     }
 
     public func aggregrate(layout: SimulationLayout, grids: [LightGrid]) {
@@ -63,17 +76,18 @@ final class LightGrid {
             }
             totalSegmentCount += grid.totalSegmentCount
         }
-        updateImage(exposure: layout.exposure)
+
+        if let renderProperties = renderProperties {
+            updateImage(renderProperties: renderProperties)
+        }
     }
 
-    private func updateImage(exposure: CGFloat) {
-        guard generateImage else { return }
-
+    private func updateImage(renderProperties: RenderImageProperties) {
         let brightness: Float
         if totalSegmentCount == 0 {
             brightness = 0
         } else {
-            brightness = calculateBrightness(segmentCount: totalSegmentCount, exposure: Float(exposure))
+            brightness = Float(renderProperties.preNormalizedBrightness) / Float(totalSegmentCount)
         }
 
         let bufferSize = totalPixels * componentsPerPixel
@@ -126,8 +140,6 @@ final class LightGrid {
 
     // MARK: Private
 
-    private let generateImage: Bool
-
     private let context: CPULightSimulatorContext
 
     // MARK: Variables for generating images.
@@ -136,8 +148,12 @@ final class LightGrid {
     private let bitsPerComponent = 8
 }
 
-private func calculateBrightness(segmentCount: Int, exposure: Float)  -> Float {
-    return Float(exp(1 + 10 * exposure)) / Float(segmentCount)
+private func calculateBrightness(
+    lightCount: Int,
+    segmentCount: Int,
+    exposure: Float
+)  -> Float {
+    return Float(exp(1 + 10 * exposure)) / Float(segmentCount / lightCount)
 }
 
 /// Represents a single pixel in the light grid.

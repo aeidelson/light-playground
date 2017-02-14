@@ -60,9 +60,10 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightGreenSlider.setValue(Float(lightColor.g), animated: false)
         lightBlueSlider.setValue(Float(lightColor.b), animated: false)
 
-        redAbsorptionSlider.setValue(Float(absorption.r), animated: false)
-        greenAbsorptionSlider.setValue(Float(absorption.g), animated: false)
-        blueAbsorptionSlider.setValue(Float(absorption.b), animated: false)
+        // `Pass` is just the inverse/friendly version of absorption.
+        redPassSlider.setValue(1.0 - Float(absorption.r), animated: false)
+        greenPassSlider.setValue(1.0 - Float(absorption.g), animated: false)
+        bluePassSlider.setValue(1.0 - Float(absorption.b), animated: false)
 
         diffusionSlider.setValue(Float(diffusion), animated: false)
     }
@@ -83,9 +84,9 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     @IBOutlet weak var lightGreenSlider: UISlider!
     @IBOutlet weak var lightBlueSlider: UISlider!
     @IBOutlet weak var diffusionSlider: UISlider!
-    @IBOutlet weak var redAbsorptionSlider: UISlider!
-    @IBOutlet weak var greenAbsorptionSlider: UISlider!
-    @IBOutlet weak var blueAbsorptionSlider: UISlider!
+    @IBOutlet weak var redPassSlider: UISlider!
+    @IBOutlet weak var greenPassSlider: UISlider!
+    @IBOutlet weak var bluePassSlider: UISlider!
 
     @IBAction func exposureChanged(_ sender: Any) {
         onExposureChange(CGFloat(exposureSlider.value))
@@ -107,16 +108,16 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         onDiffusionChange(CGFloat(diffusionSlider.value))
     }
 
-    @IBAction func redAbsorptionChanged(_ sender: Any) {
-        absorptionChanged()
+    @IBAction func redPassChanged(_ sender: Any) {
+        passChanged()
     }
 
-    @IBAction func greenAbsorptionChanged(_ sender: Any) {
-        absorptionChanged()
+    @IBAction func greenPassChanged(_ sender: Any) {
+        passChanged()
     }
 
-    @IBAction func blueAbsorptionChanged(_ sender: Any) {
-        absorptionChanged()
+    @IBAction func bluePassChanged(_ sender: Any) {
+        passChanged()
     }
 
     @IBAction func saveButtonHit(_ sender: Any) {
@@ -135,10 +136,11 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
             b: UInt8(lightBlueSlider.value)))
     }
 
-    private func absorptionChanged() {
+    private func passChanged() {
+        // `Pass` is just the inverse/friendly version of absorption.
         onAbsorptionChange(FractionalLightColor(
-            r: CGFloat(redAbsorptionSlider.value),
-            g: CGFloat(greenAbsorptionSlider.value),
-            b: CGFloat(blueAbsorptionSlider.value)))
+            r: 1.0 - CGFloat(redPassSlider.value),
+            g: 1.0 - CGFloat(greenPassSlider.value),
+            b: 1.0 - CGFloat(bluePassSlider.value)))
     }
 }

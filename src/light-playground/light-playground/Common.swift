@@ -82,8 +82,14 @@ public struct CircleShape {
     let shapeAttributes: ShapeAttributes
 }
 
+/// Properties which impact the rendering of an image from the LightGrid. Can be updated without triggering a full
+/// re-trace.
+public struct RenderImageProperties {
+    public let preNormalizedBrightness: CGFloat
+}
+
+/// Properties which will cause the scene to be completely re-traced.
 public struct SimulationLayout {
-    public let exposure: CGFloat
     public let lights: [Light]
     public let walls: [Wall]
     public let circleShapes: [CircleShape]

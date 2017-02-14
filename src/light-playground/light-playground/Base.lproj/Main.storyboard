@@ -110,7 +110,7 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="nb0-N9-XM9">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nb0-N9-XM9">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
                                                         <action selector="exposureChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="wVp-bl-BpX"/>
@@ -132,7 +132,7 @@
                             <tableViewSection headerTitle="New Light" id="nUO-ew-fcR">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="Dpu-nP-jAe">
-                                        <rect key="frame" x="0.0" y="157" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="156" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Dpu-nP-jAe" id="Kw9-nv-beO">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
@@ -147,7 +147,7 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" translatesAutoresizingMaskIntoConstraints="NO" id="Gwj-vq-YNw">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gwj-vq-YNw">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
                                                         <action selector="redLightColorChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="H4E-Xe-mOS"/>
@@ -167,7 +167,7 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="uwT-eH-fbE">
-                                        <rect key="frame" x="0.0" y="201" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="200" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="uwT-eH-fbE" id="ZaT-rv-weK">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
@@ -182,7 +182,7 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" translatesAutoresizingMaskIntoConstraints="NO" id="Le7-gg-2IX">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Le7-gg-2IX">
                                                     <rect key="frame" x="99" y="8" width="270" height="31"/>
                                                     <connections>
                                                         <action selector="greenLightColorChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="ucy-qG-bvi"/>
@@ -200,7 +200,7 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="zD4-u8-zpb">
-                                        <rect key="frame" x="0.0" y="245" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="244" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="zD4-u8-zpb" id="wqI-7n-LTo">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
@@ -215,7 +215,7 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" translatesAutoresizingMaskIntoConstraints="NO" id="xIV-z2-A9l">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xIV-z2-A9l">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
                                                         <action selector="blueLightColorChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="bm0-ve-XTW"/>
@@ -237,7 +237,7 @@
                             <tableViewSection headerTitle="New Object" id="SIZ-ar-JL1">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="pwK-Af-VRC">
-                                        <rect key="frame" x="0.0" y="346" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="344" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="pwK-Af-VRC" id="kOy-NP-fZf">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
@@ -252,7 +252,7 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="SFi-Cs-rqw">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SFi-Cs-rqw">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
                                                         <action selector="diffusionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="OQE-2h-iBd"/>
@@ -272,19 +272,19 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="LET-pb-JRu">
-                                        <rect key="frame" x="0.0" y="390" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="388" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="LET-pb-JRu" id="fLC-jr-JBN">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="6I2-7C-8sS">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6I2-7C-8sS">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
-                                                        <action selector="redAbsorptionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="WFL-bW-Xev"/>
+                                                        <action selector="redPassChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="WFL-bW-Xev"/>
                                                     </connections>
                                                 </slider>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Absorb (R)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iLW-TL-mVg">
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (R)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iLW-TL-mVg">
                                                     <rect key="frame" x="8" y="11" width="85" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="Kbr-fa-obY"/>
@@ -307,13 +307,13 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="jsA-GD-oME">
-                                        <rect key="frame" x="0.0" y="434" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="432" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="jsA-GD-oME" id="xhC-Dh-Kne">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Absorb (G)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V62-99-Dds">
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (G)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V62-99-Dds">
                                                     <rect key="frame" x="8" y="11" width="85" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="8y4-4t-uLs"/>
@@ -322,10 +322,10 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="iFF-Ri-ZpZ">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iFF-Ri-ZpZ">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
-                                                        <action selector="greenAbsorptionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="fj3-dc-bOO"/>
+                                                        <action selector="greenPassChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="fj3-dc-bOO"/>
                                                     </connections>
                                                 </slider>
                                             </subviews>
@@ -341,13 +341,13 @@
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="8mo-RU-m2l">
-                                        <rect key="frame" x="0.0" y="478" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="476" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="8mo-RU-m2l" id="BUG-NJ-fEj">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Absorb (B)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dxv-wh-wvA">
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (B)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dxv-wh-wvA">
                                                     <rect key="frame" x="8" y="11" width="85" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="E7N-lp-LRF"/>
@@ -356,10 +356,10 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="fHh-FT-BEi">
+                                                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fHh-FT-BEi">
                                                     <rect key="frame" x="99" y="6" width="270" height="31"/>
                                                     <connections>
-                                                        <action selector="blueAbsorptionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="9lG-H8-Fyh"/>
+                                                        <action selector="bluePassChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="9lG-H8-Fyh"/>
                                                     </connections>
                                                 </slider>
                                             </subviews>
@@ -379,7 +379,7 @@
                             <tableViewSection headerTitle="Other" id="quE-UH-nQV">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" id="5hf-Ia-nxs">
-                                        <rect key="frame" x="0.0" y="579" width="375" height="44"/>
+                                        <rect key="frame" x="0.0" y="576" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="5hf-Ia-nxs" id="V9z-PU-OlK">
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="43"/>
@@ -411,14 +411,14 @@
                         </connections>
                     </tableView>
                     <connections>
-                        <outlet property="blueAbsorptionSlider" destination="fHh-FT-BEi" id="U2v-0S-F3y"/>
+                        <outlet property="bluePassSlider" destination="fHh-FT-BEi" id="U2v-0S-F3y"/>
                         <outlet property="diffusionSlider" destination="SFi-Cs-rqw" id="haM-DX-JGH"/>
                         <outlet property="exposureSlider" destination="nb0-N9-XM9" id="JTK-QJ-fUU"/>
-                        <outlet property="greenAbsorptionSlider" destination="iFF-Ri-ZpZ" id="IJ4-VN-lb7"/>
+                        <outlet property="greenPassSlider" destination="iFF-Ri-ZpZ" id="IJ4-VN-lb7"/>
                         <outlet property="lightBlueSlider" destination="xIV-z2-A9l" id="6Fe-gT-rsz"/>
                         <outlet property="lightGreenSlider" destination="Le7-gg-2IX" id="bDG-js-0wY"/>
                         <outlet property="lightRedSlider" destination="Gwj-vq-YNw" id="kIi-hM-6Ha"/>
-                        <outlet property="redAbsorptionSlider" destination="6I2-7C-8sS" id="5MN-oU-sgu"/>
+                        <outlet property="redPassSlider" destination="6I2-7C-8sS" id="5MN-oU-sgu"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="aeg-SI-uK2" userLabel="First Responder" sceneMemberID="firstResponder"/>

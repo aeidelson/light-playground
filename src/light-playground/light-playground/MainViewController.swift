@@ -23,10 +23,11 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
         // The simulator relies on the layout bounds, so it only makes sense to start the simulator
         // after it has been laid out.
-        simulator = CPULightSimulator(simulationSize: CGSize(
-            width: drawLayer.frame.size.width * drawLayer.contentsScale,
-            height: drawLayer.frame.size.height * drawLayer.contentsScale
-        ))
+        simulator = CPULightSimulator(
+            simulationSize: CGSize(
+                width: drawLayer.frame.size.width * drawLayer.contentsScale,
+                height: drawLayer.frame.size.height * drawLayer.contentsScale),
+            initialExposure: exposure)
 
         simulator?.snapshotHandler = { snapshot in
             DispatchQueue.main.async {[weak self] in
@@ -149,7 +150,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
         optionsViewController.onExposureChange = { [weak self] newExposure in
             self?.exposure = newExposure
-            self?.resetSimulator()
+            self?.simulator?.exposure = newExposure
         }
 
         optionsViewController.onLightColorChange = { [weak self] newLightColor in
@@ -210,7 +211,6 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         }
 
         let layout = SimulationLayout(
-            exposure: exposure,
             lights: finalLights,
             walls: finalWalls,
             circleShapes: circleShapes)

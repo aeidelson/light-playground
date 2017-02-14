@@ -11,7 +11,7 @@ public final class SimulationSnapshot {
 }
 
 public protocol LightSimulator: class {
-    
+
     /// Will erase any existing rays.
     func restartSimulation(layout: SimulationLayout, isInteractive: Bool)
 
@@ -19,6 +19,9 @@ public protocol LightSimulator: class {
     func stop()
 
     var snapshotHandler: (SimulationSnapshot) -> Void { get set }
+
+    // Can be set at any time to change the exposure of the image.
+    var exposure: CGFloat { get set }
 }
 
 /// A context object which instances used throughout the the simulator.
@@ -26,8 +29,10 @@ struct CPULightSimulatorContext {
 }
 
 public final class CPULightSimulator: LightSimulator {
-    public required init(simulationSize: CGSize) {
-
+    public required init(
+        simulationSize: CGSize,
+        initialExposure: CGFloat
+    ) {
         self.simulationSize = simulationSize
         self.context = CPULightSimulatorContext()
 
@@ -35,9 +40,17 @@ public final class CPULightSimulator: LightSimulator {
         self.simulatorQueue.qualityOfService = .userInteractive
         self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
         self.tracerQueue.qualityOfService = .userInitiated
+        self.exposure = initialExposure
 
-        self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
-        self.currentLayout = SimulationLayout(exposure: 0.0, lights: [], walls: [], circleShapes: [])
+        self.rootGrid = LightGrid(
+            context: context,
+            size: simulationSize,
+            initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 0))
+
+        self.currentLayout = SimulationLayout(
+            lights: [],
+            walls: [],
+            circleShapes: [])
     }
 
     public func restartSimulation(layout: SimulationLayout, isInteractive: Bool) {
@@ -77,14 +90,32 @@ public final class CPULightSimulator: LightSimulator {
 
     public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
 
+    public var exposure: CGFloat {
+        didSet {
+            let renderProperties = currentRenderProperties()
+            objc_sync_enter(self.rootGrid)
+            self.rootGrid.renderProperties = renderProperties
+            objc_sync_exit(self.rootGrid)
+        }
+    }
+
     // MARK: Private
+
+    private func currentRenderProperties()  -> RenderImageProperties {
+        return RenderImageProperties(
+            preNormalizedBrightness: exp(1 + 10 * exposure) * CGFloat(currentLayout.lights.count)
+        )
+    }
 
     private func setupNewRootLightGrid() -> LightGrid {
         objc_sync_enter(self.rootGrid)
         self.rootGrid.imageHandler = { _ in }
         objc_sync_exit(self.rootGrid)
 
-        self.rootGrid = LightGrid(context: context, generateImage: true, size: simulationSize)
+        self.rootGrid = LightGrid(
+            context: context,
+            size: simulationSize,
+            initialRenderProperties: currentRenderProperties())
         self.rootGrid.imageHandler = { [weak self] image in
             guard let strongSelf = self else { return }
             strongSelf.snapshotHandler(SimulationSnapshot(image: image))

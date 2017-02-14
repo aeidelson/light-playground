@@ -30,7 +30,7 @@ final class Tracer {
             if interactiveTrace {
                 strongRootGrid.drawSegments(layout: layout, segments: segments, lowQuality: true)
             } else {
-                let tracerGrid = LightGrid(context: context, generateImage: false, size: simulationSize)
+                let tracerGrid = LightGrid(context: context, size: simulationSize, initialRenderProperties: nil)
                 tracerGrid.drawSegments(layout: layout, segments: segments, lowQuality: false)
 
                 guard !strongOperation.isCancelled else { return }
