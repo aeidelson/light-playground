@@ -144,7 +144,7 @@ final class Tracer {
 
             // Return the light segment for drawing of the ray.
             producedSegments.append(LightSegment(
-                p0: ray.origin,
+                pos1: ray.origin,
                 p1: intersectionPoint,
                 color: ray.color))
 
@@ -308,8 +308,8 @@ private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
     )
 }
 
-private func calculateDistance(_ p1: CGPoint, _ p2: CGPoint) -> CGFloat {
-    return sqrt(sq(p1.x - p2.x) + sq(p1.y - p2.y))
+private func calculateDistance(_ p1: CGPoint, _ pos2: CGPoint) -> CGFloat {
+    return sqrt(sq(p1.x - pos2.x) + sq(p1.y - pos2.y))
 
 }
 
@@ -369,45 +369,75 @@ fileprivate protocol SimulationItem {
     func hitPoint(point: CGPoint) -> Bool
 }
 
+/// Made availible so SimulationItems can use it.
+
+// TODO: Batch this and make faster.
+private func segmentIntersection(ray: LightRay, shapeSegment: ShapeSegment) -> CGPoint? {
+    // Given the equation `y = mx + b`
+
+    // Calculate `m`:
+    let raySlope = safeDivide(ray.direction.dy, ray.direction.dx)
+    if abs(raySlope - shapeSegment.slope) < 0.01 {
+        // They are rounghly parallel, stop processing.
+        return nil
+    }
+
+    // Calculate `b` using: `b = y - mx`
+    let rayYIntercept = ray.origin.y - raySlope * ray.origin.x
+
+    // Calculate x-intersection (derived from equations above)
+    let intersectionX = safeDivide(
+        (shapeSegment.yIntercept - rayYIntercept),
+        (raySlope - shapeSegment.slope))
+
+    // Calculate y intercept using `y = mx + b`
+    let intersectionY = raySlope * intersectionX + rayYIntercept
+
+    // Check if the intersection points are on the correct side of the light ray
+    let positiveXRayDirection = ray.direction.dx >= 0
+    let positiveYRayDirection = ray.direction.dy >= 0
+    let positiveIntersectionXDirection = (intersectionX - ray.origin.x) >= 0
+    let positiveIntersectionYDirection = (intersectionY - ray.origin.y) >= 0
+
+    guard positiveXRayDirection == positiveIntersectionXDirection &&
+        positiveYRayDirection == positiveIntersectionYDirection else { return nil }
+
+    // Check if the intersection points are inside the wall segment. Some buffer is added to handle horizontal
+    // or vertical lines.
+
+    let intersectionInWallX = shapeSegment.xRange.contains(intersectionX)
+    let intersectionInWallY = shapeSegment.yRange.contains(intersectionY)
+    guard intersectionInWallX && intersectionInWallY else { return nil }
+
+    return CGPoint(x: intersectionX, y: intersectionY)
+}
+
+private func segmentNormals(
+    ray: LightRay,
+    shapeSegment: ShapeSegment
+) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+    // To get the direction of the ray
+    let reverseIncomingDirection = ray.direction.reverse()
+
+    let reflectionNormal: CGVector
+    let refractionNormal: CGVector
+
+    if abs(angle(shapeSegment.normals.0, reverseIncomingDirection)) < CGFloat(M_PI_2) {
+        reflectionNormal = shapeSegment.normals.0
+        refractionNormal = shapeSegment.normals.1
+    } else {
+        reflectionNormal = shapeSegment.normals.1
+        refractionNormal = shapeSegment.normals.0
+    }
+
+    return (reflectionNormal: reflectionNormal, refractionNormal: refractionNormal)
+}
+
 extension Wall: SimulationItem {
 
     /// For a given ray, returns the point where the item and ray collide
     fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
-        // Given the equation `y = mx + b`
-
-        // Calculate `m`:
-        let raySlope = safeDivide(ray.direction.dy, ray.direction.dx)
-        if abs(raySlope - self.slope) < 0.01 {
-            // They are rounghly parallel, stop processing.
-            return nil
-        }
-
-        // Calculate `b` using: `b = y - mx`
-        let rayYIntercept = ray.origin.y - raySlope * ray.origin.x
-
-        // Calculate x-intersection (derived from equations above)
-        let intersectionX = safeDivide((self.yIntercept - rayYIntercept), (raySlope - self.slope))
-
-        // Calculate y intercept using `y = mx + b`
-        let intersectionY = raySlope * intersectionX + rayYIntercept
-
-        // Check if the intersection points are on the correct side of the light ray
-        let positiveXRayDirection = ray.direction.dx >= 0
-        let positiveYRayDirection = ray.direction.dy >= 0
-        let positiveIntersectionXDirection = (intersectionX - ray.origin.x) >= 0
-        let positiveIntersectionYDirection = (intersectionY - ray.origin.y) >= 0
-
-        guard positiveXRayDirection == positiveIntersectionXDirection &&
-            positiveYRayDirection == positiveIntersectionYDirection else { return nil }
-
-        // Check if the intersection points are inside the wall segment. Some buffer is added to handle horizontal
-        // or vertical lines.
-
-        let intersectionInWallX = self.xRange.contains(intersectionX)
-        let intersectionInWallY = self.yRange.contains(intersectionY)
-        guard intersectionInWallX && intersectionInWallY else { return nil }
-
-        return CGPoint(x: intersectionX, y: intersectionY)
+        return segmentIntersection(ray: ray, shapeSegment: self.shapeSegment)
     }
 
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
@@ -415,21 +445,7 @@ extension Wall: SimulationItem {
         ray: LightRay,
         atPos: CGPoint
     ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
-        // To get the direction of the ray
-        let reverseIncomingDirection = ray.direction.reverse()
-
-        let reflectionNormal: CGVector
-        let refractionNormal: CGVector
-
-        if abs(angle(self.normals.0, reverseIncomingDirection)) < CGFloat(M_PI_2) {
-            reflectionNormal = self.normals.0
-            refractionNormal = self.normals.1
-        } else {
-            reflectionNormal = self.normals.1
-            refractionNormal = self.normals.0
-        }
-
-        return (reflectionNormal: reflectionNormal, refractionNormal: refractionNormal)
+        return segmentNormals(ray: ray, shapeSegment: self.shapeSegment)
     }
 
     func hitPoint(point: CGPoint) -> Bool {
@@ -505,5 +521,25 @@ extension CircleShape: SimulationItem {
 
     func hitPoint(point: CGPoint) -> Bool {
         return sqrt(sq(point.x-pos.x) + sq(point.y-pos.y)) <= radius
+    }
+}
+
+extension PolygonShape: SimulationItem {
+    /// For a given ray, returns the point where the item and ray collide
+    fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
+        return nil
+    }
+
+    /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
+    fileprivate func calculateNormals(
+        ray: LightRay,
+        atPos: CGPoint
+    ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+        return (CGVector.zero, CGVector.zero)
+    }
+
+    /// Returns if the provided point is contained within the item.
+    internal func hitPoint(point: CGPoint) -> Bool {
+        return true
     }
 }

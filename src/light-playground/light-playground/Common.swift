@@ -41,15 +41,14 @@ public struct ShapeAttributes {
         translucent: false)
 }
 
-public struct Wall {
+// Used when we want to represent the flat wall of a shape. Contains some precalculations.
+public struct ShapeSegment {
     public init(
         pos1: CGPoint,
-        pos2: CGPoint,
-        shapeAttributes: ShapeAttributes
+        pos2: CGPoint
     ) {
         self.pos1 = pos1
         self.pos2 = pos2
-        self.shapeAttributes = shapeAttributes
 
         // Do some of the calculations needed for ray tracing, ahead of time:
         self.slope = safeDivide((pos2.y - pos1.y), (pos2.x - pos1.x))
@@ -65,7 +64,6 @@ public struct Wall {
     }
 
     let pos1, pos2: CGPoint
-    let shapeAttributes: ShapeAttributes
 
     /// Some precalculated variables to save re-calculating when tracing.
     let slope: CGFloat
@@ -75,10 +73,56 @@ public struct Wall {
     let normals: (CGVector, CGVector)
 }
 
+public struct Wall {
+    public init(
+        pos1: CGPoint,
+        pos2: CGPoint,
+        shapeAttributes: ShapeAttributes
+    ) {
+        self.shapeSegment = ShapeSegment(pos1: pos1, pos2: pos2)
+        self.shapeAttributes = shapeAttributes
+    }
+
+    let shapeSegment: ShapeSegment
+    let shapeAttributes: ShapeAttributes
+}
+
 public struct CircleShape {
     let pos: CGPoint
     let radius: CGFloat
 
+    let shapeAttributes: ShapeAttributes
+}
+
+public struct PolygonShape {
+    public init(
+        posList: [CGPoint],
+        shapeAttributes: ShapeAttributes
+    ) {
+        precondition(posList.count >= 3)
+        self.posList = posList
+        self.shapeAttributes = shapeAttributes
+
+        var segments = [ShapeSegment]()
+        segments.reserveCapacity(posList.count + 1)
+        var i = 0
+        while i < posList.count {
+            segments.append(ShapeSegment(
+                pos1: posList[i],
+                pos2: posList[(i + 1) % posList.count]
+            ))
+
+            i += 1
+        }
+        self.shapeSegments = segments
+    }
+
+    /// A list of vertex positions, in order. It is assumed that the first and the last positions are connected.
+    let posList: [CGPoint]
+
+
+    /// A list of segments, calculated from the `posList` above. This is useful for efficient calculations later on.
+    let shapeSegments: [ShapeSegment]
     let shapeAttributes: ShapeAttributes
 }
 
@@ -154,7 +198,7 @@ public struct FractionalLightColor {
 }
 
 public struct LightSegment {
-    public let p0: CGPoint
+    public let pos1: CGPoint
     public let p1: CGPoint
     public let color: LightColor
 }

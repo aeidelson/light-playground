@@ -181,7 +181,7 @@ public final class CPULightSimulator: LightSimulator {
         let actualSegmentCount = min(segmentCount, finalTraceSegmentsLeft)
 
         finalTraceSegmentsLeft -= actualSegmentCount
-        return segmentCount
+        return actualSegmentCount
 
     }
 

@@ -187,8 +187,8 @@ private final class BresenhamLightGridSegmentDraw {
     ) {
 
         // Figure out the color for the segment.
-        var dxFloat = abs(Float(segment.p1.x) - Float(segment.p0.x))
-        var dyFloat = abs(Float(segment.p1.y) - Float(segment.p0.y))
+        var dxFloat = abs(Float(segment.p1.x) - Float(segment.pos1.x))
+        var dyFloat = abs(Float(segment.p1.y) - Float(segment.pos1.y))
         if dyFloat > dxFloat {
             swap(&dxFloat, &dyFloat)
         }
@@ -199,8 +199,8 @@ private final class BresenhamLightGridSegmentDraw {
         let colorB = UInt32(Float(segment.color.b) * br)
 
         var steep = false
-        var x0 = Int(segment.p0.x.rounded())
-        var y0 = Int(segment.p0.y.rounded())
+        var x0 = Int(segment.pos1.x.rounded())
+        var y0 = Int(segment.pos1.y.rounded())
         var x1 = Int(segment.p1.x.rounded())
         var y1 = Int(segment.p1.y.rounded())
 
@@ -289,8 +289,8 @@ private final class WuLightGridSegmentDraw {
         data: inout ContiguousArray<LightGridPixel>,
         segment: LightSegment
     ) {
-        var x0 = Float(segment.p0.x)
-        var y0 = Float(segment.p0.y)
+        var x0 = Float(segment.pos1.x)
+        var y0 = Float(segment.pos1.y)
         var x1 = Float(segment.p1.x)
         var y1 = Float(segment.p1.y)
 
@@ -509,8 +509,8 @@ private final class WuFasterLightGridSegmentDraw {
         data: inout ContiguousArray<LightGridPixel>,
         segment: LightSegment
     ) {
-        var x0 = Float(segment.p0.x)
-        var y0 = Float(segment.p0.y)
+        var x0 = Float(segment.pos1.x)
+        var y0 = Float(segment.pos1.y)
         var x1 = Float(segment.p1.x)
         var y1 = Float(segment.p1.y)
 
