@@ -462,7 +462,6 @@ private final class WuLightGridSegmentDraw {
 }
 
 /// A modified version of the Wu line algorithm (above) that sacrifices quality (AA) for speed.
-/// TODO: Apply all of these: https://github.com/apple/swift/blob/master/docs/OptimizationTips.rst#reducing-dynamic-dispatch
 private final class WuFasterLightGridSegmentDraw {
     @inline(__always) private static func plot(
         gridWidth: Int,
