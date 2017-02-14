@@ -14,12 +14,12 @@ class light_playground_tests: XCTestCase {
 
     // MARK: Variables used in benchmarks
     let benchmarkLayout = SimulationLayout(
-        exposure: 0.55,
         lights: [Light(
             pos: CGPoint(x: 100, y: 100),
             color: LightColor(r: 255, g: 255, b: 255))],
         walls: [],
-        circleShapes: [])
+        circleShapes: [],
+        polygonShapes: [])
 
     let benchmarkSegmentCount = 20_000
 
@@ -30,7 +30,10 @@ class light_playground_tests: XCTestCase {
     // MARK: Benchmarks
 
     func testBenchmarkTraceAndDraw() {
-        let rootGrid = LightGrid(context: benchmarkContext, generateImage: true, size: benchmarkSize)
+        let rootGrid = LightGrid(
+            context: benchmarkContext,
+            size: benchmarkSize,
+            initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 1.0))
 
         self.measure {
             let tracer = Tracer.makeTracer(
@@ -56,7 +59,10 @@ class light_playground_tests: XCTestCase {
     }
 
     func testBenchmarkDraw() {
-        let grid = LightGrid(context: benchmarkContext, generateImage: true, size: benchmarkSize)
+        let grid = LightGrid(
+            context: benchmarkContext,
+            size: benchmarkSize,
+            initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 1.0))
 
         /// The scene is traced outside of measure, to create a representative trace.
         let segmentArray = Tracer.trace(

@@ -104,6 +104,7 @@ final class Tracer {
         ]
         allItems.append(contentsOf: layout.walls as [SimulationItem])
         allItems.append(contentsOf: layout.circleShapes as [SimulationItem])
+        allItems.append(contentsOf: layout.polygonShapes as [SimulationItem])
 
         var producedSegments = [LightSegment]()
         producedSegments.reserveCapacity(maxSegments)
@@ -118,29 +119,33 @@ final class Tracer {
                 maxY: maxY,
                 point: ray.origin) else { continue }
 
-            var closestDistance = CGFloat.greatestFiniteMagnitude
+            var closestDistanceSquared = CGFloat.greatestFiniteMagnitude
             var closestIntersectionPoint: CGPoint?
+            var closestIntersectionContext: SimulationContext?
 
             /// This is the item whose wall the ray intersected with. It may be the item the ray is traveling through.
-            var closestIntersectionSurfaceItem: SimulationItem?
+            var closestIntersectionSimulationItem: SimulationItem?
 
             for item in allItems {
-                guard let possibleIntersectionPoint = item.intersectionPoint(ray: ray) else { continue }
+                let (context, possibleIntersectionPointOptional) = item.intersectionPoint(ray: ray)
+                guard let possibleIntersectionPoint = possibleIntersectionPointOptional else { continue }
 
                 // Check if the intersection points are closer than the current closest
-                let distFromOrigin = sqrt(
-                    sq(ray.origin.x - possibleIntersectionPoint.x) +
-                        sq(ray.origin.y - possibleIntersectionPoint.y))
+                // Is squared to save us a sqrt.
+                let distFromOriginSquared = sq(ray.origin.x - possibleIntersectionPoint.x) +
+                    sq(ray.origin.y - possibleIntersectionPoint.y)
 
-                if distFromOrigin < closestDistance {
-                    closestDistance = distFromOrigin
+                if distFromOriginSquared < closestDistanceSquared {
+                    closestDistanceSquared = distFromOriginSquared
                     closestIntersectionPoint = possibleIntersectionPoint
-                    closestIntersectionSurfaceItem = item
+                    closestIntersectionContext = context
+                    closestIntersectionSimulationItem = item
                 }
             }
 
             guard let intersectionPoint = closestIntersectionPoint else { preconditionFailure() }
-            guard let intersectionSurfaceItem = closestIntersectionSurfaceItem else { preconditionFailure() }
+            guard let intersectionSimulationItem = closestIntersectionSimulationItem else { preconditionFailure() }
+            guard let intersectionSimulationContext = closestIntersectionContext else { preconditionFailure() }
 
             // Return the light segment for drawing of the ray.
             producedSegments.append(LightSegment(
@@ -149,15 +154,15 @@ final class Tracer {
                 color: ray.color))
 
             // TODO: Stop if the ray is too dark to begin with
-            let absorption = intersectionSurfaceItem.shapeAttributes.absorption
+            let absorption = intersectionSimulationItem.shapeAttributes.absorption
             guard absorption.r < 0.99 || absorption.g < 0.99 || absorption.b < 0.99 else { continue }
             let colorAfterAbsorption =
-                ray.color.multiplyBy(intersectionSurfaceItem.shapeAttributes.absorption.remainder())
+                ray.color.multiplyBy(intersectionSimulationItem.shapeAttributes.absorption.remainder())
 
             // Now we may spawn some more rays depending on the ray and attributes of the intersectionItem.
 
             // Some commonly used variables are calculated.
-            let normals = intersectionSurfaceItem.calculateNormals(ray: ray, atPos: intersectionPoint)
+            let normals = intersectionSimulationItem.calculateNormals(context: intersectionSimulationContext, ray: ray)
             let reverseIncomingDirection = ray.direction.reverse()
             let incomingAngleFromNormal = angle(normals.reflectionNormal, reverseIncomingDirection)
 
@@ -166,7 +171,7 @@ final class Tracer {
 
             let reflectedProperties = calculateReflectedProperties(
                 intersectionPoint: intersectionPoint,
-                intersectedSurfaceAttributes: intersectionSurfaceItem.shapeAttributes,
+                intersectedSurfaceAttributes: intersectionSimulationItem.shapeAttributes,
                 reverseIncomingDirection: reverseIncomingDirection,
                 reflectionNormal: normals.reflectionNormal,
                 incomingAngleFromNormal: incomingAngleFromNormal)
@@ -174,11 +179,14 @@ final class Tracer {
             // Calculate the refracted ray if the surface item is translucent.
             var percentReflected: CGFloat = 1.0
 
-            if intersectionSurfaceItem.shapeAttributes.translucent {
+            if intersectionSimulationItem.shapeAttributes.translucent {
                 // Find the medium that the new rayis going to enter.
                 let newItemTestPoint = advance(p: intersectionPoint, by: 0.1, towards: ray.direction)
 
-                let newItem = pointItem(items: allItems, point: newItemTestPoint)
+                let newItem = pointItem(
+                    context: intersectionSimulationContext,
+                    items: allItems,
+                    point: newItemTestPoint)
                 let newMedium = newItem?.shapeAttributes ?? spaceAttributes
 
                 percentReflected = calculateReflectance(
@@ -325,9 +333,9 @@ private func isInsideSimulationBounds(
 
 /// Gets the item at the given point (if there is one). Currently has undefined behavior if items are overlapping each
 /// other.
-private func pointItem(items: [SimulationItem], point: CGPoint) -> SimulationItem? {
+private func pointItem(context: SimulationContext, items: [SimulationItem], point: CGPoint) -> SimulationItem? {
     for item in items {
-        if item.hitPoint(point: point) {
+        if item.hitPoint(context: context, point: point) {
             return item
         }
     }
@@ -353,20 +361,23 @@ fileprivate struct LightRay {
         mediumAttributes: ShapeAttributes.zero)
 }
 
-fileprivate protocol SimulationItem {
+typealias SimulationContext = Any
 
+
+fileprivate protocol SimulationItem {
     /// All intersection items must have a surface and so they must have surface attributes.
     var shapeAttributes: ShapeAttributes { get }
 
     /// For a given ray, returns the point where the item and ray collide
-    func intersectionPoint(ray: LightRay) -> CGPoint?
+    /// The context must be returned if a point is returned.
+    func intersectionPoint(ray: LightRay) -> (SimulationContext?, CGPoint?)
 
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
-    func calculateNormals(ray: LightRay, atPos: CGPoint) ->
+    func calculateNormals(context: SimulationContext, ray: LightRay) ->
         (reflectionNormal: CGVector, refractionNormal: CGVector)
 
     /// Returns if the provided point is contained within the item.
-    func hitPoint(point: CGPoint) -> Bool
+    func hitPoint(context: SimulationContext, point: CGPoint) -> Bool
 }
 
 /// Made availible so SimulationItems can use it.
@@ -436,26 +447,27 @@ private func segmentNormals(
 extension Wall: SimulationItem {
 
     /// For a given ray, returns the point where the item and ray collide
-    fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
-        return segmentIntersection(ray: ray, shapeSegment: self.shapeSegment)
+    fileprivate func intersectionPoint(ray: LightRay) -> (SimulationContext?, CGPoint?) {
+        return ((), segmentIntersection(ray: ray, shapeSegment: self.shapeSegment))
     }
 
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
     fileprivate func calculateNormals(
-        ray: LightRay,
-        atPos: CGPoint
+        context: Any,
+        ray: LightRay
     ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
         return segmentNormals(ray: ray, shapeSegment: self.shapeSegment)
     }
 
-    func hitPoint(point: CGPoint) -> Bool {
+    func hitPoint(context: SimulationContext, point: CGPoint) -> Bool {
         return false
     }
 }
 
 extension CircleShape: SimulationItem {
+    /// `SimulationContext` represents a type of `CGPoint?`
 
-    fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
+    fileprivate func intersectionPoint(ray: LightRay) -> (SimulationContext?, CGPoint?) {
         // Inspired heavily by the derivation here: http://math.stackexchange.com/a/311956
 
         let x0 = ray.origin.x
@@ -475,7 +487,7 @@ extension CircleShape: SimulationItem {
 
         let det = sq(b) - 4 * a * c
 
-        guard det >= 0 else { return nil }
+        guard det >= 0 else { return (nil, nil) }
 
         let t1 = (-b + sqrt(det)) / (2 * a)
         let t2 = (-b - sqrt(det)) / (2 * a)
@@ -488,18 +500,22 @@ extension CircleShape: SimulationItem {
         } else if t2 > 0 {
             t = t2
         } else {
-            return nil
+            return (nil, nil)
         }
 
-        return CGPoint(
+        let p = CGPoint(
             x: (x1 - x0) * t + x0,
             y: (y1 - y0) * t + y0)
+
+        return (p, p)
     }
 
     fileprivate func calculateNormals(
-        ray: LightRay,
-        atPos: CGPoint
+        context: SimulationContext,
+        ray: LightRay
     ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
+        let atPos = context as! CGPoint
+
         let normalTowardsCenter = CGVector(
             dx: pos.x - atPos.x,
             dy: pos.y - atPos.y)
@@ -519,27 +535,67 @@ extension CircleShape: SimulationItem {
         }
     }
 
-    func hitPoint(point: CGPoint) -> Bool {
+    func hitPoint(
+        context: SimulationContext,
+        point: CGPoint
+    ) -> Bool {
         return sqrt(sq(point.x-pos.x) + sq(point.y-pos.y)) <= radius
     }
 }
 
 extension PolygonShape: SimulationItem {
     /// For a given ray, returns the point where the item and ray collide
-    fileprivate func intersectionPoint(ray: LightRay) -> CGPoint? {
-        return nil
+    fileprivate func intersectionPoint(ray: LightRay) -> (SimulationContext?, CGPoint?) {
+        var closestDistanceSquared = CGFloat.greatestFiniteMagnitude
+        var closestIntersectionPoint: CGPoint?
+        var closestIntersectionSegment: ShapeSegment?
+
+        for shapeSegment in shapeSegments {
+            let point = segmentIntersection(ray: ray, shapeSegment: shapeSegment)
+            if let point = point {
+                let distanceSquared = sq(ray.origin.x - point.x) + sq(ray.origin.y - point.y)
+
+                if closestDistanceSquared > distanceSquared {
+                    closestDistanceSquared = distanceSquared
+                    closestIntersectionPoint = point
+                    closestIntersectionSegment = shapeSegment
+                }
+            }
+        }
+
+        return (closestIntersectionSegment as SimulationContext, closestIntersectionPoint)
     }
 
     /// Given the light ray and the intersection point, returns the reflection and the refraction normals.
     fileprivate func calculateNormals(
-        ray: LightRay,
-        atPos: CGPoint
+        context: SimulationContext,
+        ray: LightRay
     ) -> (reflectionNormal: CGVector, refractionNormal: CGVector) {
-        return (CGVector.zero, CGVector.zero)
+        let intersectedSegment = context as! ShapeSegment
+
+        return segmentNormals(ray: ray, shapeSegment: intersectedSegment)
     }
 
     /// Returns if the provided point is contained within the item.
-    internal func hitPoint(point: CGPoint) -> Bool {
-        return true
+    /// A hit is determined by the number of segment crossings: https://en.wikipedia.org/wiki/Point_in_polygon
+    /// TODO: The intersection checking here can be combined with the checking above (and stored in the context).
+    internal func hitPoint(context: SimulationContext, point: CGPoint) -> Bool {
+        let testDirection = CGVector(dx: 1, dy: 1)
+
+        let testRay = LightRay(
+            origin: point,
+            direction: testDirection,
+            color: LightColor.zero,
+            mediumAttributes: ShapeAttributes.zero)
+
+        var intersectionCount = 0
+        for shapeSegments in shapeSegments {
+            if segmentIntersection(ray: testRay, shapeSegment: shapeSegments) != nil {
+                intersectionCount += 1
+            }
+        }
+
+        // An odd number of intersections means that the point is inside the polygon.
+        return intersectionCount % 2 == 1
     }
 }

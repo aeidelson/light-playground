@@ -50,7 +50,8 @@ public final class CPULightSimulator: LightSimulator {
         self.currentLayout = SimulationLayout(
             lights: [],
             walls: [],
-            circleShapes: [])
+            circleShapes: [],
+            polygonShapes: [])
     }
 
     public func restartSimulation(layout: SimulationLayout, isInteractive: Bool) {

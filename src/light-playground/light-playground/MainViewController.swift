@@ -76,6 +76,26 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                     indexOfRefraction: 1.5,
                     translucent: true)))
             resetSimulator()
+        case .polygon:
+            let d: CGFloat = 200.0
+            let p1 = CGPoint(
+                x: tapLocation.x,
+                y: tapLocation.y - d)
+            let p2 = CGPoint(
+                x: tapLocation.x - d,
+                y: tapLocation.y + d)
+            let p3 = CGPoint(
+                x: tapLocation.x + d,
+                y: tapLocation.y + d)
+            polygonShapes.append(PolygonShape(
+                posList: [p1, p2, p3],
+                shapeAttributes: ShapeAttributes(
+                    absorption: absorption,
+                    diffusion: diffusion,
+                    indexOfRefraction: 1.5,
+                    translucent: true)))
+
+            resetSimulator()
         default:
             break
         }
@@ -128,6 +148,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
     @IBAction func clearButtonHit(_ sender: Any) {
         self.circleShapes = []
+        self.polygonShapes = []
         self.walls = []
         self.lights = []
         self.interactiveWall = nil
@@ -182,6 +203,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         case light
         case wall
         case circle
+        case polygon
     }
 
     private var currentInteractionMode: InteractionMode {
@@ -192,6 +214,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             return .wall
         case 2:
             return .circle
+        case 3:
+            return .polygon
         default:
             preconditionFailure()
         }
@@ -213,7 +237,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         let layout = SimulationLayout(
             lights: finalLights,
             walls: finalWalls,
-            circleShapes: circleShapes)
+            circleShapes: circleShapes,
+            polygonShapes: polygonShapes)
 
         simulator?.restartSimulation(
             layout: layout,
@@ -236,6 +261,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     private var lights = [Light]()
     private var walls = [Wall]()
     private var circleShapes = [CircleShape]()
+    private var polygonShapes = [PolygonShape]()
     private var interactiveWall: Wall?
     private var simulator: LightSimulator?
 }

@@ -137,6 +137,7 @@ public struct SimulationLayout {
     public let lights: [Light]
     public let walls: [Wall]
     public let circleShapes: [CircleShape]
+    public let polygonShapes: [PolygonShape]
 }
 
 public struct LightColor {
