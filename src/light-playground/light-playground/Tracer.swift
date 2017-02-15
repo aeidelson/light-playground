@@ -121,10 +121,18 @@ final class Tracer {
             var closestIntersectionSimulationItem: SimulationItem?
 
             for item in allItems {
-                // Skip the item if the ray originates from it.
-                guard item.id != ray.sourceItemId else { continue }
+                var testRay = ray
+                // HACK: If the ray came from the item, advance it to ensure it doesn't collide in the same spot.
+                if item.id == ray.sourceItemId {
+                    testRay = LightRay(
+                        sourceItemId: ray.sourceItemId,
+                        origin: advance(p: ray.origin, by: 0.1, towards: ray.direction),
+                        direction: ray.direction,
+                        color: ray.color,
+                        mediumAttributes: ray.mediumAttributes)
+                }
 
-                let (context, possibleIntersectionPointOptional) = item.intersectionPoint(ray: ray)
+                let (context, possibleIntersectionPointOptional) = item.intersectionPoint(ray: testRay)
                 guard let possibleIntersectionPoint = possibleIntersectionPointOptional else { continue }
 
                 // Check if the intersection points are closer than the current closest
@@ -313,7 +321,7 @@ private func calculateRefractedProperties(
 
     let rayDirection = rotate(refractionNormal, refractedAngleFromNormal)
 
-    return (origin: intersectionPoint, direction: rayDirection)
+    return (intersectionPoint, rayDirection)
 }
 
 private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {

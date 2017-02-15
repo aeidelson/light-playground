@@ -69,7 +69,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         case .circle:
             circleShapes.append(CircleShape(
                 pos: tapLocation,
-                radius: 50,
+                radius: 300,
                 shapeAttributes: ShapeAttributes(
                     absorption: absorption,
                     diffusion: diffusion,
