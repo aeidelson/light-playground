@@ -226,7 +226,7 @@ final class Tracer {
     }
 
     private static func createRootRay(layout: SimulationLayout) -> LightRay {
-        let randomLightIndex = Int(arc4random_uniform(UInt32(layout.lights.count - 1)))
+        let randomLightIndex = Int(arc4random_uniform(UInt32(layout.lights.count)))
         let lightChosen = layout.lights[randomLightIndex]
 
         // Rays from light have both a random origin and a random direction.
