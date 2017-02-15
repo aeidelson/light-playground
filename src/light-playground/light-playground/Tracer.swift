@@ -50,6 +50,8 @@ final class Tracer {
 
     /// Volume attributes applying to empty space in a scene.
     private static let spaceAttributes = ShapeAttributes(indexOfRefraction: 1)
+    /// Minimum aggregate color for a ray to be processed.
+    private static let rayColorCutoff: UInt32 = 50
 
     /// Synchronously produces light segments given the simulation layout.
     /// This shouldn't rely on any mutable state outside of the function, as this may be running in parallel to other
@@ -63,28 +65,10 @@ final class Tracer {
         /// There's nothing to show if there are no lights.
         guard layout.lights.count > 0 else { preconditionFailure() }
 
+        /// The ray queue is used to keep track of any rays we want to process in the following trace cycle.
         let rayQueue = CircularBufferQueue<LightRay>(
             capacity: maxSegments,
             empty: LightRay.zero)
-
-        // Prime rayBuffer with the rays emitting from lights. Half of the remaining segments alloted are used for
-        // bounces.
-        // TODO: Figure out a smarter way to allow for more rays (maybe based on the number of objects in the scene?)
-        let initialRaysToCast = maxSegments / 2
-
-        for i in 0..<initialRaysToCast {
-            let lightChosen = layout.lights[i % layout.lights.count]
-
-            // Rays from light have both a random origin and a random direction.
-            let rayOrigin = lightChosen.pos
-            let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
-            let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
-            rayQueue.enqueue(LightRay(
-                origin: rayOrigin,
-                direction: rayDirection,
-                color: lightChosen.color,
-                mediumAttributes: spaceAttributes))
-        }
 
         // Hardcode walls to prevent out of index.
         let minX: CGFloat = 1.0
@@ -109,7 +93,17 @@ final class Tracer {
         var producedSegments = [LightSegment]()
         producedSegments.reserveCapacity(maxSegments)
 
-        while let ray = rayQueue.dequeue(), producedSegments.count < maxSegments {
+        while producedSegments.count < maxSegments {
+            let ray: LightRay
+            if let queuedRay = rayQueue.dequeue() {
+                if queuedRay.color.aggregate() < rayColorCutoff {
+                    continue
+                } else {
+                    ray = queuedRay
+                }
+            } else {
+                ray = createRootRay(layout: layout)
+            }
 
             // For safety, we ignore any rays that originate outside the image
             guard isInsideSimulationBounds(
@@ -150,10 +144,9 @@ final class Tracer {
             // Return the light segment for drawing of the ray.
             producedSegments.append(LightSegment(
                 pos1: ray.origin,
-                p1: intersectionPoint,
+                pos2: intersectionPoint,
                 color: ray.color))
 
-            // TODO: Stop if the ray is too dark to begin with
             let absorption = intersectionSimulationItem.shapeAttributes.absorption
             guard absorption.r < 0.99 || absorption.g < 0.99 || absorption.b < 0.99 else { continue }
             let colorAfterAbsorption =
@@ -217,6 +210,21 @@ final class Tracer {
         }
 
         return producedSegments
+    }
+
+    private static func createRootRay(layout: SimulationLayout) -> LightRay {
+        let randomLightIndex = Int(arc4random_uniform(UInt32(layout.lights.count - 1)))
+        let lightChosen = layout.lights[randomLightIndex]
+
+        // Rays from light have both a random origin and a random direction.
+        let rayOrigin = lightChosen.pos
+        let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
+        let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
+        return LightRay(
+            origin: rayOrigin,
+            direction: rayDirection,
+            color: lightChosen.color,
+            mediumAttributes: spaceAttributes)
     }
 }
 
@@ -316,8 +324,8 @@ private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
     )
 }
 
-private func calculateDistance(_ p1: CGPoint, _ pos2: CGPoint) -> CGFloat {
-    return sqrt(sq(p1.x - pos2.x) + sq(p1.y - pos2.y))
+private func calculateDistance(_ pos1: CGPoint, _ pos2: CGPoint) -> CGFloat {
+    return sqrt(sq(pos1.x - pos2.x) + sq(pos1.y - pos2.y))
 
 }
 

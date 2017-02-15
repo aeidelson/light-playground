@@ -187,13 +187,18 @@ private final class BresenhamLightGridSegmentDraw {
     ) {
 
         // Figure out the color for the segment.
-        var dxFloat = abs(Float(segment.p1.x) - Float(segment.pos1.x))
-        var dyFloat = abs(Float(segment.p1.y) - Float(segment.pos1.y))
+        var dxFloat = abs(Float(segment.pos2.x) - Float(segment.pos1.x))
+        var dyFloat = abs(Float(segment.pos2.y) - Float(segment.pos1.y))
         if dyFloat > dxFloat {
             swap(&dxFloat, &dyFloat)
         }
 
-        let br = safeDividef(sqrtf(dxFloat*dxFloat + dyFloat*dyFloat), dxFloat)
+        // Save ourselves a lot of trouble by avoiding zero-values.
+        if abs(dxFloat) < 0.01 {
+            dxFloat = 0.01
+        }
+
+        let br = max(abs(sqrtf(dxFloat*dxFloat + dyFloat*dyFloat) / dxFloat), 2)
         let colorR = UInt32(Float(segment.color.r) * br)
         let colorG = UInt32(Float(segment.color.g) * br)
         let colorB = UInt32(Float(segment.color.b) * br)
@@ -201,8 +206,8 @@ private final class BresenhamLightGridSegmentDraw {
         var steep = false
         var x0 = Int(segment.pos1.x.rounded())
         var y0 = Int(segment.pos1.y.rounded())
-        var x1 = Int(segment.p1.x.rounded())
-        var y1 = Int(segment.p1.y.rounded())
+        var x1 = Int(segment.pos2.x.rounded())
+        var y1 = Int(segment.pos2.y.rounded())
 
         if abs(x0 - x1) < abs(y0 - y1) {
             swap(&x0, &y0)
@@ -291,8 +296,8 @@ private final class WuLightGridSegmentDraw {
     ) {
         var x0 = Float(segment.pos1.x)
         var y0 = Float(segment.pos1.y)
-        var x1 = Float(segment.p1.x)
-        var y1 = Float(segment.p1.y)
+        var x1 = Float(segment.pos2.x)
+        var y1 = Float(segment.pos2.y)
 
         // As an optimization, we convert the color to float once.
         let lightColorFloat = (Float(segment.color.r), Float(segment.color.g), Float(segment.color.b))
@@ -310,11 +315,16 @@ private final class WuLightGridSegmentDraw {
         }
 
         // First endpoint
-        let dx = x1 - x0
+        var dx = x1 - x0
         let dy = y1 - y0
-        let gradient = dy / dx
 
-        let brCoeff = safeDividef(sqrtf(dx*dx + dy*dy), dx)
+        // Save ourselves a lot of trouble by avoiding zero-values.
+        if abs(dx) < 0.01 {
+            dx = 0.01
+        }
+
+        let gradient = dy / dx
+        let brCoeff: Float = min(abs(sqrtf(dx*dx + dy*dy) / dx), 2.0)
 
         var xend = round(x0)
         var yend = y0 + gradient * (Float(xend) - x0)
@@ -511,8 +521,8 @@ private final class WuFasterLightGridSegmentDraw {
     ) {
         var x0 = Float(segment.pos1.x)
         var y0 = Float(segment.pos1.y)
-        var x1 = Float(segment.p1.x)
-        var y1 = Float(segment.p1.y)
+        var x1 = Float(segment.pos2.x)
+        var y1 = Float(segment.pos2.y)
 
         let steep = abs(y1 - y0) > abs(x1 - x0)
 
@@ -526,10 +536,16 @@ private final class WuFasterLightGridSegmentDraw {
             swap(&y0, &y1)
         }
 
-        let dx = x1 - x0
+        var dx = x1 - x0
         let dy = y1 - y0
+
+        // Save ourselves a lot of trouble by avoiding zero-values.
+        if abs(dx) < 0.01 {
+            dx = 0.01
+        }
+
         let gradient = dy / dx
-        let brCoeff = safeDividef(sqrtf(dx*dx + dy*dy), dx)
+        let brCoeff: Float = min(abs(sqrtf(dx*dx + dy*dy) / dx), 2.0)
 
         // As an optimization, we convert the color to float once.
         let lightColorUInt32 = (

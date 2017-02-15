@@ -168,6 +168,11 @@ public struct LightColor {
         )
     }
 
+    /// Is used to check if a ray is too dark to really matter.
+    func aggregate() -> UInt32 {
+        return UInt32(r) + UInt32(g) + UInt32(b)
+    }
+
     static let zero = LightColor(r: 0, g: 0, b: 0)
 }
 
@@ -200,7 +205,7 @@ public struct FractionalLightColor {
 
 public struct LightSegment {
     public let pos1: CGPoint
-    public let p1: CGPoint
+    public let pos2: CGPoint
     public let color: LightColor
 }
 
@@ -226,14 +231,6 @@ func concurrentOperationQueue(_ maxConcurrentOperations: Int) -> OperationQueue 
 }
 
 func safeDivide(_ a: CGFloat, _ b: CGFloat) -> CGFloat {
-    let c = a / b
-    if c.isInfinite {
-        return 9999999
-    }
-    return c
-}
-
-func safeDividef(_ a: Float, _ b: Float) -> Float {
     let c = a / b
     if c.isInfinite {
         return 9999999
