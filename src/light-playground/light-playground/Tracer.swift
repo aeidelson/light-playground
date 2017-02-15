@@ -121,6 +121,9 @@ final class Tracer {
             var closestIntersectionSimulationItem: SimulationItem?
 
             for item in allItems {
+                // Skip the item if the ray originates from it.
+                guard item.id != ray.sourceItemId else { continue }
+
                 let (context, possibleIntersectionPointOptional) = item.intersectionPoint(ray: ray)
                 guard let possibleIntersectionPoint = possibleIntersectionPointOptional else { continue }
 
@@ -195,6 +198,7 @@ final class Tracer {
                     newMediumAttributes: newMedium)
 
                 rayQueue.enqueue(LightRay(
+                    sourceItemId: intersectionSimulationItem.id,
                     origin: refractedProperties.origin,
                     direction: refractedProperties.direction,
                     color: colorAfterAbsorption.multiplyBy(1 - percentReflected),
@@ -202,10 +206,11 @@ final class Tracer {
             }
 
             rayQueue.enqueue(LightRay(
+                sourceItemId: intersectionSimulationItem.id,
                 origin: reflectedProperties.origin,
                 direction: reflectedProperties.direction,
                 color: colorAfterAbsorption.multiplyBy(percentReflected),
-                /// Because the ray is a reflection, it will share the same attributes as the original ray.
+                // Because the ray is a reflection, it will share the same attributes as the original ray.
                 mediumAttributes: ray.mediumAttributes))
         }
 
@@ -221,6 +226,7 @@ final class Tracer {
         let rayDirectionPoint = randomPointOnCircle(center: CGPoint(x: 0, y: 0), radius: 300.0)
         let rayDirection = CGVector(dx: rayDirectionPoint.x, dy: rayDirectionPoint.y)
         return LightRay(
+            sourceItemId: nil,
             origin: rayOrigin,
             direction: rayDirection,
             color: lightChosen.color,
@@ -290,10 +296,7 @@ private func calculateReflectedProperties(
         reflectedRayDirection = rotate(reflectedRayDirection, diffuseAngle)
     }
 
-    /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
-    let reflectedRayOrigin = advance(p: intersectionPoint, by: 0.1, towards: reflectedRayDirection)
-
-    return (reflectedRayOrigin, reflectedRayDirection)
+    return (intersectionPoint, reflectedRayDirection)
 }
 
 private func calculateRefractedProperties(
@@ -310,10 +313,7 @@ private func calculateRefractedProperties(
 
     let rayDirection = rotate(refractionNormal, refractedAngleFromNormal)
 
-    /// Start the ray off with a small head-start so it doesn't collide with the item it intersected with.
-    let origin = advance(p: intersectionPoint, by: 0.1, towards: rayDirection)
-
-    return (origin: origin, direction: rayDirection)
+    return (origin: intersectionPoint, direction: rayDirection)
 }
 
 private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
@@ -353,9 +353,11 @@ private func pointItem(context: SimulationContext, items: [SimulationItem], poin
 // MARK: Ray intersections
 
 fileprivate struct LightRay {
+    let sourceItemId: Id?
     let origin: CGPoint
     let direction: CGVector
     let color: LightColor
+    // Only set when the ray is reflected or refracted off of an item.
 
     /// Attributes for the medium the ray is traveling in.
     /// For rays in space (i.e. coming from lights or in-between items), this will be `spaceVolumeAttributes`. For rays
@@ -363,6 +365,7 @@ fileprivate struct LightRay {
     let mediumAttributes: ShapeAttributes
 
     static let zero = LightRay(
+        sourceItemId: nil,
         origin: CGPoint.zero,
         direction: CGVector.zero,
         color: LightColor.zero,
@@ -373,6 +376,9 @@ typealias SimulationContext = Any
 
 
 fileprivate protocol SimulationItem {
+    /// A unique identifier for this item.
+    var id: Id { get }
+
     /// All intersection items must have a surface and so they must have surface attributes.
     var shapeAttributes: ShapeAttributes { get }
 
@@ -396,7 +402,7 @@ private func segmentIntersection(ray: LightRay, shapeSegment: ShapeSegment) -> C
 
     // Calculate `m`:
     let raySlope = safeDivide(ray.direction.dy, ray.direction.dx)
-    if abs(raySlope - shapeSegment.slope) < 0.01 {
+    if abs(raySlope - shapeSegment.slope) < 0.0001 {
         // They are rounghly parallel, stop processing.
         return nil
     }
@@ -591,6 +597,7 @@ extension PolygonShape: SimulationItem {
         let testDirection = CGVector(dx: 1, dy: 1)
 
         let testRay = LightRay(
+            sourceItemId: nil,
             origin: point,
             direction: testDirection,
             color: LightColor.zero,

@@ -3,6 +3,31 @@ import CoreGraphics
 
 /// This file contains helpers used across the codebase.
 
+/// A non-thread-safe Id allocator.
+struct Id: Equatable {
+    internal static func takeId() -> Id {
+        let newId: Id = Id(nextId)
+        nextId += 1
+        return newId
+    }
+
+    // MARK: Equatable
+
+    public static func ==(lhs: Id, rhs: Id) -> Bool {
+        return  lhs.value == rhs.value
+    }
+
+    // MARK: Private
+
+    private static var nextId: Int = 0
+
+    private init(_ i: Int) {
+        self.value = i
+    }
+
+    private let value: Int
+}
+
 public struct Light {
     let pos: CGPoint
     let color: LightColor
@@ -22,6 +47,8 @@ public struct ShapeAttributes {
         self.indexOfRefraction = indexOfRefraction
         self.translucent = translucent
     }
+
+    internal let id = Id.takeId()
 
     /// Percentage of the light to absorb per color. A value of zero will result in no absorption.
     public let absorption: FractionalLightColor
@@ -83,11 +110,15 @@ public struct Wall {
         self.shapeAttributes = shapeAttributes
     }
 
+    internal let id = Id.takeId()
+
     let shapeSegment: ShapeSegment
     let shapeAttributes: ShapeAttributes
 }
 
 public struct CircleShape {
+    internal let id = Id.takeId()
+
     let pos: CGPoint
     let radius: CGFloat
 
@@ -116,6 +147,8 @@ public struct PolygonShape {
         }
         self.shapeSegments = segments
     }
+
+    internal let id = Id.takeId()
 
     /// A list of vertex positions, in order. It is assumed that the first and the last positions are connected.
     let posList: [CGPoint]
