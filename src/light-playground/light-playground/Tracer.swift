@@ -12,7 +12,7 @@ final class Tracer {
         interactiveTrace: Bool
     ) -> Operation {
         var operation: BlockOperation?
-        operation = BlockOperation {
+        operation = BlockOperation { [weak rootGrid] in
             // TODO: retain cycle?
             guard let strongOperation = operation else { return }
 
@@ -23,11 +23,12 @@ final class Tracer {
 
             guard !strongOperation.isCancelled else { return }
 
-            objc_sync_enter(rootGrid)
-            defer { objc_sync_exit(rootGrid) }
+            guard let strongRootGrid = rootGrid else { return }
+            objc_sync_enter(strongRootGrid)
+            defer { objc_sync_exit(strongRootGrid) }
             guard !strongOperation.isCancelled else { return }
 
-            rootGrid.drawSegments(layout: layout, segments: segments, lowQuality: interactiveTrace)
+            strongRootGrid.drawSegments(layout: layout, segments: segments, lowQuality: interactiveTrace)
         }
 
         return operation!

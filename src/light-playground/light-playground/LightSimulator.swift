@@ -1,5 +1,6 @@
 import Foundation
 import CoreGraphics
+import Metal
 
 /// Contains the result of the simulation (so far)
 public final class SimulationSnapshot {
@@ -12,6 +13,60 @@ public final class SimulationSnapshot {
 
 /// A context object which instances used throughout the the simulator.
 struct LightSimulatorContext {
+
+    /// All information needed to render using metal.
+    /// Will be nil if the device doesn't support metal.
+    let metalContext: MetalContext?
+}
+
+struct MetalContext {
+    init?() {
+        guard let device = MTLCreateSystemDefaultDevice() else { return nil }
+        self.device = device
+
+        guard let library = device.newDefaultLibrary() else { return nil }
+
+        commandQueue = device.makeCommandQueue()
+
+        guard let imagePreprocessingPipelineState = try? device.makeComputePipelineState(
+            function: library.makeFunction(name: "preprocessing_kernel")!) else { return nil }
+        self.imagePreprocessingPipelineState = imagePreprocessingPipelineState
+
+        // Create and configure the pipeline descriptor.
+        renderPipelineDescriptor = MTLRenderPipelineDescriptor()
+
+        /// Setup each render channel
+        renderPipelineDescriptor.colorAttachments[0].pixelFormat = .r32Float
+        renderPipelineDescriptor.colorAttachments[0].isBlendingEnabled = true
+        renderPipelineDescriptor.colorAttachments[0].rgbBlendOperation = .add
+        renderPipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = .one
+        renderPipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = .one
+
+        renderPipelineDescriptor.colorAttachments[1].pixelFormat = .r32Float
+        renderPipelineDescriptor.colorAttachments[1].isBlendingEnabled = true
+        renderPipelineDescriptor.colorAttachments[1].rgbBlendOperation = .add
+        renderPipelineDescriptor.colorAttachments[1].sourceRGBBlendFactor = .one
+        renderPipelineDescriptor.colorAttachments[1].destinationRGBBlendFactor = .one
+
+        renderPipelineDescriptor.colorAttachments[2].pixelFormat = .r32Float
+        renderPipelineDescriptor.colorAttachments[2].isBlendingEnabled = true
+        renderPipelineDescriptor.colorAttachments[2].rgbBlendOperation = .add
+        renderPipelineDescriptor.colorAttachments[2].sourceRGBBlendFactor = .one
+        renderPipelineDescriptor.colorAttachments[2].destinationRGBBlendFactor = .one
+
+        renderPipelineDescriptor.vertexFunction = library.makeFunction(name: "vertex_shader")
+        renderPipelineDescriptor.fragmentFunction = library.makeFunction(name: "fragment_shader")
+
+        guard let renderPipelineState = try? device.makeRenderPipelineState(descriptor: renderPipelineDescriptor) else {
+            return nil }
+        self.renderPipelineState = renderPipelineState
+    }
+
+    let device: MTLDevice
+    let commandQueue: MTLCommandQueue
+    let renderPipelineDescriptor: MTLRenderPipelineDescriptor
+    let renderPipelineState: MTLRenderPipelineState
+    let imagePreprocessingPipelineState: MTLComputePipelineState
 }
 
 public final class LightSimulator {
@@ -20,7 +75,7 @@ public final class LightSimulator {
         initialExposure: CGFloat
     ) {
         self.simulationSize = simulationSize
-        self.context = LightSimulatorContext()
+        self.context = LightSimulatorContext(metalContext: MetalContext())
 
         self.simulatorQueue = serialOperationQueue()
         self.simulatorQueue.qualityOfService = .userInteractive
@@ -31,7 +86,7 @@ public final class LightSimulator {
         self.rootGrid = CPULightGrid(
             context: context,
             size: simulationSize,
-            initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 0))
+            initialRenderProperties: RenderImageProperties(exposure: 0))
 
         self.currentLayout = SimulationLayout(
             lights: [],
@@ -90,7 +145,7 @@ public final class LightSimulator {
 
     private func currentRenderProperties()  -> RenderImageProperties {
         return RenderImageProperties(
-            preNormalizedBrightness: exp(1 + 10 * exposure) * CGFloat(currentLayout.lights.count)
+            exposure: exp(1 + 10 * exposure) * CGFloat(currentLayout.lights.count)
         )
     }
 
@@ -157,7 +212,7 @@ public final class LightSimulator {
     }
 
     private let interactiveMaxSegmentsToTrace = 200
-    private let standardTracerSize = 20_000
+    private let standardTracerSize = 200_000
     private let finalMaxSegmentsToTrace = 10_000_000
     private var finalTraceSegmentsLeft = 0
 

@@ -1,10 +1,9 @@
 import Foundation
 import CoreGraphics
 
-protocol LightGrid {
-    var renderProperties: RenderImageProperties? { get set }
+protocol LightGrid: class {
+    var renderProperties: RenderImageProperties { get set }
     var imageHandler: (CGImage) -> Void { get set }
-
 
     func reset()
 
@@ -18,7 +17,7 @@ final class CPULightGrid: LightGrid {
     public init(
         context: LightSimulatorContext,
         size: CGSize,
-        initialRenderProperties: RenderImageProperties?
+        initialRenderProperties: RenderImageProperties
     ) {
         self.context = context
         self.width = Int(size.width.rounded())
@@ -28,11 +27,9 @@ final class CPULightGrid: LightGrid {
         self.data = ContiguousArray<LightGridPixel>(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
     }
 
-    public var renderProperties: RenderImageProperties? {
+    public var renderProperties: RenderImageProperties {
         didSet {
-            if let renderProperties = renderProperties {
-                updateImage(renderProperties: renderProperties)
-            }
+            updateImage(renderProperties: renderProperties)
         }
     }
 
@@ -44,9 +41,7 @@ final class CPULightGrid: LightGrid {
         }
         totalSegmentCount = 0
 
-        if let renderProperties = renderProperties {
-            updateImage(renderProperties: renderProperties)
-        }
+        updateImage(renderProperties: renderProperties)
     }
 
     public func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool) {
@@ -70,9 +65,7 @@ final class CPULightGrid: LightGrid {
 
         totalSegmentCount += segments.count
 
-        if let renderProperties = renderProperties {
-            updateImage(renderProperties: renderProperties)
-        }
+        updateImage(renderProperties: renderProperties)
     }
 
     private func updateImage(renderProperties: RenderImageProperties) {
@@ -80,7 +73,7 @@ final class CPULightGrid: LightGrid {
         if totalSegmentCount == 0 {
             brightness = 0
         } else {
-            brightness = Float(renderProperties.preNormalizedBrightness) / Float(totalSegmentCount)
+            brightness = Float(renderProperties.exposure) / Float(totalSegmentCount)
         }
 
         let bufferSize = totalPixels * componentsPerPixel

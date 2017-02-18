@@ -162,7 +162,7 @@ public struct PolygonShape {
 /// Properties which impact the rendering of an image from the LightGrid. Can be updated without triggering a full
 /// re-trace.
 public struct RenderImageProperties {
-    public let preNormalizedBrightness: CGFloat
+    public let exposure: CGFloat
 }
 
 /// Properties which will cause the scene to be completely re-traced.

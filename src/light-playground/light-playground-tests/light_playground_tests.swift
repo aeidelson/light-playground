@@ -25,15 +25,15 @@ class light_playground_tests: XCTestCase {
 
     let benchmarkSize = CGSize(width: 1080, height: 1920)
 
-    let benchmarkContext = LightSimulatorContext()
+    let benchmarkContext = LightSimulatorContext(metalContext: MetalContext())
 
     // MARK: Benchmarks
 
     func testBenchmarkTraceAndDraw() {
-        let rootGrid = LightGrid(
+        let rootGrid = MetalLightGrid(
             context: benchmarkContext,
             size: benchmarkSize,
-            initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 1.0))
+            initialRenderProperties: RenderImageProperties(exposure: 0.55))
 
         self.measure {
             let tracer = Tracer.makeTracer(
@@ -59,10 +59,10 @@ class light_playground_tests: XCTestCase {
     }
 
     func testBenchmarkDraw() {
-        let grid = LightGrid(
+        let grid = MetalLightGrid(
             context: benchmarkContext,
             size: benchmarkSize,
-            initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 1.0))
+            initialRenderProperties: RenderImageProperties(exposure: 0.55))
 
         /// The scene is traced outside of measure, to create a representative trace.
         let segmentArray = Tracer.trace(
