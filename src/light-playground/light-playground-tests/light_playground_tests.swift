@@ -21,7 +21,7 @@ class light_playground_tests: XCTestCase {
         circleShapes: [],
         polygonShapes: [])
 
-    let benchmarkSegmentCount = 20_000
+    let benchmarkSegmentCount = 100_000
 
     let benchmarkSize = CGSize(width: 1080, height: 1920)
 

@@ -42,6 +42,14 @@ kernel void preprocessing_kernel(device float* parameters [[ buffer(0) ]],
                                  texture2d<float, access::read> blueTextureReadFrom [[ texture(4) ]],
                                  texture2d<float, access::write> blueTextureWriteTo [[ texture(5) ]],
                                  ushort2 gid [[ thread_position_in_grid ]]) {
+
+    // Because of how the thread groups are layed out, the function may be called on a position outside of the texture.
+    // In that case, exit early.
+    // Details: https://developer.apple.com/reference/metal/mtlcomputecommandencoder
+    if (gid.x > redTextureReadFrom.get_width() - 1 || gid.y > redTextureReadFrom.get_height() - 1) {
+        return;
+    }
+
     float brightness = parameters[0];
 
     float initialColorRed = redTextureReadFrom.read(gid).r;

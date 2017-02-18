@@ -94,10 +94,15 @@ final class MetalLightGrid: LightGrid {
         preprocessEncoder.setTexture(bMetalTextureCurrent, at: 5)
 
         // TODO: Figure out what these dimensions should actually be.
-        let threadsPerThreadGroup = MTLSizeMake(8, 8, 1)
+        let threadExecutionWidth = metalContext.imagePreprocessingPipelineState.threadExecutionWidth
+        let maxTotalThreadsPerThreadgroup = metalContext.imagePreprocessingPipelineState.maxTotalThreadsPerThreadgroup
+        let threadsPerThreadGroup = MTLSizeMake(
+            threadExecutionWidth,
+            maxTotalThreadsPerThreadgroup / threadExecutionWidth,
+            1)
         let threadgroupsPerGrid = MTLSizeMake(
-            width / threadsPerThreadGroup.width,
-            height / threadsPerThreadGroup.height,
+            (width + threadsPerThreadGroup.width - 1) / threadsPerThreadGroup.width,
+            (height + threadsPerThreadGroup.height - 1) / threadsPerThreadGroup.height,
             1)
         preprocessEncoder.dispatchThreadgroups(
             threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadGroup)
@@ -266,7 +271,7 @@ final class MetalLightGrid: LightGrid {
 
         // Write the textures to the corresponding image channel on the rendered image.
         let exposure = Float(renderProperties.exposure)
-        let bufferSize = width * height * 3
+        let bufferSize = width * height * 4
         let imagePixelBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
         var i = 0
         while i < width * height {
@@ -274,7 +279,7 @@ final class MetalLightGrid: LightGrid {
             let greenValue = UInt8(Float(UInt8.max) * min(greenTextureReadBuffer[i] * exposure, 1.0))
             let blueValue = UInt8(Float(UInt8.max) * min(blueTextureReadBuffer[i] * exposure, 1.0))
 
-            let imageIndex = i * 3
+            let imageIndex = i * 4
             imagePixelBuffer[imageIndex + 0] = redValue
             imagePixelBuffer[imageIndex + 1] = greenValue
             imagePixelBuffer[imageIndex + 2] = blueValue
@@ -288,14 +293,12 @@ final class MetalLightGrid: LightGrid {
                 length: bufferSize,
                 freeWhenDone: true))
 
-        let bitsPerPixel = 3 * MemoryLayout<UInt8>.size
-
         let image = CGImage(
             width: width,
             height: height,
-            bitsPerComponent: 3,
-            bitsPerPixel: bitsPerPixel,
-            bytesPerRow: width * bitsPerPixel / 8,
+            bitsPerComponent: 8,
+            bitsPerPixel: 4 * 8,
+            bytesPerRow: width * 4,
             space: CGColorSpaceCreateDeviceRGB(),
             // Alpha is ignored.
             bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),

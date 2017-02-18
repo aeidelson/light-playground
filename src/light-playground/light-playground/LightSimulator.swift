@@ -83,10 +83,18 @@ public final class LightSimulator {
         self.tracerQueue.qualityOfService = .userInitiated
         self.exposure = initialExposure
 
-        self.rootGrid = CPULightGrid(
+        // Metal is a lot faster, so we bump the trace size.
+        if context.metalContext == nil {
+            self.standardTracerSize = 20_000
+        } else {
+            self.standardTracerSize = 200_000
+        }
+
+        self.rootGrid = createLightGrid(
+            logRenderType: true,
             context: context,
-            size: simulationSize,
-            initialRenderProperties: RenderImageProperties(exposure: 0))
+            simulationSize: simulationSize,
+            renderImageProperties: RenderImageProperties(exposure: 0))
 
         self.currentLayout = SimulationLayout(
             lights: [],
@@ -154,10 +162,12 @@ public final class LightSimulator {
         self.rootGrid.imageHandler = { _ in }
         objc_sync_exit(self.rootGrid)
 
-        self.rootGrid = CPULightGrid(
+        self.rootGrid = createLightGrid(
+            logRenderType: false,
             context: context,
-            size: simulationSize,
-            initialRenderProperties: currentRenderProperties())
+            simulationSize: simulationSize,
+            renderImageProperties: currentRenderProperties())
+
         self.rootGrid.imageHandler = { [weak self] image in
             guard let strongSelf = self else { return }
             strongSelf.snapshotHandler(SimulationSnapshot(image: image))
@@ -212,7 +222,7 @@ public final class LightSimulator {
     }
 
     private let interactiveMaxSegmentsToTrace = 200
-    private let standardTracerSize = 200_000
+    private let standardTracerSize: Int
     private let finalMaxSegmentsToTrace = 10_000_000
     private var finalTraceSegmentsLeft = 0
 
@@ -228,19 +238,38 @@ public final class LightSimulator {
     }
 
     private let simulationSize: CGSize
-
     private let context: LightSimulatorContext
-
     /// The queue to use for any top-level simulator logic.
     private let simulatorQueue: OperationQueue
-
     /// The queue to run traces on
     private var tracerQueue: OperationQueue
-
     private let tracerQueueConcurrency = ProcessInfo.processInfo.activeProcessorCount
-
     /// The grid that everything aggregrated to.
     private var rootGrid: LightGrid
-
     private var currentLayout: SimulationLayout
+}
+
+private func createLightGrid(
+    logRenderType: Bool,
+    context: LightSimulatorContext,
+    simulationSize: CGSize,
+    renderImageProperties: RenderImageProperties
+) -> LightGrid {
+    if context.metalContext == nil {
+        if logRenderType {
+            print("Couldn't connect to Metal, drawing using CPU.")
+        }
+        return CPULightGrid(
+            context: context,
+            size: simulationSize,
+            initialRenderProperties: renderImageProperties)
+    } else {
+        if logRenderType {
+            print("Drawing using Metal!")
+        }
+        return MetalLightGrid(
+            context: context,
+            size: simulationSize,
+            initialRenderProperties: renderImageProperties)
+    }
 }
