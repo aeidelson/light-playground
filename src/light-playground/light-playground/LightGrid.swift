@@ -1,11 +1,22 @@
 import Foundation
 import CoreGraphics
 
+protocol LightGrid {
+    var renderProperties: RenderImageProperties? { get set }
+    var imageHandler: (CGImage) -> Void { get set }
+
+
+    func reset()
+
+    func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool)
+}
+
+
 // Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
 // Setting a `renderImageProperties` triggers an update to the image.
-final class LightGrid {
+final class CPULightGrid: LightGrid {
     public init(
-        context: CPULightSimulatorContext,
+        context: LightSimulatorContext,
         size: CGSize,
         initialRenderProperties: RenderImageProperties?
     ) {
@@ -58,24 +69,6 @@ final class LightGrid {
         }
 
         totalSegmentCount += segments.count
-
-        if let renderProperties = renderProperties {
-            updateImage(renderProperties: renderProperties)
-        }
-    }
-
-    public func aggregrate(layout: SimulationLayout, grids: [LightGrid]) {
-        for grid in grids {
-            precondition(grid.width == width)
-            precondition(grid.height == height)
-
-            for i in 0..<totalPixels {
-                data[i].r += grid.data[i].r
-                data[i].g += grid.data[i].g
-                data[i].b += grid.data[i].b
-            }
-            totalSegmentCount += grid.totalSegmentCount
-        }
 
         if let renderProperties = renderProperties {
             updateImage(renderProperties: renderProperties)
@@ -140,7 +133,7 @@ final class LightGrid {
 
     // MARK: Private
 
-    private let context: CPULightSimulatorContext
+    private let context: LightSimulatorContext
 
     // MARK: Variables for generating images.
 

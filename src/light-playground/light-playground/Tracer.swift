@@ -4,7 +4,7 @@ import CoreGraphics
 final class Tracer {
     /// Constructs an operation to perform a trace of some number of rays.
     static func makeTracer(
-        context: CPULightSimulatorContext,
+        context: LightSimulatorContext,
         rootGrid: LightGrid,
         layout: SimulationLayout,
         simulationSize: CGSize,
@@ -12,7 +12,7 @@ final class Tracer {
         interactiveTrace: Bool
     ) -> Operation {
         var operation: BlockOperation?
-        operation = BlockOperation { [weak rootGrid] in
+        operation = BlockOperation {
             // TODO: retain cycle?
             guard let strongOperation = operation else { return }
 
@@ -23,24 +23,11 @@ final class Tracer {
 
             guard !strongOperation.isCancelled else { return }
 
-            guard let strongRootGrid = rootGrid else { return }
+            objc_sync_enter(rootGrid)
+            defer { objc_sync_exit(rootGrid) }
+            guard !strongOperation.isCancelled else { return }
 
-            // In the case of an interactive trace, we know there is only one grid and tracer so we can write to it
-            // directly. Otherwise we create a grid just for this tracer and lock / agregate at the end.
-            if interactiveTrace {
-                strongRootGrid.drawSegments(layout: layout, segments: segments, lowQuality: true)
-            } else {
-                let tracerGrid = LightGrid(context: context, size: simulationSize, initialRenderProperties: nil)
-                tracerGrid.drawSegments(layout: layout, segments: segments, lowQuality: false)
-
-                guard !strongOperation.isCancelled else { return }
-
-                objc_sync_enter(strongRootGrid)
-                defer { objc_sync_exit(strongRootGrid) }
-                // One more check to make sure it is still not cancelled when the grid is locked.
-                guard !strongOperation.isCancelled else { return }
-                strongRootGrid.aggregrate(layout: layout, grids: [tracerGrid])
-            }
+            rootGrid.drawSegments(layout: layout, segments: segments, lowQuality: interactiveTrace)
         }
 
         return operation!

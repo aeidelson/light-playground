@@ -10,31 +10,17 @@ public final class SimulationSnapshot {
     public let image: CGImage
 }
 
-public protocol LightSimulator: class {
-
-    /// Will erase any existing rays.
-    func restartSimulation(layout: SimulationLayout, isInteractive: Bool)
-
-    /// Will stop any further processing. No-op if the simulator hasn't been started.
-    func stop()
-
-    var snapshotHandler: (SimulationSnapshot) -> Void { get set }
-
-    // Can be set at any time to change the exposure of the image.
-    var exposure: CGFloat { get set }
-}
-
 /// A context object which instances used throughout the the simulator.
-struct CPULightSimulatorContext {
+struct LightSimulatorContext {
 }
 
-public final class CPULightSimulator: LightSimulator {
+public final class LightSimulator {
     public required init(
         simulationSize: CGSize,
         initialExposure: CGFloat
     ) {
         self.simulationSize = simulationSize
-        self.context = CPULightSimulatorContext()
+        self.context = LightSimulatorContext()
 
         self.simulatorQueue = serialOperationQueue()
         self.simulatorQueue.qualityOfService = .userInteractive
@@ -42,7 +28,7 @@ public final class CPULightSimulator: LightSimulator {
         self.tracerQueue.qualityOfService = .userInitiated
         self.exposure = initialExposure
 
-        self.rootGrid = LightGrid(
+        self.rootGrid = CPULightGrid(
             context: context,
             size: simulationSize,
             initialRenderProperties: RenderImageProperties(preNormalizedBrightness: 0))
@@ -113,7 +99,7 @@ public final class CPULightSimulator: LightSimulator {
         self.rootGrid.imageHandler = { _ in }
         objc_sync_exit(self.rootGrid)
 
-        self.rootGrid = LightGrid(
+        self.rootGrid = CPULightGrid(
             context: context,
             size: simulationSize,
             initialRenderProperties: currentRenderProperties())
@@ -188,7 +174,7 @@ public final class CPULightSimulator: LightSimulator {
 
     private let simulationSize: CGSize
 
-    private let context: CPULightSimulatorContext
+    private let context: LightSimulatorContext
 
     /// The queue to use for any top-level simulator logic.
     private let simulatorQueue: OperationQueue

@@ -25,7 +25,7 @@ class light_playground_tests: XCTestCase {
 
     let benchmarkSize = CGSize(width: 1080, height: 1920)
 
-    let benchmarkContext = CPULightSimulatorContext()
+    let benchmarkContext = LightSimulatorContext()
 
     // MARK: Benchmarks
 

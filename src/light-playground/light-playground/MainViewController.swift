@@ -23,7 +23,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
         // The simulator relies on the layout bounds, so it only makes sense to start the simulator
         // after it has been laid out.
-        simulator = CPULightSimulator(
+        simulator = LightSimulator(
             simulationSize: CGSize(
                 width: drawLayer.frame.size.width * drawLayer.contentsScale,
                 height: drawLayer.frame.size.height * drawLayer.contentsScale),
