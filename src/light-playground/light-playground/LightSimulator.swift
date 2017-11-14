@@ -24,9 +24,10 @@ struct MetalContext {
         guard let device = MTLCreateSystemDefaultDevice() else { return nil }
         self.device = device
 
-        guard let library = device.newDefaultLibrary() else { return nil }
+        guard let library = device.makeDefaultLibrary() else { return nil }
 
-        commandQueue = device.makeCommandQueue()
+        guard let commandQueue = device.makeCommandQueue() else { return nil }
+        self.commandQueue = commandQueue
 
         guard let imagePreprocessingPipelineState = try? device.makeComputePipelineState(
             function: library.makeFunction(name: "preprocessing_kernel")!) else { return nil }

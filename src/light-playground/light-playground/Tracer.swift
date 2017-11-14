@@ -279,7 +279,7 @@ private func calculateReflectedProperties(
 
         // Find how far the ray is from the closest perpendicular part of the item.
         // TODO: Need to investigate if this works for non-wall items.
-        let perpendicularAngles = (normalAngle + CGFloat(M_PI_4), normalAngle - CGFloat(M_PI_4))
+        let perpendicularAngles = (normalAngle + (CGFloat.pi / 4), normalAngle - (CGFloat.pi / 4))
         let closestAngleDifference =
             min(abs(reflectedRayAngle - perpendicularAngles.0), abs(reflectedRayAngle - perpendicularAngles.0))
 
@@ -287,7 +287,7 @@ private func calculateReflectedProperties(
         // This should be pi/8 normally, but if the of reflection is steep this will be the angle between
         // the reflection and the item (With a very small ammount of buffer room for safety).
         let maxDiffuseAngle = min(
-            CGFloat(M_PI / 8) * intersectedSurfaceAttributes.diffusion, closestAngleDifference - 0.1)
+            (CGFloat.pi/8) * intersectedSurfaceAttributes.diffusion, closestAngleDifference - 0.1)
         let diffuseAngle = CGFloat(drand48()) * 2 * maxDiffuseAngle - maxDiffuseAngle
         reflectedRayDirection = rotate(reflectedRayDirection, diffuseAngle)
     }
@@ -313,7 +313,7 @@ private func calculateRefractedProperties(
 }
 
 private func randomPointOnCircle(center: CGPoint, radius: CGFloat) -> CGPoint {
-    let radians = CGFloat(drand48() * 2.0 * M_PI)
+    let radians = CGFloat(drand48() * 2.0 * Double.pi)
     return CGPoint(
         x: center.x + radius * cos(radians),
         y: center.y + radius * sin(radians)
@@ -443,7 +443,7 @@ private func segmentNormals(
     let reflectionNormal: CGVector
     let refractionNormal: CGVector
 
-    if abs(angle(shapeSegment.normals.0, reverseIncomingDirection)) < CGFloat(M_PI_2) {
+    if abs(angle(shapeSegment.normals.0, reverseIncomingDirection)) < (CGFloat.pi / 2) {
         reflectionNormal = shapeSegment.normals.0
         refractionNormal = shapeSegment.normals.1
     } else {

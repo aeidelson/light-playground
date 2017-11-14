@@ -25,12 +25,12 @@ final class MetalLightGrid: LightGrid {
 
         textureDescriptor.storageMode = .shared
 
-        self.rMetalTextureOld = metalContext.device.makeTexture(descriptor: textureDescriptor)
-        self.rMetalTextureCurrent = metalContext.device.makeTexture(descriptor: textureDescriptor)
-        self.gMetalTextureOld = metalContext.device.makeTexture(descriptor: textureDescriptor)
-        self.gMetalTextureCurrent = metalContext.device.makeTexture(descriptor: textureDescriptor)
-        self.bMetalTextureOld = metalContext.device.makeTexture(descriptor: textureDescriptor)
-        self.bMetalTextureCurrent = metalContext.device.makeTexture(descriptor: textureDescriptor)
+        self.rMetalTextureOld = metalContext.device.makeTexture(descriptor: textureDescriptor)!
+        self.rMetalTextureCurrent = metalContext.device.makeTexture(descriptor: textureDescriptor)!
+        self.gMetalTextureOld = metalContext.device.makeTexture(descriptor: textureDescriptor)!
+        self.gMetalTextureCurrent = metalContext.device.makeTexture(descriptor: textureDescriptor)!
+        self.bMetalTextureOld = metalContext.device.makeTexture(descriptor: textureDescriptor)!
+        self.bMetalTextureCurrent = metalContext.device.makeTexture(descriptor: textureDescriptor)!
     }
 
 
@@ -82,16 +82,16 @@ final class MetalLightGrid: LightGrid {
             length: MemoryLayout<Float32>.size * preprocessParameters.count,
             options: [])
 
-        let preprocessCommandBuffer = metalContext.commandQueue.makeCommandBuffer()
-        let preprocessEncoder = preprocessCommandBuffer.makeComputeCommandEncoder()
+        let preprocessCommandBuffer = metalContext.commandQueue.makeCommandBuffer()!
+        let preprocessEncoder = preprocessCommandBuffer.makeComputeCommandEncoder()!
         preprocessEncoder.setComputePipelineState(metalContext.imagePreprocessingPipelineState)
-        preprocessEncoder.setBuffer(preprocessParametersBuffer, offset: 0, at: 0)
-        preprocessEncoder.setTexture(rMetalTextureOld, at: 0)
-        preprocessEncoder.setTexture(rMetalTextureCurrent, at: 1)
-        preprocessEncoder.setTexture(gMetalTextureOld, at: 2)
-        preprocessEncoder.setTexture(gMetalTextureCurrent, at: 3)
-        preprocessEncoder.setTexture(bMetalTextureOld, at: 4)
-        preprocessEncoder.setTexture(bMetalTextureCurrent, at: 5)
+        preprocessEncoder.setBuffer(preprocessParametersBuffer, offset: 0, index: 0)
+        preprocessEncoder.setTexture(rMetalTextureOld, index: 0)
+        preprocessEncoder.setTexture(rMetalTextureCurrent, index: 1)
+        preprocessEncoder.setTexture(gMetalTextureOld, index: 2)
+        preprocessEncoder.setTexture(gMetalTextureCurrent, index: 3)
+        preprocessEncoder.setTexture(bMetalTextureOld, index: 4)
+        preprocessEncoder.setTexture(bMetalTextureCurrent, index: 5)
 
         // TODO: Figure out what these dimensions should actually be.
         let threadExecutionWidth = metalContext.imagePreprocessingPipelineState.threadExecutionWidth
@@ -111,7 +111,7 @@ final class MetalLightGrid: LightGrid {
 
         // After the preprocessing, draw the segments in a render pass.
 
-        let renderCommandBuffer = metalContext.commandQueue.makeCommandBuffer()
+        let renderCommandBuffer = metalContext.commandQueue.makeCommandBuffer()!
         let renderPassDescriptor = MTLRenderPassDescriptor()
 
         renderPassDescriptor.colorAttachments[0].texture = rMetalTextureCurrent
@@ -124,7 +124,7 @@ final class MetalLightGrid: LightGrid {
         renderPassDescriptor.colorAttachments[2].loadAction = .load
         renderPassDescriptor.colorAttachments[2].storeAction = .store
 
-        let renderEncoder = renderCommandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
+        let renderEncoder = renderCommandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         renderEncoder.setRenderPipelineState(metalContext.renderPipelineState)
         // The y-axis is flipped to match our own coord system.
         renderEncoder.setViewport(MTLViewport(
@@ -202,8 +202,8 @@ final class MetalLightGrid: LightGrid {
             length: colors.count * MemoryLayout<Float32>.size,
             options: [])
 
-        renderEncoder.setVertexBuffer(positionBuffer, offset: 0, at: 0)
-        renderEncoder.setVertexBuffer(colorBuffer, offset: 0, at: 1)
+        renderEncoder.setVertexBuffer(positionBuffer, offset: 0, index: 0)
+        renderEncoder.setVertexBuffer(colorBuffer, offset: 0, index: 1)
 
         renderEncoder.drawPrimitives(
             type: .line,
