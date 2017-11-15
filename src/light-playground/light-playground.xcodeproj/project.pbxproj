@@ -20,6 +20,8 @@
 		8E322E771E512819001CE0FB /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
 		8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
 		8E322E791E512821001CE0FB /* CPULightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */; };
+		8E6DB1FD1FBCF01900FF5737 /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */; };
+		8E6DB1FE1FBCF2A500FF5737 /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */; };
 		8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
 		8E72C9AE1E276FA50057C08A /* CPULightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */; };
 		8E9CC4D11E57D06B00C1F315 /* MetalLightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */; };
@@ -50,6 +52,7 @@
 		8E322E6C1E512708001CE0FB /* light-playground-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "light-playground-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E322E6E1E512708001CE0FB /* light_playground_tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = light_playground_tests.swift; sourceTree = "<group>"; };
 		8E322E701E512708001CE0FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightGrid.swift; sourceTree = "<group>"; };
 		8E72C9A91E2754400057C08A /* Tracer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Tracer.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = CPULightGrid.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalLightGrid.swift; sourceTree = "<group>"; };
@@ -102,9 +105,10 @@
 				8E2293A61E2C0C84005CD3CD /* Common.swift */,
 				8E9D54661E19D40700E7C927 /* LightSimulator.swift */,
 				8E72C9A91E2754400057C08A /* Tracer.swift */,
+				8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */,
+				8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */,
 				8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */,
 				8E266A171E583FA900BA6CD1 /* MetalShaders.metal */,
-				8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */,
 				8E1475491E19ADD50094CB28 /* Main.storyboard */,
 				8E14754C1E19ADD50094CB28 /* Assets.xcassets */,
 				8E14754E1E19ADD50094CB28 /* LaunchScreen.storyboard */,
@@ -234,6 +238,7 @@
 				8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */,
 				8ECE22391E45AB3A00237581 /* OptionsViewController.swift in Sources */,
 				8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */,
+				8E6DB1FD1FBCF01900FF5737 /* LightGrid.swift in Sources */,
 				8E72C9AE1E276FA50057C08A /* CPULightGrid.swift in Sources */,
 				8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */,
 				8E266A181E583FA900BA6CD1 /* MetalShaders.metal in Sources */,
@@ -248,6 +253,7 @@
 				8E322E791E512821001CE0FB /* CPULightGrid.swift in Sources */,
 				8E322E771E512819001CE0FB /* Common.swift in Sources */,
 				8E322E6F1E512708001CE0FB /* light_playground_tests.swift in Sources */,
+				8E6DB1FE1FBCF2A500FF5737 /* LightGrid.swift in Sources */,
 				8E266A191E5842C600BA6CD1 /* MetalLightGrid.swift in Sources */,
 				8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */,
 			);

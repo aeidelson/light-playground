@@ -1,11 +1,3 @@
-//
-//  AppDelegate.swift
-//  light-playground
-//
-//  Created by Aaron Eidelson on 1/1/17.
-//  Copyright © 2017 Aaron Eidelson. All rights reserved.
-//
-
 import UIKit
 
 @UIApplicationMain

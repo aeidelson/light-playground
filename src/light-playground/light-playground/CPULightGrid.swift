@@ -1,18 +1,7 @@
-import Foundation
 import CoreGraphics
+import Foundation
 
-protocol LightGrid: class {
-    var renderProperties: RenderImageProperties { get set }
-    var imageHandler: (CGImage) -> Void { get set }
-
-    func reset()
-
-    func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool)
-}
-
-
-// Encapsulates the accumulated light trace grid and provides related functions. Is thread-safe.
-// Setting a `renderImageProperties` triggers an update to the image.
+/// An implementation of LightGrid which draws using the CPU exclusively.
 final class CPULightGrid: LightGrid {
     public init(
         context: LightSimulatorContext,
@@ -24,7 +13,9 @@ final class CPULightGrid: LightGrid {
         self.height = Int(size.height.rounded())
         self.totalPixels = width * height
         self.renderProperties = initialRenderProperties
-        self.data = ContiguousArray<LightGridPixel>(repeating: LightGridPixel(r: 0, g: 0, b: 0), count: totalPixels)
+        self.data = ContiguousArray<LightGridPixel>(
+            repeating: LightGridPixel(r: 0, g: 0, b: 0),
+            count: totalPixels)
     }
 
     public var renderProperties: RenderImageProperties {

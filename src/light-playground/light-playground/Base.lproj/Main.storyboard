@@ -105,7 +105,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Exposure" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fDq-lU-IOa">
                                                     <rect key="frame" x="16" y="11" width="85" height="21"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="W6e-eG-HLt"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="W6e-eG-HLt"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -142,7 +142,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Red" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TG3-oY-7lP">
                                                     <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="jta-JY-SKW"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="jta-JY-SKW"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -177,7 +177,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Green" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="55F-Sq-DTh">
                                                     <rect key="frame" x="16" y="11" width="85" height="21"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="4hH-DF-70j"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="4hH-DF-70j"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -210,7 +210,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Blue" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eui-TE-Ppa">
                                                     <rect key="frame" x="16" y="11" width="85" height="21"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="tED-67-w95"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="tED-67-w95"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -247,7 +247,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Difussion" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="He2-a1-w58">
                                                     <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="ELX-eB-Xag"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="ELX-eB-Xag"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -288,7 +288,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (R)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iLW-TL-mVg">
                                                     <rect key="frame" x="16" y="14" width="85" height="16"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="Kbr-fa-obY"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="Kbr-fa-obY"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -316,7 +316,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (G)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V62-99-Dds">
                                                     <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="8y4-4t-uLs"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="8y4-4t-uLs"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
@@ -350,7 +350,7 @@
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (B)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dxv-wh-wvA">
                                                     <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" constant="85" id="E7N-lp-LRF"/>
+                                                        <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="85" id="E7N-lp-LRF"/>
                                                     </constraints>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>

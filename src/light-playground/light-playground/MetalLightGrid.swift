@@ -1,6 +1,7 @@
-import Foundation
 import Metal
 import CoreGraphics
+
+/// An implementation of LightGrid which draws primarily using Metal.
 
 final class MetalLightGrid: LightGrid {
     public init(
@@ -37,7 +38,6 @@ final class MetalLightGrid: LightGrid {
     // MARK: LightGrid
     
     public func reset() {
-
         // Wipe each of the "current" textures.
         let emptyBytes = [Float](repeatElement(0, count: height * width))
 
@@ -94,8 +94,10 @@ final class MetalLightGrid: LightGrid {
         preprocessEncoder.setTexture(bMetalTextureCurrent, index: 5)
 
         // TODO: Figure out what these dimensions should actually be.
-        let threadExecutionWidth = metalContext.imagePreprocessingPipelineState.threadExecutionWidth
-        let maxTotalThreadsPerThreadgroup = metalContext.imagePreprocessingPipelineState.maxTotalThreadsPerThreadgroup
+        let threadExecutionWidth =
+            metalContext.imagePreprocessingPipelineState.threadExecutionWidth
+        let maxTotalThreadsPerThreadgroup =
+            metalContext.imagePreprocessingPipelineState.maxTotalThreadsPerThreadgroup
         let threadsPerThreadGroup = MTLSizeMake(
             threadExecutionWidth,
             maxTotalThreadsPerThreadgroup / threadExecutionWidth,
@@ -239,7 +241,6 @@ final class MetalLightGrid: LightGrid {
         didSet {
             updateImage()
         }
-
     }
 
     public var imageHandler: (CGImage) -> Void = { _ in }

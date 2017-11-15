@@ -1,12 +1,3 @@
-//
-//  OptionsViewController.swift
-//  light-playground
-//
-//  Created by Aaron Eidelson on 2/3/17.
-//  Copyright © 2017 Aaron Eidelson. All rights reserved.
-//
-
-import Foundation
 import UIKit
 
 class OptionsViewController: UITableViewController, UIPopoverPresentationControllerDelegate {

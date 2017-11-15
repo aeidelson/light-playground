@@ -58,7 +58,8 @@ public struct ShapeAttributes {
 
     public let indexOfRefraction: CGFloat
 
-    /// Shapes with no volume (like walls) can't be translucent (the tracer doesn't handle this case gracefully yet).
+    /// Shapes with no volume (like walls) can't be translucent (the tracer doesn't handle this case
+    /// gracefully yet).
     public let translucent: Bool
 
     static let zero = ShapeAttributes(
