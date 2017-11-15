@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="hLN-59-Igd">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13529" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="hLN-59-Igd">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="11757"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13527"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -27,7 +27,7 @@
                                 <items>
                                     <barButtonItem style="plain" id="fvg-vq-WTL">
                                         <segmentedControl key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="bar" selectedSegmentIndex="0" id="Fz4-xu-6at">
-                                            <rect key="frame" x="16" y="7" width="194" height="30"/>
+                                            <rect key="frame" x="16" y="7" width="199" height="30"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                             <segments>
                                                 <segment title="Light"/>
@@ -103,7 +103,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Exposure" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fDq-lU-IOa">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="11" width="85" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="W6e-eG-HLt"/>
                                                     </constraints>
@@ -112,7 +112,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nb0-N9-XM9">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="exposureChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="wVp-bl-BpX"/>
                                                     </connections>
@@ -140,7 +140,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Red" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TG3-oY-7lP">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="jta-JY-SKW"/>
                                                     </constraints>
@@ -149,7 +149,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Gwj-vq-YNw">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="redLightColorChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="H4E-Xe-mOS"/>
                                                     </connections>
@@ -175,7 +175,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Green" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="55F-Sq-DTh">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="11" width="85" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="4hH-DF-70j"/>
                                                     </constraints>
@@ -184,7 +184,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Le7-gg-2IX">
-                                                    <rect key="frame" x="99" y="8" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="8" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="greenLightColorChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="ucy-qG-bvi"/>
                                                     </connections>
@@ -208,7 +208,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Blue" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eui-TE-Ppa">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="11" width="85" height="21"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="tED-67-w95"/>
                                                     </constraints>
@@ -217,7 +217,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="255" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="xIV-z2-A9l">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="blueLightColorChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="bm0-ve-XTW"/>
                                                     </connections>
@@ -245,7 +245,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Difussion" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="He2-a1-w58">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="ELX-eB-Xag"/>
                                                     </constraints>
@@ -254,7 +254,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SFi-Cs-rqw">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="diffusionChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="OQE-2h-iBd"/>
                                                     </connections>
@@ -280,13 +280,13 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6I2-7C-8sS">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="redPassChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="WFL-bW-Xev"/>
                                                     </connections>
                                                 </slider>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (R)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iLW-TL-mVg">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="14" width="85" height="16"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="Kbr-fa-obY"/>
                                                     </constraints>
@@ -301,7 +301,6 @@
                                                 <constraint firstAttribute="trailing" secondItem="6I2-7C-8sS" secondAttribute="trailing" constant="8" id="S2w-2o-aGi"/>
                                                 <constraint firstItem="6I2-7C-8sS" firstAttribute="top" secondItem="fLC-jr-JBN" secondAttribute="top" constant="6" id="SS5-5n-6rS"/>
                                                 <constraint firstItem="iLW-TL-mVg" firstAttribute="top" secondItem="fLC-jr-JBN" secondAttribute="topMargin" constant="3" id="TQh-OJ-2jz"/>
-                                                <constraint firstItem="6I2-7C-8sS" firstAttribute="leading" secondItem="fLC-jr-JBN" secondAttribute="leading" constant="101" id="ea7-Zd-ak4"/>
                                                 <constraint firstAttribute="bottomMargin" secondItem="iLW-TL-mVg" secondAttribute="bottom" constant="3" id="ruU-ui-VVp"/>
                                                 <constraint firstAttribute="bottom" secondItem="6I2-7C-8sS" secondAttribute="bottom" constant="7" id="yCx-dW-XAO"/>
                                             </constraints>
@@ -315,7 +314,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (G)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="V62-99-Dds">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="8y4-4t-uLs"/>
                                                     </constraints>
@@ -324,7 +323,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="iFF-Ri-ZpZ">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="greenPassChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="fj3-dc-bOO"/>
                                                     </connections>
@@ -349,7 +348,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Pass (B)" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dxv-wh-wvA">
-                                                    <rect key="frame" x="8" y="11" width="85" height="21"/>
+                                                    <rect key="frame" x="16" y="14" width="85" height="15.5"/>
                                                     <constraints>
                                                         <constraint firstAttribute="width" constant="85" id="E7N-lp-LRF"/>
                                                     </constraints>
@@ -358,7 +357,7 @@
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="1" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fHh-FT-BEi">
-                                                    <rect key="frame" x="99" y="6" width="270" height="31"/>
+                                                    <rect key="frame" x="107" y="6" width="262" height="31"/>
                                                     <connections>
                                                         <action selector="bluePassChanged:" destination="a6G-zL-nws" eventType="valueChanged" id="9lG-H8-Fyh"/>
                                                     </connections>
@@ -432,7 +431,7 @@
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="hLN-59-Igd" sceneMemberID="viewController">
                     <toolbarItems/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="GhZ-Lp-Ahs">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <nil name="viewControllers"/>

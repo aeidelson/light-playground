@@ -370,7 +370,6 @@ fileprivate struct LightRay {
 
 typealias SimulationContext = Any
 
-
 fileprivate protocol SimulationItem {
     /// A unique identifier for this item.
     var id: Id { get }
