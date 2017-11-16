@@ -1,7 +1,6 @@
 import Foundation
 import CoreGraphics
 
-
 protocol LightGrid: class {
 
     /// Setting this updates some properties affecting the render. May trigger an update to the

@@ -8,25 +8,30 @@
 
 /* Begin PBXBuildFile section */
 		8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1475451E19ADD50094CB28 /* AppDelegate.swift */; };
-		8E1475481E19ADD50094CB28 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1475471E19ADD50094CB28 /* MainViewController.swift */; };
 		8E14754B1E19ADD50094CB28 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E1475491E19ADD50094CB28 /* Main.storyboard */; };
 		8E14754D1E19ADD50094CB28 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754C1E19ADD50094CB28 /* Assets.xcassets */; };
 		8E1475501E19ADD50094CB28 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754E1E19ADD50094CB28 /* LaunchScreen.storyboard */; };
 		8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
-		8E266A181E583FA900BA6CD1 /* MetalShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8E266A171E583FA900BA6CD1 /* MetalShaders.metal */; };
-		8E266A191E5842C600BA6CD1 /* MetalLightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */; };
 		8E322E6F1E512708001CE0FB /* light_playground_tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E322E6E1E512708001CE0FB /* light_playground_tests.swift */; };
 		8E322E761E5127E7001CE0FB /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
 		8E322E771E512819001CE0FB /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
 		8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
-		8E322E791E512821001CE0FB /* CPULightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */; };
-		8E6DB1FD1FBCF01900FF5737 /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */; };
-		8E6DB1FE1FBCF2A500FF5737 /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */; };
+		8E6DB2171FBCFA2200FF5737 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */; };
+		8E6DB2181FBCFA2200FF5737 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */; };
+		8E6DB2191FBCFA2200FF5737 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */; };
+		8E6DB21A1FBCFA2200FF5737 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */; };
+		8E6DB21B1FBCFA2200FF5737 /* MetalLightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2131FBCFA2200FF5737 /* MetalLightGrid.swift */; };
+		8E6DB21C1FBCFA2200FF5737 /* MetalLightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2131FBCFA2200FF5737 /* MetalLightGrid.swift */; };
+		8E6DB21D1FBCFA2200FF5737 /* CPULightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2141FBCFA2200FF5737 /* CPULightGrid.swift */; };
+		8E6DB21E1FBCFA2200FF5737 /* CPULightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2141FBCFA2200FF5737 /* CPULightGrid.swift */; };
+		8E6DB21F1FBCFA2200FF5737 /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2151FBCFA2200FF5737 /* LightGrid.swift */; };
+		8E6DB2201FBCFA2200FF5737 /* LightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2151FBCFA2200FF5737 /* LightGrid.swift */; };
+		8E6DB2211FBCFA2200FF5737 /* MetalShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2161FBCFA2200FF5737 /* MetalShaders.metal */; };
+		8E6DB2221FBCFA2200FF5737 /* MetalShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2161FBCFA2200FF5737 /* MetalShaders.metal */; };
+		8E6DB2241FBCFC7400FF5737 /* Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2231FBCFC7400FF5737 /* Object.swift */; };
+		8E6DB2251FBCFC7400FF5737 /* Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2231FBCFC7400FF5737 /* Object.swift */; };
 		8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
-		8E72C9AE1E276FA50057C08A /* CPULightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */; };
-		8E9CC4D11E57D06B00C1F315 /* MetalLightGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */; };
 		8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
-		8ECE22391E45AB3A00237581 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ECE22381E45AB3A00237581 /* OptionsViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,22 +47,23 @@
 /* Begin PBXFileReference section */
 		8E1475421E19ADD50094CB28 /* light-playground.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "light-playground.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E1475451E19ADD50094CB28 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		8E1475471E19ADD50094CB28 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = MainViewController.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		8E14754A1E19ADD50094CB28 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		8E14754C1E19ADD50094CB28 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8E14754F1E19ADD50094CB28 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		8E1475511E19ADD50094CB28 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8E2293A61E2C0C84005CD3CD /* Common.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Common.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		8E266A171E583FA900BA6CD1 /* MetalShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalShaders.metal; sourceTree = "<group>"; };
 		8E322E6C1E512708001CE0FB /* light-playground-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "light-playground-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E322E6E1E512708001CE0FB /* light_playground_tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = light_playground_tests.swift; sourceTree = "<group>"; };
 		8E322E701E512708001CE0FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightGrid.swift; sourceTree = "<group>"; };
+		8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionsViewController.swift; sourceTree = "<group>"; };
+		8E6DB2131FBCFA2200FF5737 /* MetalLightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalLightGrid.swift; sourceTree = "<group>"; };
+		8E6DB2141FBCFA2200FF5737 /* CPULightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPULightGrid.swift; sourceTree = "<group>"; };
+		8E6DB2151FBCFA2200FF5737 /* LightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightGrid.swift; sourceTree = "<group>"; };
+		8E6DB2161FBCFA2200FF5737 /* MetalShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalShaders.metal; sourceTree = "<group>"; };
+		8E6DB2231FBCFC7400FF5737 /* Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Object.swift; sourceTree = "<group>"; };
 		8E72C9A91E2754400057C08A /* Tracer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = Tracer.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; path = CPULightGrid.swift; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalLightGrid.swift; sourceTree = "<group>"; };
 		8E9D54661E19D40700E7C927 /* LightSimulator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightSimulator.swift; sourceTree = "<group>"; };
-		8ECE22381E45AB3A00237581 /* OptionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionsViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,16 +105,13 @@
 		8E1475441E19ADD50094CB28 /* light-playground */ = {
 			isa = PBXGroup;
 			children = (
+				8E6DB2121FBCFA2200FF5737 /* LightGrid */,
+				8E6DB20E1FBCFA2200FF5737 /* ViewControllers */,
 				8E1475451E19ADD50094CB28 /* AppDelegate.swift */,
-				8E1475471E19ADD50094CB28 /* MainViewController.swift */,
-				8ECE22381E45AB3A00237581 /* OptionsViewController.swift */,
+				8E6DB2231FBCFC7400FF5737 /* Object.swift */,
 				8E2293A61E2C0C84005CD3CD /* Common.swift */,
 				8E9D54661E19D40700E7C927 /* LightSimulator.swift */,
 				8E72C9A91E2754400057C08A /* Tracer.swift */,
-				8E6DB1FC1FBCF01900FF5737 /* LightGrid.swift */,
-				8E72C9AD1E276FA50057C08A /* CPULightGrid.swift */,
-				8E9CC4D01E57D06B00C1F315 /* MetalLightGrid.swift */,
-				8E266A171E583FA900BA6CD1 /* MetalShaders.metal */,
 				8E1475491E19ADD50094CB28 /* Main.storyboard */,
 				8E14754C1E19ADD50094CB28 /* Assets.xcassets */,
 				8E14754E1E19ADD50094CB28 /* LaunchScreen.storyboard */,
@@ -124,6 +127,26 @@
 				8E322E701E512708001CE0FB /* Info.plist */,
 			);
 			path = "light-playground-tests";
+			sourceTree = "<group>";
+		};
+		8E6DB20E1FBCFA2200FF5737 /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */,
+				8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */,
+			);
+			path = ViewControllers;
+			sourceTree = "<group>";
+		};
+		8E6DB2121FBCFA2200FF5737 /* LightGrid */ = {
+			isa = PBXGroup;
+			children = (
+				8E6DB2131FBCFA2200FF5737 /* MetalLightGrid.swift */,
+				8E6DB2141FBCFA2200FF5737 /* CPULightGrid.swift */,
+				8E6DB2151FBCFA2200FF5737 /* LightGrid.swift */,
+				8E6DB2161FBCFA2200FF5737 /* MetalShaders.metal */,
+			);
+			path = LightGrid;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -232,16 +255,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8E9CC4D11E57D06B00C1F315 /* MetalLightGrid.swift in Sources */,
-				8E1475481E19ADD50094CB28 /* MainViewController.swift in Sources */,
+				8E6DB2211FBCFA2200FF5737 /* MetalShaders.metal in Sources */,
 				8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */,
+				8E6DB21F1FBCFA2200FF5737 /* LightGrid.swift in Sources */,
 				8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */,
-				8ECE22391E45AB3A00237581 /* OptionsViewController.swift in Sources */,
 				8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */,
-				8E6DB1FD1FBCF01900FF5737 /* LightGrid.swift in Sources */,
-				8E72C9AE1E276FA50057C08A /* CPULightGrid.swift in Sources */,
+				8E6DB21D1FBCFA2200FF5737 /* CPULightGrid.swift in Sources */,
+				8E6DB2241FBCFC7400FF5737 /* Object.swift in Sources */,
+				8E6DB2191FBCFA2200FF5737 /* OptionsViewController.swift in Sources */,
 				8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */,
-				8E266A181E583FA900BA6CD1 /* MetalShaders.metal in Sources */,
+				8E6DB2171FBCFA2200FF5737 /* MainViewController.swift in Sources */,
+				8E6DB21B1FBCFA2200FF5737 /* MetalLightGrid.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,13 +273,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E6DB2221FBCFA2200FF5737 /* MetalShaders.metal in Sources */,
 				8E322E761E5127E7001CE0FB /* Tracer.swift in Sources */,
-				8E322E791E512821001CE0FB /* CPULightGrid.swift in Sources */,
+				8E6DB2201FBCFA2200FF5737 /* LightGrid.swift in Sources */,
 				8E322E771E512819001CE0FB /* Common.swift in Sources */,
 				8E322E6F1E512708001CE0FB /* light_playground_tests.swift in Sources */,
-				8E6DB1FE1FBCF2A500FF5737 /* LightGrid.swift in Sources */,
-				8E266A191E5842C600BA6CD1 /* MetalLightGrid.swift in Sources */,
+				8E6DB21E1FBCFA2200FF5737 /* CPULightGrid.swift in Sources */,
+				8E6DB2251FBCFC7400FF5737 /* Object.swift in Sources */,
+				8E6DB21A1FBCFA2200FF5737 /* OptionsViewController.swift in Sources */,
 				8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */,
+				8E6DB2181FBCFA2200FF5737 /* MainViewController.swift in Sources */,
+				8E6DB21C1FBCFA2200FF5737 /* MetalLightGrid.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
