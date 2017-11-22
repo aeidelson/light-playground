@@ -19,24 +19,28 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews();
-        drawLayer.frame = interactionView.bounds
 
-        // The simulator relies on the layout bounds, so it only makes sense to start the simulator
-        // after it has been laid out.
-        simulator = LightSimulator(
-            simulationSize: CGSize(
-                width: drawLayer.frame.size.width * drawLayer.contentsScale,
-                height: drawLayer.frame.size.height * drawLayer.contentsScale),
-            initialExposure: exposure)
+        // Only take action if the simulation dimensions have changed.
+        if drawLayer.frame != interactionView.bounds {
+            drawLayer.frame = interactionView.bounds
 
-        simulator?.snapshotHandler = { snapshot in
-            DispatchQueue.main.async {[weak self] in
-                self?.latestImage = snapshot.image
-                self?.drawLayer.display()
+            // The simulator relies on the layout bounds, so it only makes sense to start the simulator
+            // after it has been laid out.
+            simulator = LightSimulator(
+                simulationSize: CGSize(
+                    width: drawLayer.frame.size.width * drawLayer.contentsScale,
+                    height: drawLayer.frame.size.height * drawLayer.contentsScale),
+                initialExposure: exposure)
+
+            simulator?.snapshotHandler = { snapshot in
+                DispatchQueue.main.async {[weak self] in
+                    self?.latestImage = snapshot.image
+                    self?.drawLayer.display()
+                }
             }
-        }
 
-        resetSimulator()
+            resetSimulator()
+        }
      }
 
     // MARK: CALayerDelegate
@@ -246,6 +250,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     }
 
     private func saveImage() {
+        precondition(Thread.isMainThread)
         guard let cgImage = latestImage else { return }
         let image = UIImage(cgImage: cgImage)
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
