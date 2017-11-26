@@ -1,15 +1,6 @@
 import CoreGraphics
 import Metal
 
-/// Contains the result of the simulation (so far)
-public final class SimulationSnapshot {
-    public init(image: CGImage) {
-        self.image = image
-    }
-
-    public let image: CGImage
-}
-
 /// A context object which instances used throughout the the simulator.
 struct LightSimulatorContext {
 
@@ -149,6 +140,8 @@ public final class LightSimulator {
         }
     }
 
+    private let finalMaxSegmentsToTrace = 10_000_000
+
     // MARK: Private
 
     private func currentRenderProperties()  -> RenderImageProperties {
@@ -159,7 +152,7 @@ public final class LightSimulator {
 
     private func setupNewRootLightGrid() -> LightGrid {
         objc_sync_enter(self.rootGrid)
-        self.rootGrid.imageHandler = { _ in }
+        self.rootGrid.snapshotHandler = { _ in }
         objc_sync_exit(self.rootGrid)
 
         self.rootGrid = createLightGrid(
@@ -168,9 +161,9 @@ public final class LightSimulator {
             simulationSize: simulationSize,
             renderImageProperties: currentRenderProperties())
 
-        self.rootGrid.imageHandler = { [weak self] image in
+        self.rootGrid.snapshotHandler = { [weak self] snapshot in
             guard let strongSelf = self else { return }
-            strongSelf.snapshotHandler(SimulationSnapshot(image: image))
+            strongSelf.snapshotHandler(snapshot)
         }
         return self.rootGrid
     }
@@ -223,7 +216,6 @@ public final class LightSimulator {
 
     private let interactiveMaxSegmentsToTrace = 200
     private let standardTracerSize: Int
-    private let finalMaxSegmentsToTrace = 10_000_000
     private var finalTraceSegmentsLeft = 0
 
     private var finalTracerCount = 0

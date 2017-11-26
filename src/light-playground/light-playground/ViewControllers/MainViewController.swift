@@ -5,7 +5,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.navigationController?.navigationBar.isHidden = true
+//        self.navigationController?.navigationBar.isHidden = true
+        self.navigationController?.navigationBar.isTranslucent = true
 
         // Setup the draw layer
         drawLayer.delegate = self
@@ -34,8 +35,10 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
             simulator?.snapshotHandler = { snapshot in
                 DispatchQueue.main.async {[weak self] in
-                    self?.latestImage = snapshot.image
+                    self?.latestSnapshot = snapshot
                     self?.drawLayer.display()
+
+                    self?.updateStatusBar()
                 }
             }
 
@@ -46,18 +49,19 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     // MARK: CALayerDelegate
 
     func display(_ layer: CALayer) {
-        drawLayer.contents = latestImage
+        drawLayer.contents = latestSnapshot?.image
     }
 
     // MARK: Private
     private let drawLayer = CALayer()
-    private var latestImage: CGImage?
+    private var latestSnapshot: SimulationSnapshot?
 
     // MARK: Handle user interaction
 
     @IBOutlet weak var interactionView: UIView!
     @IBOutlet weak var interactionModeControl: UISegmentedControl!
     @IBOutlet weak var optionsButton: UIBarButtonItem!
+    @IBOutlet weak var statusBar: UILabel!
 
     @IBAction func tapGesture(_ sender: UITapGestureRecognizer) {
         let tapLocationRaw = sender.location(in: interactionView)
@@ -80,7 +84,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                     indexOfRefraction: 1.5,
                     translucent: true)))
             resetSimulator()
-        case .polygon:
+        case .triangle:
             let d: CGFloat = 200.0
             let p1 = CGPoint(
                 x: tapLocation.x,
@@ -190,13 +194,18 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             self?.diffusion = newDiffusion
         }
 
-        optionsViewController.onSaveButtonHit = { [weak self] in
-            self?.saveImage()
-        }
-
         optionsViewController.modalPresentationStyle = .popover
         optionsViewController.popoverPresentationController?.barButtonItem = optionsButton
         present(optionsViewController, animated: false, completion: nil)
+    }
+
+    @IBAction func shareButtonHit(_ sender: Any) {
+        precondition(Thread.isMainThread)
+        guard let cgImage = latestSnapshot?.image else { return }
+        let image = UIImage(cgImage: cgImage)
+        let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        present(activityViewController, animated: true, completion: nil)
+        // UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
     }
 
     /// Used to track where the start of a wall was.
@@ -207,7 +216,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         case light
         case wall
         case circle
-        case polygon
+        case triangle
     }
 
     private var currentInteractionMode: InteractionMode {
@@ -219,9 +228,21 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         case 2:
             return .circle
         case 3:
-            return .polygon
+            return .triangle
         default:
             preconditionFailure()
+        }
+    }
+
+    private func updateStatusBar() {
+        precondition(Thread.isMainThread)
+
+        // TODO: Add if using Metal vs CPU
+
+        if self.lights.isEmpty {
+            statusBar.text = "Add a light to start tracing"
+        } else {
+            statusBar.text = "\(latestSnapshot?.totalLightSegmentsTraced ?? 0) light segments drawn"
         }
     }
 
@@ -247,13 +268,6 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         simulator?.restartSimulation(
             layout: layout,
             isInteractive: isInteractive)
-    }
-
-    private func saveImage() {
-        precondition(Thread.isMainThread)
-        guard let cgImage = latestImage else { return }
-        let image = UIImage(cgImage: cgImage)
-        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
     }
 
     /// Options (with defaults) that are configurable in the OptionsController.

@@ -74,7 +74,7 @@ final class MetalLightGrid: LightGrid {
 
         // How much to multiply the old texture by before drawing the new segments on top.
         let baseImageBrightness: Float32 =
-            Float32(totalSegmentCount) / Float(totalSegmentCount + segments.count)
+            Float32(totalSegmentCount) / Float(totalSegmentCount + UInt64(segments.count))
 
         let preprocessParameters: [Float32] = [baseImageBrightness]
         let preprocessParametersBuffer = metalContext.device.makeBuffer(
@@ -143,7 +143,7 @@ final class MetalLightGrid: LightGrid {
         var positions = [Float32](repeatElement(0.0, count: numOfVerts * 4))
         var colors = [Float32](repeatElement(0.0, count: numOfVerts * 4))
 
-        let newSegmentBrightness = 1 / Float(segments.count + totalSegmentCount)
+        let newSegmentBrightness = 1 / Float(UInt64(segments.count) + totalSegmentCount)
 
         var i = 0
         while i < segments.count {
@@ -220,7 +220,7 @@ final class MetalLightGrid: LightGrid {
         renderCommandBuffer.waitUntilCompleted()
 
         // Record the new segment count and update the image.
-        totalSegmentCount += segments.count
+        totalSegmentCount += UInt64(segments.count)
         updateImage()
     }
 
@@ -243,7 +243,7 @@ final class MetalLightGrid: LightGrid {
         }
     }
 
-    public var imageHandler: (CGImage) -> Void = { _ in }
+    public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
 
     // MARK: Private
 
@@ -309,15 +309,13 @@ final class MetalLightGrid: LightGrid {
             intent: .defaultIntent)
 
         if let imageUnwrapped = image {
-            imageHandler(imageUnwrapped)
+            snapshotHandler(SimulationSnapshot(image: imageUnwrapped, totalLightSegmentsTraced: totalSegmentCount))
         }
-
-
     }
 
     private let width: Int
     private let height: Int
-    private var totalSegmentCount = 0
+    private var totalSegmentCount = UInt64(0)
 
     private let context: LightSimulatorContext
     private let metalContext: MetalContext

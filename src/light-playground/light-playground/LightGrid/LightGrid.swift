@@ -9,7 +9,7 @@ protocol LightGrid: class {
 
     /// Is called any time the light grid is updated. Is called on the thread which triggered the
     /// update.
-    var imageHandler: (CGImage) -> Void { get set }
+    var snapshotHandler: (SimulationSnapshot) -> Void { get set }
 
     /// Reset the light grid to the  to a state as if it was just created. Called as an optimization
     /// rather than re-creating array buffers.
@@ -18,4 +18,9 @@ protocol LightGrid: class {
     /// Draw the specfied light segments to the light grid. lowQuality indicates if the faster
     /// drawing method should be used.
     func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool)
+}
+
+public struct SimulationSnapshot {
+    public let image: CGImage
+    public let totalLightSegmentsTraced: UInt64
 }

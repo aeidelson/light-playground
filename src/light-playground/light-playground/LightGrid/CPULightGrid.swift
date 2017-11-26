@@ -54,7 +54,7 @@ final class CPULightGrid: LightGrid {
             }
         }
 
-        totalSegmentCount += segments.count
+        totalSegmentCount += UInt64(segments.count)
 
         updateImage(renderProperties: renderProperties)
     }
@@ -99,21 +99,21 @@ final class CPULightGrid: LightGrid {
             intent: .defaultIntent)
 
          if let imageUnwrapped = image {
-            imageHandler(imageUnwrapped)
+            snapshotHandler(SimulationSnapshot(image: imageUnwrapped, totalLightSegmentsTraced: totalSegmentCount))
         }
     }
 
     public let width: Int
     public let height: Int
 
-    public var imageHandler: (CGImage) -> Void = { _ in }
+    public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
 
     // MARK: Fileprivate
 
     /// These are intended to be read when aggregrating grids.
     fileprivate let totalPixels: Int
     fileprivate var data: ContiguousArray<LightGridPixel>
-    fileprivate var totalSegmentCount = 0
+    fileprivate var totalSegmentCount = UInt64(0)
 
     // MARK: Private
 

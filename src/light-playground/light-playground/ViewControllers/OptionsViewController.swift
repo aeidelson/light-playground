@@ -51,10 +51,10 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         lightGreenSlider.setValue(Float(lightColor.g), animated: false)
         lightBlueSlider.setValue(Float(lightColor.b), animated: false)
 
-        // `Pass` is just the inverse/friendly version of absorption.
-        redPassSlider.setValue(1.0 - Float(absorption.r), animated: false)
-        greenPassSlider.setValue(1.0 - Float(absorption.g), animated: false)
-        bluePassSlider.setValue(1.0 - Float(absorption.b), animated: false)
+        // Surface color is the inverse of the absorption.
+        surfaceRedSlider.setValue(1.0 - Float(absorption.r), animated: false)
+        surfaceGreenSlider.setValue(1.0 - Float(absorption.g), animated: false)
+        surfaceBlueSlider.setValue(1.0 - Float(absorption.b), animated: false)
 
         diffusionSlider.setValue(Float(diffusion), animated: false)
     }
@@ -66,7 +66,6 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     var onLightColorChange: (LightColor) -> Void = { _ in }
     var onAbsorptionChange: (FractionalLightColor) -> Void = { _ in }
     var onDiffusionChange: (CGFloat) -> Void = { _ in }
-    var onSaveButtonHit: () -> Void = {}
 
     // MARK: Interface builder outlets
 
@@ -75,9 +74,9 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     @IBOutlet weak var lightGreenSlider: UISlider!
     @IBOutlet weak var lightBlueSlider: UISlider!
     @IBOutlet weak var diffusionSlider: UISlider!
-    @IBOutlet weak var redPassSlider: UISlider!
-    @IBOutlet weak var greenPassSlider: UISlider!
-    @IBOutlet weak var bluePassSlider: UISlider!
+    @IBOutlet weak var surfaceRedSlider: UISlider!
+    @IBOutlet weak var surfaceGreenSlider: UISlider!
+    @IBOutlet weak var surfaceBlueSlider: UISlider!
 
     @IBAction func exposureChanged(_ sender: Any) {
         onExposureChange(CGFloat(exposureSlider.value))
@@ -111,11 +110,6 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         passChanged()
     }
 
-    @IBAction func saveButtonHit(_ sender: Any) {
-        dismiss(animated: false)
-        onSaveButtonHit()
-    }
-
     // MARK: Private
 
     // A helper to combine the color sliders before calling `onLightColorChange`
@@ -130,8 +124,8 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
     private func passChanged() {
         // `Pass` is just the inverse/friendly version of absorption.
         onAbsorptionChange(FractionalLightColor(
-            r: 1.0 - CGFloat(redPassSlider.value),
-            g: 1.0 - CGFloat(greenPassSlider.value),
-            b: 1.0 - CGFloat(bluePassSlider.value)))
+            r: 1.0 - CGFloat(surfaceRedSlider.value),
+            g: 1.0 - CGFloat(surfaceGreenSlider.value),
+            b: 1.0 - CGFloat(surfaceBlueSlider.value)))
     }
 }
