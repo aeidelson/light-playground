@@ -89,6 +89,7 @@
                         <outlet property="interactionModeControl" destination="Fz4-xu-6at" id="ERp-kR-wOI"/>
                         <outlet property="interactionView" destination="mIz-ZO-T50" id="Iyn-Ca-i6l"/>
                         <outlet property="optionsButton" destination="Mzd-km-3Li" id="yM5-WT-jpA"/>
+                        <outlet property="shareButton" destination="1Ma-k0-SqL" id="0Eh-MM-t3t"/>
                         <outlet property="statusBar" destination="DUA-VA-Mzi" id="jul-U8-BDp"/>
                     </connections>
                 </viewController>
@@ -129,7 +130,7 @@
                             <imageView userInteractionEnabled="NO" contentMode="center" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Hrk-1u-TQS">
                                 <rect key="frame" x="16" y="128" width="343" height="539"/>
                             </imageView>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="This is some example text...." textAlignment="natural" translatesAutoresizingMaskIntoConstraints="NO" id="kzn-MK-MdA">
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" text="This is some example text...." textAlignment="natural" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kzn-MK-MdA">
                                 <rect key="frame" x="16" y="20" width="343" height="73"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="73" id="DH3-gJ-Mco"/>
@@ -462,16 +463,20 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eQU-Ga-I7s">
-                                                    <rect key="frame" x="141" y="7" width="93" height="30"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
                                                     <state key="normal" title="Show Tutorial"/>
                                                     <connections>
-                                                        <action selector="onShowTutorial:" destination="a6G-zL-nws" eventType="touchUpInside" id="aWO-pU-cod"/>
+                                                        <action selector="onShowTutorial:" destination="a6G-zL-nws" eventType="touchDown" id="Fhh-ib-wKo"/>
                                                     </connections>
                                                 </button>
                                             </subviews>
                                             <constraints>
+                                                <constraint firstItem="eQU-Ga-I7s" firstAttribute="top" secondItem="DI0-bA-QDk" secondAttribute="top" id="ADP-el-y1G"/>
+                                                <constraint firstAttribute="bottom" secondItem="eQU-Ga-I7s" secondAttribute="bottom" id="CYA-2n-22n"/>
+                                                <constraint firstAttribute="trailing" secondItem="eQU-Ga-I7s" secondAttribute="trailing" id="OrU-Ax-Azy"/>
                                                 <constraint firstItem="eQU-Ga-I7s" firstAttribute="centerX" secondItem="DI0-bA-QDk" secondAttribute="centerX" id="wtm-cS-MaI"/>
                                                 <constraint firstItem="eQU-Ga-I7s" firstAttribute="centerY" secondItem="DI0-bA-QDk" secondAttribute="centerY" id="yz7-3f-Lfw"/>
+                                                <constraint firstItem="eQU-Ga-I7s" firstAttribute="leading" secondItem="DI0-bA-QDk" secondAttribute="leading" id="zfe-QR-tQT"/>
                                             </constraints>
                                         </tableViewCellContentView>
                                     </tableViewCell>

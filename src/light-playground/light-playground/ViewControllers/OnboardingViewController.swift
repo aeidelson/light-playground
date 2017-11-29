@@ -32,31 +32,31 @@ class OnboardingViewController: UIPageViewController, UIPageViewControllerDataSo
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
                 text: "Welcome to light playground!",
-                imageName: "AppIcon"),
+                imageName: "onboarding_1"),
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
                 text: "Select the light tool and tap on space to add a light",
-                imageName: "AppIcon"),
+                imageName: "onboarding_2"),
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
                 text: "After adding a light, select the wall tool to draw walls",
-                imageName: "AppIcon"),
+                imageName: "onboarding_3"),
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
-                text: "Triangle and Circle tools can also be used to distort light",
-                imageName: "AppIcon"),
+                text: "Circle and triangle tools can also be used to distort light",
+                imageName: "onboarding_4"),
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
-                text: "Light color and tool properties can be configured using the options",
-                imageName: "AppIcon"),
+                text: "Colors can be configured using the options button",
+                imageName: "onboarding_5"),
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
                 text: "Your image can be shared at any time using the share button",
-                imageName: "AppIcon"),
+                imageName: "onboarding_6"),
             SingleOnboardingPageViewController.new(
                 storyboard: storyboard,
-                text: "Swipe to start",
-                imageName: "AppIcon"),
+                text: "Swipe to start!",
+                imageName: nil),
 
 
 

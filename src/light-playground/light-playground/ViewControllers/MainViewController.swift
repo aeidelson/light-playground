@@ -63,6 +63,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     @IBOutlet weak var optionsButton: UIBarButtonItem!
     @IBOutlet weak var statusBar: UILabel!
     @IBOutlet weak var clearButton: UIBarButtonItem!
+    @IBOutlet weak var shareButton: UIBarButtonItem!
 
     @IBAction func tapGesture(_ sender: UITapGestureRecognizer) {
         let tapLocationRaw = sender.location(in: interactionView)
@@ -166,6 +167,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
             self.resetSimulator()
         }))
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.popoverPresentationController?.barButtonItem = clearButton
         present(alert, animated: true, completion: nil)
     }
 
@@ -210,8 +212,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         guard let cgImage = latestSnapshot?.image else { return }
         let image = UIImage(cgImage: cgImage)
         let activityViewController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        activityViewController.popoverPresentationController?.barButtonItem = shareButton
         present(activityViewController, animated: true, completion: nil)
-        // UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
     }
 
     /// Used to track where the start of a wall was.

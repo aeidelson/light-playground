@@ -140,7 +140,7 @@ public final class LightSimulator {
         }
     }
 
-    private let finalMaxSegmentsToTrace = 10_000_000
+    private let finalMaxSegmentsToTrace = 5_000_000
 
     // MARK: Private
 
