@@ -5,9 +5,6 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     override func viewDidLoad() {
         super.viewDidLoad()
 
-//        self.navigationController?.navigationBar.isHidden = true
-        self.navigationController?.navigationBar.isTranslucent = true
-
         // Setup the draw layer
         drawLayer.delegate = self
         drawLayer.isOpaque = true
@@ -16,6 +13,9 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         //   http://stackoverflow.com/questions/9479001/uiviews-contentscalefactor-depends-on-implementing-drawrect
         drawLayer.contentsScale = UIScreen.main.scale
         interactionView.layer.insertSublayer(drawLayer, at: 0)
+
+        guard let storyboard = self.storyboard else { preconditionFailure() }
+        OnboardingViewController.presentIfNeverCompleted(storyboard: storyboard, parentController: self)
     }
 
     override func viewDidLayoutSubviews() {
@@ -38,7 +38,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
                     self?.latestSnapshot = snapshot
                     self?.drawLayer.display()
 
-                    self?.updateStatusBar()
+                    self?.updateUIState()
                 }
             }
 
@@ -62,6 +62,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     @IBOutlet weak var interactionModeControl: UISegmentedControl!
     @IBOutlet weak var optionsButton: UIBarButtonItem!
     @IBOutlet weak var statusBar: UILabel!
+    @IBOutlet weak var clearButton: UIBarButtonItem!
 
     @IBAction func tapGesture(_ sender: UITapGestureRecognizer) {
         let tapLocationRaw = sender.location(in: interactionView)
@@ -155,12 +156,17 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     }
 
     @IBAction func clearButtonHit(_ sender: Any) {
-        self.circleShapes = []
-        self.polygonShapes = []
-        self.walls = []
-        self.lights = []
-        self.interactiveWall = nil
-        resetSimulator()
+        let alert = UIAlertController(title: "Do you want to clear the scene? (can't be undone)", message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Clear", style: .destructive, handler: { _ in
+            self.circleShapes = []
+            self.polygonShapes = []
+            self.walls = []
+            self.lights = []
+            self.interactiveWall = nil
+            self.resetSimulator()
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        present(alert, animated: true, completion: nil)
     }
 
     @IBAction func optionsButtonHit(_ sender: Any) {
@@ -234,15 +240,32 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         }
     }
 
-    private func updateStatusBar() {
+    private func updateUIState() {
         precondition(Thread.isMainThread)
 
         // TODO: Add if using Metal vs CPU
 
         if self.lights.isEmpty {
-            statusBar.text = "Add a light to start tracing"
+            statusBar.text = "Tap anywhere in the blank scene to add a light"
+
+            clearButton.isEnabled = false
+
+            // If there aren't any lights, then the only item the user can add to the scene is a light.
+            interactionModeControl.selectedSegmentIndex = 0
+            interactionModeControl.setEnabled(true, forSegmentAt: 0)
+            interactionModeControl.setEnabled(false, forSegmentAt: 1)
+            interactionModeControl.setEnabled(false, forSegmentAt: 2)
+            interactionModeControl.setEnabled(false, forSegmentAt: 3)
         } else {
             statusBar.text = "\(latestSnapshot?.totalLightSegmentsTraced ?? 0) light segments drawn"
+
+            clearButton.isEnabled = true
+
+            // Enable all segments, since there is at least one light.
+            interactionModeControl.setEnabled(true, forSegmentAt: 0)
+            interactionModeControl.setEnabled(true, forSegmentAt: 1)
+            interactionModeControl.setEnabled(true, forSegmentAt: 2)
+            interactionModeControl.setEnabled(true, forSegmentAt: 3)
         }
     }
 
@@ -271,7 +294,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     }
 
     /// Options (with defaults) that are configurable in the OptionsController.
-    private var exposure: CGFloat = 0.55
+    private var exposure: CGFloat = 0.45
     private var lightColor = LightColor(r: 255, g: 255, b: 255)
     private var absorption: FractionalLightColor = FractionalLightColor.zero
     private var diffusion: CGFloat = 0

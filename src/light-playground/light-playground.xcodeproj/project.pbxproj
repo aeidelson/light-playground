@@ -16,6 +16,8 @@
 		8E322E761E5127E7001CE0FB /* Tracer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E72C9A91E2754400057C08A /* Tracer.swift */; };
 		8E322E771E512819001CE0FB /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E2293A61E2C0C84005CD3CD /* Common.swift */; };
 		8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E9D54661E19D40700E7C927 /* LightSimulator.swift */; };
+		8E6D65901FCE076B008ABACC /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6D658F1FCE076B008ABACC /* OnboardingViewController.swift */; };
+		8E6D65941FCE13AD008ABACC /* SingleOnboardingPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6D65931FCE13AD008ABACC /* SingleOnboardingPageViewController.swift */; };
 		8E6DB2171FBCFA2200FF5737 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */; };
 		8E6DB2181FBCFA2200FF5737 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */; };
 		8E6DB2191FBCFA2200FF5737 /* OptionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */; };
@@ -55,6 +57,8 @@
 		8E322E6C1E512708001CE0FB /* light-playground-tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "light-playground-tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E322E6E1E512708001CE0FB /* light_playground_tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = light_playground_tests.swift; sourceTree = "<group>"; };
 		8E322E701E512708001CE0FB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8E6D658F1FCE076B008ABACC /* OnboardingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewController.swift; sourceTree = "<group>"; };
+		8E6D65931FCE13AD008ABACC /* SingleOnboardingPageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SingleOnboardingPageViewController.swift; sourceTree = "<group>"; };
 		8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OptionsViewController.swift; sourceTree = "<group>"; };
 		8E6DB2131FBCFA2200FF5737 /* MetalLightGrid.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalLightGrid.swift; sourceTree = "<group>"; };
@@ -132,8 +136,10 @@
 		8E6DB20E1FBCFA2200FF5737 /* ViewControllers */ = {
 			isa = PBXGroup;
 			children = (
+				8E6D65931FCE13AD008ABACC /* SingleOnboardingPageViewController.swift */,
 				8E6DB20F1FBCFA2200FF5737 /* MainViewController.swift */,
 				8E6DB2101FBCFA2200FF5737 /* OptionsViewController.swift */,
+				8E6D658F1FCE076B008ABACC /* OnboardingViewController.swift */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -257,11 +263,13 @@
 			files = (
 				8E6DB2211FBCFA2200FF5737 /* MetalShaders.metal in Sources */,
 				8E9D54671E19D40700E7C927 /* LightSimulator.swift in Sources */,
+				8E6D65941FCE13AD008ABACC /* SingleOnboardingPageViewController.swift in Sources */,
 				8E6DB21F1FBCFA2200FF5737 /* LightGrid.swift in Sources */,
 				8E72C9AA1E2754400057C08A /* Tracer.swift in Sources */,
 				8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */,
 				8E6DB21D1FBCFA2200FF5737 /* CPULightGrid.swift in Sources */,
 				8E6DB2241FBCFC7400FF5737 /* Object.swift in Sources */,
+				8E6D65901FCE076B008ABACC /* OnboardingViewController.swift in Sources */,
 				8E6DB2191FBCFA2200FF5737 /* OptionsViewController.swift in Sources */,
 				8E2293A71E2C0C84005CD3CD /* Common.swift in Sources */,
 				8E6DB2171FBCFA2200FF5737 /* MainViewController.swift in Sources */,

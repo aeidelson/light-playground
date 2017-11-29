@@ -110,6 +110,11 @@ class OptionsViewController: UITableViewController, UIPopoverPresentationControl
         passChanged()
     }
 
+    @IBAction func onShowTutorial(_ sender: Any) {
+        guard let storyboard = self.storyboard else { preconditionFailure() }
+        present(OnboardingViewController.new(storyboard: storyboard), animated: false, completion: nil)
+    }
+
     // MARK: Private
 
     // A helper to combine the color sliders before calling `onLightColorChange`
