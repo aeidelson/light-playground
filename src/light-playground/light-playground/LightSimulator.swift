@@ -78,7 +78,7 @@ public final class LightSimulator {
         if context.metalContext == nil {
             self.standardTracerSize = 20_000
         } else {
-            self.standardTracerSize = 200_000
+            self.standardTracerSize = 100_000
         }
 
         self.rootGrid = createLightGrid(
@@ -122,7 +122,7 @@ public final class LightSimulator {
 
     public func stop() {
         tracerQueue.cancelAllOperations()
-        _ = setupNewRootLightGrid()
+        setupNewRootLightGrid()
         self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
         self.tracerQueue.qualityOfService = .userInitiated
         finalTraceSegmentsLeft = 0
@@ -150,7 +150,7 @@ public final class LightSimulator {
         )
     }
 
-    private func setupNewRootLightGrid() -> LightGrid {
+    private func setupNewRootLightGrid() {
         objc_sync_enter(self.rootGrid)
         self.rootGrid.snapshotHandler = { _ in }
         objc_sync_exit(self.rootGrid)
@@ -165,7 +165,6 @@ public final class LightSimulator {
             guard let strongSelf = self else { return }
             strongSelf.snapshotHandler(snapshot)
         }
-        return self.rootGrid
     }
 
     private func enqueueInteractiveTracer() {

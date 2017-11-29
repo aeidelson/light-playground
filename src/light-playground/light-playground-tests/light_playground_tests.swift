@@ -29,7 +29,7 @@ class light_playground_tests: XCTestCase {
 
     // MARK: Benchmarks
 
-    func testBenchmarkTraceAndDraw() {
+    func testBenchmarkTraceAndDrawCold() {
         let rootGrid = MetalLightGrid(
             context: benchmarkContext,
             size: benchmarkSize,
@@ -44,6 +44,37 @@ class light_playground_tests: XCTestCase {
                 segmentsToTrace: self.benchmarkSegmentCount,
                 interactiveTrace: false)
 
+            tracer.start()
+            tracer.waitUntilFinished()
+        }
+    }
+
+    func testBenchmarkTraceAndDrawWarm() {
+        let rootGrid = MetalLightGrid(
+            context: benchmarkContext,
+            size: benchmarkSize,
+            initialRenderProperties: RenderImageProperties(exposure: 0.55))
+
+        let tracer = Tracer.makeTracer(
+            context: self.benchmarkContext,
+            rootGrid: rootGrid,
+            layout: self.benchmarkLayout,
+            simulationSize: self.benchmarkSize,
+            segmentsToTrace: self.benchmarkSegmentCount,
+            interactiveTrace: false)
+        tracer.start()
+        tracer.waitUntilFinished()
+
+        rootGrid.reset()
+
+        self.measure {
+            let tracer = Tracer.makeTracer(
+                context: self.benchmarkContext,
+                rootGrid: rootGrid,
+                layout: self.benchmarkLayout,
+                simulationSize: self.benchmarkSize,
+                segmentsToTrace: self.benchmarkSegmentCount,
+                interactiveTrace: false)
             tracer.start()
             tracer.waitUntilFinished()
         }

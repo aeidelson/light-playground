@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8E02CA3E1FCF4EB3003DDA21 /* OnboardingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6D658F1FCE076B008ABACC /* OnboardingViewController.swift */; };
+		8E02CA3F1FCF4ED1003DDA21 /* SingleOnboardingPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6D65931FCE13AD008ABACC /* SingleOnboardingPageViewController.swift */; };
 		8E1475461E19ADD50094CB28 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1475451E19ADD50094CB28 /* AppDelegate.swift */; };
 		8E14754B1E19ADD50094CB28 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8E1475491E19ADD50094CB28 /* Main.storyboard */; };
 		8E14754D1E19ADD50094CB28 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8E14754C1E19ADD50094CB28 /* Assets.xcassets */; };
@@ -283,11 +285,13 @@
 			files = (
 				8E6DB2221FBCFA2200FF5737 /* MetalShaders.metal in Sources */,
 				8E322E761E5127E7001CE0FB /* Tracer.swift in Sources */,
+				8E02CA3F1FCF4ED1003DDA21 /* SingleOnboardingPageViewController.swift in Sources */,
 				8E6DB2201FBCFA2200FF5737 /* LightGrid.swift in Sources */,
 				8E322E771E512819001CE0FB /* Common.swift in Sources */,
 				8E322E6F1E512708001CE0FB /* light_playground_tests.swift in Sources */,
 				8E6DB21E1FBCFA2200FF5737 /* CPULightGrid.swift in Sources */,
 				8E6DB2251FBCFC7400FF5737 /* Object.swift in Sources */,
+				8E02CA3E1FCF4EB3003DDA21 /* OnboardingViewController.swift in Sources */,
 				8E6DB21A1FBCFA2200FF5737 /* OptionsViewController.swift in Sources */,
 				8E322E781E51281C001CE0FB /* LightSimulator.swift in Sources */,
 				8E6DB2181FBCFA2200FF5737 /* MainViewController.swift in Sources */,

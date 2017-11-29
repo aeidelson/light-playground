@@ -246,7 +246,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         // TODO: Add if using Metal vs CPU
 
         if self.lights.isEmpty {
-            statusBar.text = "Tap anywhere in the blank scene to add a light"
+            statusBar.text = "Tap anywhere to add a light"
 
             clearButton.isEnabled = false
 
