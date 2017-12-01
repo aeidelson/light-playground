@@ -275,6 +275,8 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
 
     /// Should be called any time the state of input to the simulator changes.
     private func resetSimulator() {
+        layoutVersion += 1
+
         let finalLights = lights
         var finalWalls = walls
         var isInteractive = false
@@ -285,6 +287,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
         }
 
         let layout = SimulationLayout(
+            version: layoutVersion,
             lights: finalLights,
             walls: finalWalls,
             circleShapes: circleShapes,
@@ -302,6 +305,7 @@ class MainViewController: UIViewController, CALayerDelegate, UIPopoverPresentati
     private var diffusion: CGFloat = 0
 
     // State of the simulation
+    private var layoutVersion = UInt64(0)
     private var lights = [Light]()
     private var walls = [Wall]()
     private var circleShapes = [CircleShape]()

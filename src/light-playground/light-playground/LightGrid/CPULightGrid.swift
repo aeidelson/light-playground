@@ -20,11 +20,13 @@ final class CPULightGrid: LightGrid {
 
     public var renderProperties: RenderImageProperties {
         didSet {
-            updateImage(renderProperties: renderProperties)
+            if !oldValue.exposure.isEqual(to: renderProperties.exposure) {
+                updateImage(renderProperties: renderProperties)
+            }
         }
     }
 
-    public func reset() {
+    public func reset(updateImage: Bool) {
         for i in 0..<totalPixels {
             data[i].r = 0
             data[i].g = 0
@@ -32,10 +34,17 @@ final class CPULightGrid: LightGrid {
         }
         totalSegmentCount = 0
 
-        updateImage(renderProperties: renderProperties)
+        if updateImage {
+            self.updateImage(renderProperties: renderProperties)
+        }
     }
 
     public func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool) {
+        if layout.version < latestLayoutVersion {
+            return
+        }
+        latestLayoutVersion = layout.version
+
         if lowQuality {
             for segment in segments {
                 BresenhamLightGridSegmentDraw.drawSegment(
@@ -108,16 +117,13 @@ final class CPULightGrid: LightGrid {
 
     public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
 
-    // MARK: Fileprivate
-
-    /// These are intended to be read when aggregrating grids.
-    fileprivate let totalPixels: Int
-    fileprivate var data: ContiguousArray<LightGridPixel>
-    fileprivate var totalSegmentCount = UInt64(0)
-
     // MARK: Private
 
     private let context: LightSimulatorContext
+    fileprivate let totalPixels: Int
+    fileprivate var data: ContiguousArray<LightGridPixel>
+    fileprivate var totalSegmentCount = UInt64(0)
+    private var latestLayoutVersion = UInt64(0)
 
     // MARK: Variables for generating images.
 

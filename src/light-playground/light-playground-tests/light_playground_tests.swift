@@ -14,6 +14,7 @@ class light_playground_tests: XCTestCase {
 
     // MARK: Variables used in benchmarks
     let benchmarkLayout = SimulationLayout(
+        version: 0,
         lights: [Light(
             pos: CGPoint(x: 100, y: 100),
             color: LightColor(r: 255, g: 255, b: 255))],

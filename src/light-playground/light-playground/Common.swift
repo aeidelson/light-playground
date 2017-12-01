@@ -168,6 +168,9 @@ public struct RenderImageProperties {
 
 /// Properties which will cause the scene to be completely re-traced.
 public struct SimulationLayout {
+    /// Must be incremented each time the layout changes, and is used throughout the app to evaluate if data is stale.
+    public let version: UInt64
+
     public let lights: [Light]
     public let walls: [Wall]
     public let circleShapes: [CircleShape]

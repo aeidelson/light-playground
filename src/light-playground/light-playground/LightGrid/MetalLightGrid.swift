@@ -37,7 +37,7 @@ final class MetalLightGrid: LightGrid {
 
     // MARK: LightGrid
     
-    public func reset() {
+    public func reset(updateImage: Bool) {
         // Wipe each of the "current" textures.
         let emptyBytes = [Float](repeatElement(0, count: height * width))
 
@@ -61,10 +61,17 @@ final class MetalLightGrid: LightGrid {
         totalSegmentCount = 0
 
         // Send out an updated image.
-        updateImage()
+        if updateImage {
+            self.updateImage()
+        }
     }
 
     public func drawSegments(layout: SimulationLayout, segments: [LightSegment], lowQuality: Bool) {
+        if layout.version < latestLayoutVersion {
+            return
+        }
+        latestLayoutVersion = layout.version
+
         // Swap the old and current textures so we can re-use the previous texture as the source.
         swap(&rMetalTextureOld, &rMetalTextureCurrent)
         swap(&gMetalTextureOld, &gMetalTextureCurrent)
@@ -239,7 +246,9 @@ final class MetalLightGrid: LightGrid {
 
     public var renderProperties: RenderImageProperties {
         didSet {
-            updateImage()
+            if !oldValue.exposure.isEqual(to: renderProperties.exposure) {
+                updateImage()
+            }
         }
     }
 
@@ -316,6 +325,7 @@ final class MetalLightGrid: LightGrid {
     private let width: Int
     private let height: Int
     private var totalSegmentCount = UInt64(0)
+    private var latestLayoutVersion = UInt64(0)
 
     private let context: LightSimulatorContext
     private let metalContext: MetalContext

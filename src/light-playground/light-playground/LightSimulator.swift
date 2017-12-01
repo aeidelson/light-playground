@@ -81,17 +81,22 @@ public final class LightSimulator {
             self.standardTracerSize = 100_000
         }
 
-        self.rootGrid = createLightGrid(
-            logRenderType: true,
-            context: context,
-            simulationSize: simulationSize,
-            renderImageProperties: RenderImageProperties(exposure: 0))
-
         self.currentLayout = SimulationLayout(
+            version: 0,
             lights: [],
             walls: [],
             circleShapes: [],
             polygonShapes: [])
+
+        self.rootGrid = createLightGrid(
+            logRenderType: true,
+            context: context,
+            simulationSize: simulationSize,
+            renderImageProperties: RenderImageProperties(exposure: initialExposure))
+        self.rootGrid.snapshotHandler = { [weak self] snapshot in
+            guard let strongSelf = self else { return }
+            strongSelf.snapshotHandler(snapshot)
+        }
     }
 
     public func restartSimulation(layout: SimulationLayout, isInteractive: Bool) {
@@ -102,13 +107,22 @@ public final class LightSimulator {
             guard let strongSelf = self else { return }
             strongSelf.currentLayout = layout
 
-            strongSelf.stop()
+            /// Setup a new queue.
+            strongSelf.tracerQueue.cancelAllOperations()
+            strongSelf.tracerQueue = concurrentOperationQueue(strongSelf.tracerQueueConcurrency)
+            strongSelf.tracerQueue.qualityOfService = .userInitiated
 
-            // There's no light to trace.
-            guard layout.lights.count > 0 else {
-                // Reset the root grid to make sure it is cleared.
-                strongSelf.rootGrid.reset()
+            // The render properties depend on the lights, which may have changed.
+            // The LightGrid should only update the image if a significant value changes.
+            strongSelf.rootGrid.renderProperties = strongSelf.currentRenderProperties()
+
+            if layout.lights.isEmpty {
+                strongSelf.resetLightGrid(updateImage: true)
                 return
+            } else {
+                // Skip updating the image so the user doesn't see a blank grid.
+                // It will be updated when the next trace completes.
+                strongSelf.resetLightGrid(updateImage: false)
             }
 
             if isInteractive {
@@ -121,12 +135,7 @@ public final class LightSimulator {
     }
 
     public func stop() {
-        tracerQueue.cancelAllOperations()
-        setupNewRootLightGrid()
-        self.tracerQueue = concurrentOperationQueue(tracerQueueConcurrency)
-        self.tracerQueue.qualityOfService = .userInitiated
-        finalTraceSegmentsLeft = 0
-        finalTracerCount = 0
+
     }
 
     public var snapshotHandler: (SimulationSnapshot) -> Void = { _ in }
@@ -150,21 +159,12 @@ public final class LightSimulator {
         )
     }
 
-    private func setupNewRootLightGrid() {
+    private func resetLightGrid(updateImage: Bool) {
         objc_sync_enter(self.rootGrid)
-        self.rootGrid.snapshotHandler = { _ in }
-        objc_sync_exit(self.rootGrid)
+        defer { objc_sync_exit(self.rootGrid) }
 
-        self.rootGrid = createLightGrid(
-            logRenderType: false,
-            context: context,
-            simulationSize: simulationSize,
-            renderImageProperties: currentRenderProperties())
+        self.rootGrid.reset(updateImage: updateImage)
 
-        self.rootGrid.snapshotHandler = { [weak self] snapshot in
-            guard let strongSelf = self else { return }
-            strongSelf.snapshotHandler(snapshot)
-        }
     }
 
     private func enqueueInteractiveTracer() {
@@ -236,7 +236,7 @@ public final class LightSimulator {
     private var tracerQueue: OperationQueue
     private let tracerQueueConcurrency = ProcessInfo.processInfo.activeProcessorCount
     /// The grid that everything aggregrated to.
-    private var rootGrid: LightGrid
+    private let rootGrid: LightGrid
     private var currentLayout: SimulationLayout
 }
 
