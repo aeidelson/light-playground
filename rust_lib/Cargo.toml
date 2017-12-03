@@ -1,0 +1,10 @@
+[package]
+name = "light_playground_lib"
+version = "0.1.0"
+authors = ["Aaron Eidelson <aeidelson@gmail.com>"]
+publish = false
+
+# TODO(aeidelson): Add a library section here when we are ready to expose this as a
+# static iOS library.
+
+[dependencies]
