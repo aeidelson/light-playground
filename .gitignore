@@ -67,7 +67,7 @@ fastlane/screenshots
 fastlane/test_output
 
 ## Rust
-/src/rust_lib/target/
+rust_lib/target/
 Cargo.lock
 **/*.rs.bk
 
