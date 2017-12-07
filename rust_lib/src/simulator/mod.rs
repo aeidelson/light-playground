@@ -1,13 +1,13 @@
-use drawing_surface::DrawingSurface;
+use surface::Surface;
 
-pub struct Simulator<T: DrawingSurface> {
-    draw_surface: T,
+pub struct Simulator<TSurface: Surface> {
+    surface: TSurface,
 }
 
-impl<T: DrawingSurface> Simulator<T> {
-    pub fn new(draw_surface: T) -> Simulator<T> {
+impl<TSurface: Surface> Simulator<TSurface> {
+    pub fn new(surface: TSurface) -> Simulator<TSurface> {
         Simulator{
-            draw_surface: draw_surface,
+            surface: surface,
         }
     }
 }
