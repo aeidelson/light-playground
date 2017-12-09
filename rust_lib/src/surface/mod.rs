@@ -15,5 +15,4 @@ pub trait Surface: Sync + Send {
 }
 
 /// Manages a single drawing session from a single thread.
-pub trait SurfaceSession {
-}
+pub trait SurfaceSession {}

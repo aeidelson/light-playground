@@ -1,11 +1,10 @@
 use surface::{Surface, SurfaceSession};
 
-pub struct CpuSurface {
-}
+pub struct CpuSurface {}
 
 impl CpuSurface {
     pub fn new() -> CpuSurface {
-        CpuSurface{}
+        CpuSurface {}
     }
 }
 
@@ -13,12 +12,10 @@ impl Surface for CpuSurface {
     type SurfaceSessionType = CpuSurfaceSession;
 
     fn draw_session() -> CpuSurfaceSession {
-        CpuSurfaceSession{}
+        CpuSurfaceSession {}
     }
 }
 
-pub struct CpuSurfaceSession {
-}
+pub struct CpuSurfaceSession {}
 
-impl SurfaceSession for CpuSurfaceSession {
-}
+impl SurfaceSession for CpuSurfaceSession {}
