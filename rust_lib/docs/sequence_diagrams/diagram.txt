@@ -1,0 +1,44 @@
+@startuml
+participant UI
+participant Simulator
+participant TracerJobGenerator
+participant "Tracer (one of multiple threads)" as Tracer
+participant LightSegmentQueue
+participant Surface
+
+hnote over UI: User opens app
+
+... The app is at a steady state (everything is intialized and something is being simulated) ...
+
+hnote over UI: User modifies scene
+
+UI -> Simulator: clear_and_simulate(layout)
+Simulator -> Surface: clear_and_increment_layout_version()
+Simulator -> TracerJobGenerator: reset()
+Simulator -> LightSegmentQueue: dequeue_all()
+
+Simulator -> Tracer: condvar.notify_all()
+
+activate Tracer
+Tracer <-> TracerJobGenerator: next_job()
+rnote over Tracer: Trace scene
+Tracer -> LightSegmentQueue: enqueue(segments, layout_version)
+
+Tracer -> Surface: condvar.notify_all()
+activate Surface
+
+Surface <-> LightSegmentQueue: dequeue_segments()
+rnote over Surface: Draw segments if correct layout version
+Surface -> Simulator: new_image(bitmap)
+deactivate Surface
+
+Simulator -> UI: new_image(bitmap)
+
+
+deactivate Tracer
+
+@enduml
+
+
+
+
