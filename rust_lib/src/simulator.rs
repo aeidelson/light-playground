@@ -2,7 +2,8 @@ use std::sync::{Arc, Mutex};
 
 
 use surface::Surface;
-use tracer::{Tracer, TracerJobProducer};
+use tracer::tracer::Tracer;
+use tracer::job::{JobProducer};
 
 pub struct Simulator<TSurface: Surface> {
     surface: TSurface,
@@ -10,7 +11,7 @@ pub struct Simulator<TSurface: Surface> {
 
 impl<TSurface: Surface> Simulator<TSurface> {
     pub fn new(surface: TSurface) -> Simulator<TSurface> {
-        let tracer_job_producer_mutex = Arc::new(Mutex::new(TracerJobProducer::new()));
+        let tracer_job_producer_mutex = Arc::new(Mutex::new(JobProducer::new()));
         let tracer1 = Tracer::new(&tracer_job_producer_mutex);
         let tracer2 = Tracer::new(&tracer_job_producer_mutex);
 
